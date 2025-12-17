@@ -45,6 +45,11 @@ export const metadata: Metadata = {
   description:
     "Persept builds bold software and marketing in a week. Week-one prototypes, launch-ready products, and creative under one roof.",
   metadataBase: new URL("https://persept.ai"),
+  icons: {
+    icon: "/logo_persept_red.png",
+    shortcut: "/logo_persept_red.png",
+    apple: "/logo_persept_red.png",
+  },
   openGraph: {
     title: "Persept · Week-one prototypes, launch-ready builds",
     description:
