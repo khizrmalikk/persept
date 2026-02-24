@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
 import { Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
 const neueHaasDisplay = localFont({
@@ -41,9 +41,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Persept · Week-one prototypes, launch-ready builds",
+  title: "Persept AI Workforce Solutions — AI Agents for Dubai Hospitality",
   description:
-    "Persept builds bold software and marketing in a week. Week-one prototypes, launch-ready products, and creative under one roof.",
+    "Save 15-20 hours per week with AI agents that handle guest communications, review management, scheduling, and reporting for Dubai hotels and restaurants.",
   metadataBase: new URL("https://persept.ai"),
   icons: {
     icon: "/logo_persept_red.png",
@@ -51,17 +51,17 @@ export const metadata: Metadata = {
     apple: "/logo_persept_red.png",
   },
   openGraph: {
-    title: "Persept · Week-one prototypes, launch-ready builds",
+    title: "Persept AI Workforce Solutions — AI Agents for Dubai Hospitality",
     description:
-      "We ship working prototypes in 7 days, production builds, and launch creative so you can reach users fast.",
+      "Save 15-20 hours per week with AI agents that handle guest communications, review management, scheduling, and reporting.",
     url: "https://persept.ai",
-    siteName: "Persept",
+    siteName: "Persept AI Workforce Solutions",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Persept · Week-one prototypes, launch-ready builds",
+    title: "Persept AI Workforce Solutions — AI Agents for Dubai Hospitality",
     description:
-      "Week-one prototypes, production builds, and launch creative to reach users fast.",
+      "Save 15-20 hours per week with AI agents for guest communications, review management, scheduling, and reporting.",
   },
 };
 
