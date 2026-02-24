@@ -10,9 +10,14 @@ interface Dot {
   radius: number;
 }
 
-const DOT_COUNT = 120;
 const CONNECTION_DIST = 180;
 const SPEED = 0.3;
+
+function getDotCount(width: number) {
+  if (width < 640) return 25;
+  if (width < 1024) return 60;
+  return 120;
+}
 
 export function NetworkCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -20,13 +25,15 @@ export function NetworkCanvas() {
   const rafRef = useRef<number>(0);
 
   const initDots = useCallback((w: number, h: number) => {
+    const count = getDotCount(w);
+    const speed = w < 640 ? SPEED * 0.6 : SPEED;
     const dots: Dot[] = [];
-    for (let i = 0; i < DOT_COUNT; i++) {
+    for (let i = 0; i < count; i++) {
       dots.push({
         x: Math.random() * w,
         y: Math.random() * h,
-        vx: (Math.random() - 0.5) * SPEED,
-        vy: (Math.random() - 0.5) * SPEED,
+        vx: (Math.random() - 0.5) * speed,
+        vy: (Math.random() - 0.5) * speed,
         radius: Math.random() * 2 + 2,
       });
     }
@@ -59,7 +66,11 @@ export function NetworkCanvas() {
       // Reset transform before scaling
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      if (dotsRef.current.length === 0) {
+      const expectedCount = getDotCount(w);
+      if (
+        dotsRef.current.length === 0 ||
+        dotsRef.current.length !== expectedCount
+      ) {
         initDots(w, h);
       }
     };
