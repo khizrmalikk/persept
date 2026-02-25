@@ -29,7 +29,7 @@ export function Hero() {
               Book a Free Consultation
               <ArrowRight className="h-4 w-4" />
             </CTAButton>
-            <CTAButton variant="secondary" size="lg">
+            <CTAButton variant="secondary" size="lg" href="#how-it-works">
               See How It Works
             </CTAButton>
           </div>
