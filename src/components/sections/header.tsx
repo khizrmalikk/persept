@@ -6,10 +6,11 @@ import { useEffect, useState } from "react";
 import { CTAButton } from "@/components/ui/cta-button";
 
 const navLinks = [
-  { href: "#problem", label: "Challenges" },
-  { href: "#solution", label: "AI Agents" },
-  { href: "#how-it-works", label: "How It Works" },
-  { href: "#social-proof", label: "Results" },
+  { href: "/#problem", label: "Challenges" },
+  { href: "/#solution", label: "AI Agents" },
+  { href: "/solution", label: "Our Solution" },
+  { href: "/#how-it-works", label: "How It Works" },
+  { href: "/pricing", label: "Pricing" },
 ];
 
 export function Header() {
