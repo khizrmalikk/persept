@@ -2,15 +2,15 @@
 
 import { ArrowRight } from "lucide-react";
 import { CTAButton } from "@/components/ui/cta-button";
-import { AnimatedBackground } from "@/components/ui/animated-background";
+import { NetworkCanvas } from "@/components/ui/network-canvas";
 import { AnimatedCounter, FadeUp, GlowPulse } from "@/components/ui/scroll-animations";
 
 export function Hero() {
   return (
     <section className="relative overflow-hidden py-16 sm:py-20 md:py-28 lg:py-32">
-      {/* Particle background only - no 3D shapes */}
-      <div className="pointer-events-none absolute inset-0 opacity-30">
-        <AnimatedBackground />
+      {/* Network canvas - connecting dots and lines */}
+      <div className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true">
+        <NetworkCanvas />
       </div>
 
       {/* Gradient overlay for readability */}
