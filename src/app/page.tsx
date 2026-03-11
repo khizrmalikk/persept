@@ -6,6 +6,7 @@ import { HowItWorks } from "@/components/sections/how-it-works";
 import { Problem } from "@/components/sections/problem";
 import { SocialProof } from "@/components/sections/social-proof";
 import { Solution } from "@/components/sections/solution";
+import { InteractiveDemo } from "@/components/ui/interactive-demo";
 
 export default function Home() {
   return (
@@ -14,6 +15,7 @@ export default function Home() {
       <Hero />
       <Problem />
       <Solution />
+      <InteractiveDemo />
       <HowItWorks />
       <SocialProof />
       <FinalCTA />
