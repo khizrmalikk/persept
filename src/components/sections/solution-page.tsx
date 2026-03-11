@@ -835,29 +835,31 @@ export function SolutionPage() {
                   whileHover={{ x: 4 }}
                   transition={{ duration: 0.2 }}
                 >
-                <div
-                  className="mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full"
-                  style={{ backgroundColor: event.color }}
-                />
-                <div>
-                  <p className="text-[12px] font-medium text-white/40">
-                    {event.time}
-                  </p>
-                  <p className="text-[14px] text-white">
-                    <span
-                      className="font-semibold"
-                      style={{ color: event.color }}
-                    >
-                      {event.agent}
-                    </span>{" "}
-                    {event.text}
-                  </p>
-                </div>
-              </div>
+                  <div
+                    className="mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: event.color }}
+                  />
+                  <div>
+                    <p className="text-[12px] font-medium text-white/40">
+                      {event.time}
+                    </p>
+                    <p className="text-[14px] text-white">
+                      <span
+                        className="font-semibold"
+                        style={{ color: event.color }}
+                      >
+                        {event.agent}
+                      </span>{" "}
+                      {event.text}
+                    </p>
+                  </div>
+                </motion.div>
+              </FadeUp>
             ))}
-          </div>
+          </StaggerContainer>
 
-          <div className="mt-8 rounded-xl bg-[#0a0a0a]/10 p-5">
+          <FadeUp delay={0.6}>
+            <div className="mt-8 rounded-xl bg-[#0a0a0a]/10 p-5">
             <p className="text-[13px] font-semibold text-white">
               Weekend result:
             </p>
@@ -871,7 +873,8 @@ export function SolutionPage() {
                 25–30 hours saved
               </span>
             </div>
-          </div>
+            </div>
+          </FadeUp>
         </div>
       </section>
 
