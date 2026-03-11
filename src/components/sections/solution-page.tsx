@@ -23,10 +23,16 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import dynamic from "next/dynamic";
 import { Footer } from "@/components/sections/footer";
 import { Header } from "@/components/sections/header";
 import { CTAButton } from "@/components/ui/cta-button";
 import { FadeUp, StaggerContainer, SlideIn } from "@/components/ui/scroll-animations";
+
+const AnimatedBackground = dynamic(
+  () => import("@/components/ui/animated-background").then((mod) => mod.AnimatedBackground),
+  { ssr: false }
+);
 
 /* ================================================================== */
 /*  Data                                                               */
@@ -651,8 +657,11 @@ export function SolutionPage() {
       <Header />
 
       {/* ── Hero ───────────────────────────────────── */}
-      <section className="bg-gradient-to-b from-[#111111] to-[#0a0a0a] py-24 sm:py-32">
-        <div className="mx-auto max-w-3xl px-6 text-center lg:px-8">
+      <section className="relative bg-gradient-to-b from-[#111111] to-[#0a0a0a] py-24 sm:py-32 overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 opacity-40">
+          <AnimatedBackground />
+        </div>
+        <div className="relative z-10 mx-auto max-w-3xl px-6 text-center lg:px-8">
           <h1 className="fade-up text-[clamp(1.75rem,4.5vw,3rem)] font-bold leading-tight tracking-[-0.02em] text-white">
             Stop Fighting the Chaos. <br/>
             <span className="text-[#b91c1c]">Let AI Do the Boring Stuff.</span> 🎯
