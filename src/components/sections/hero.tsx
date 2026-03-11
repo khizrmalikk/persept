@@ -13,7 +13,7 @@ const HotelScene = dynamic(
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden py-20 sm:py-28 lg:py-32">
+    <section className="relative overflow-hidden py-16 sm:py-20 md:py-28 lg:py-32">
       <AnimatedBackground />
 
       {/* Hero 3D Scene */}
@@ -24,7 +24,7 @@ export function Hero() {
       {/* Top gradient overlay for readability */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#0a0a0a]/80 via-transparent to-[#0a0a0a]/60" />
 
-      <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <FadeUp>
             <p className="text-[12px] font-medium uppercase tracking-[0.15em] text-red-500">
@@ -55,19 +55,19 @@ export function Hero() {
           </FadeUp>
 
           <FadeUp delay={0.3}>
-            <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
-              <CTAButton size="lg">
+            <div className="mt-8 sm:mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4 w-full max-w-md mx-auto sm:max-w-none">
+              <CTAButton size="lg" className="w-full sm:w-auto">
                 Yes, I Want My Life Back
                 <ArrowRight className="h-4 w-4" />
               </CTAButton>
-              <CTAButton variant="secondary" size="lg" href="#how-it-works">
+              <CTAButton variant="secondary" size="lg" href="#how-it-works" className="w-full sm:w-auto">
                 Show Me a Demo First
               </CTAButton>
             </div>
           </FadeUp>
 
           <FadeUp delay={0.4}>
-            <div className="mt-14 flex flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-8">
+            <div className="mt-10 sm:mt-14 flex flex-col items-center gap-3 sm:gap-4 md:flex-row md:justify-center md:gap-8">
               {[
                 { value: 18, prefix: "", suffix: "+hrs", label: "saved weekly" },
                 { value: 30, prefix: "<", suffix: "s", label: "response time" },

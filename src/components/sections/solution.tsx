@@ -167,8 +167,8 @@ function AgentRow({ agent, reversed, index }: { agent: Agent; reversed: boolean;
 
 export function Solution() {
   return (
-    <section id="solution" className="py-24 sm:py-28">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+    <section id="solution" className="py-16 sm:py-20 md:py-24 lg:py-28">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <motion.p
             initial={{ opacity: 0 }}

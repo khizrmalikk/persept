@@ -45,8 +45,8 @@ const painPoints = [
 
 export function Problem() {
   return (
-    <section id="problem" className="py-24 sm:py-28">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+    <section id="problem" className="py-16 sm:py-20 md:py-24 lg:py-28">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="max-w-xl">
           <FadeUp>
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-red-500">

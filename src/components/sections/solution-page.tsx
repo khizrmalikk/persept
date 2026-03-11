@@ -657,11 +657,11 @@ export function SolutionPage() {
       <Header />
 
       {/* ── Hero ───────────────────────────────────── */}
-      <section className="relative bg-gradient-to-b from-[#111111] to-[#0a0a0a] py-24 sm:py-32 overflow-hidden">
+      <section className="relative bg-gradient-to-b from-[#111111] to-[#0a0a0a] py-16 sm:py-20 md:py-24 lg:py-32 overflow-hidden">
         <div className="pointer-events-none absolute inset-0 opacity-40">
           <AnimatedBackground />
         </div>
-        <div className="relative z-10 mx-auto max-w-3xl px-6 text-center lg:px-8">
+        <div className="relative z-10 mx-auto max-w-3xl px-4 sm:px-6 text-center lg:px-8">
           <h1 className="fade-up text-[clamp(1.75rem,4.5vw,3rem)] font-bold leading-tight tracking-[-0.02em] text-white">
             Stop Fighting the Chaos. <br/>
             <span className="text-[#b91c1c]">Let AI Do the Boring Stuff.</span> 🎯
@@ -669,12 +669,12 @@ export function SolutionPage() {
           <p className="fade-up delay-1 mt-5 text-[16px] leading-relaxed text-[#a3a3a3]">
             Your team is drowning in copy-paste replies while guests wait hours. Staff quit because they spend their days doing robot work. There's a better way — and it doesn't involve hiring more humans.
           </p>
-          <div className="fade-up delay-2 mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <CTAButton size="lg">
+          <div className="fade-up delay-2 mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center w-full max-w-md mx-auto sm:max-w-none">
+            <CTAButton size="lg" className="w-full sm:w-auto min-h-[44px]">
               Book Free Consultation
               <ArrowRight className="h-4 w-4" />
             </CTAButton>
-            <CTAButton variant="secondary" size="lg" href="/pricing">
+            <CTAButton variant="secondary" size="lg" href="/pricing" className="w-full sm:w-auto min-h-[44px]">
               See Pricing
             </CTAButton>
           </div>
@@ -682,8 +682,8 @@ export function SolutionPage() {
       </section>
 
       {/* ── Section 1: The Problems ────────────────── */}
-      <section className="bg-[#0a0a0a] py-20 sm:py-24">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <section className="bg-[#0a0a0a] py-16 sm:py-20 md:py-24">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionHeader
             label="The reality"
             title="Running a Hotel Shouldn't Feel Like Surviving a Disaster Movie 🔥"
@@ -700,8 +700,8 @@ export function SolutionPage() {
       </section>
 
       {/* ── Section 2: Old Solutions ───────────────── */}
-      <section className="bg-[#111111] py-20 sm:py-24">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <section className="bg-[#111111] py-16 sm:py-20 md:py-24">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionHeader
             label="Why they fail"
             title="You've Tried Everything. Nothing Worked. We Know. 🤷"
@@ -718,8 +718,8 @@ export function SolutionPage() {
       </section>
 
       {/* ── Section 3: Our Solution — The Agents ──── */}
-      <section className="bg-[#0a0a0a] py-20 sm:py-24">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <section className="bg-[#0a0a0a] py-16 sm:py-20 md:py-24">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionHeader
             label="Our solution"
             title="Meet Your New Coworkers. They Never Complain About Shifts. 🤖"
@@ -776,8 +776,8 @@ export function SolutionPage() {
       </section>
 
       {/* ── Scenario: How It All Works Together ───── */}
-      <section className="bg-[#0a0a0a] py-20 sm:py-24 border-y border-[#262626]">
-        <div className="mx-auto max-w-4xl px-6 lg:px-8">
+      <section className="bg-[#0a0a0a] py-16 sm:py-20 md:py-24 border-y border-[#262626]">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#b91c1c]">
               The full picture
@@ -879,8 +879,8 @@ export function SolutionPage() {
       </section>
 
       {/* ── Section 4: Why Different ───────────────── */}
-      <section className="bg-[#0a0a0a] py-20 sm:py-24">
-        <div className="mx-auto max-w-5xl px-6 lg:px-8">
+      <section className="bg-[#0a0a0a] py-16 sm:py-20 md:py-24">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <SectionHeader
             label="The difference"
             title="Why We're Not Like Every Other 'AI Solution' 🙄"
@@ -921,8 +921,8 @@ export function SolutionPage() {
       </section>
 
       {/* ── Section 5: Before / After ─────────────── */}
-      <section className="bg-[#111111] py-20 sm:py-24">
-        <div className="mx-auto max-w-5xl px-6 lg:px-8">
+      <section className="bg-[#111111] py-16 sm:py-20 md:py-24">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <SectionHeader
             label="The transformation"
             title="Before vs. After: The Difference is Ridiculous 📊"
@@ -990,8 +990,8 @@ export function SolutionPage() {
       </section>
 
       {/* ── Section 6: Implementation Timeline ────── */}
-      <section className="bg-[#0a0a0a] py-20 sm:py-24">
-        <div className="mx-auto max-w-4xl px-6 lg:px-8">
+      <section className="bg-[#0a0a0a] py-16 sm:py-20 md:py-24">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <SectionHeader
             label="Implementation"
             title="From Audit to Go-Live in 30 Days"
@@ -1028,19 +1028,19 @@ export function SolutionPage() {
       </section>
 
       {/* ── CTA ────────────────────────────────────── */}
-      <section className="bg-[#b91c1c] py-20 sm:py-24">
-        <div className="mx-auto max-w-2xl px-6 text-center lg:px-8">
+      <section className="bg-[#b91c1c] py-16 sm:py-20 md:py-24">
+        <div className="mx-auto max-w-2xl px-4 sm:px-6 text-center lg:px-8">
           <h2 className="text-[clamp(1.5rem,3.5vw,2.25rem)] font-bold leading-tight text-white">
             Ready to Stop the Madness? 🚀
           </h2>
           <p className="mt-3 text-[15px] leading-relaxed text-white/80">
             Book a free 30-minute call. We'll show you exactly where you're bleeding time (and money) — and how Sarah, Marcus, Olivia, and Alex can plug the leak.
           </p>
-          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center w-full max-w-md mx-auto sm:max-w-none">
             <CTAButton
               variant="secondary"
               size="lg"
-              className="border-white/20 bg-[#0a0a0a] text-[#b91c1c] hover:bg-[#0a0a0a]/90"
+              className="border-white/20 bg-[#0a0a0a] text-[#b91c1c] hover:bg-[#0a0a0a]/90 w-full sm:w-auto min-h-[44px]"
             >
               Book Free Consultation
             </CTAButton>
@@ -1048,7 +1048,7 @@ export function SolutionPage() {
               variant="secondary"
               size="lg"
               href="/pricing"
-              className="border-white/30 bg-transparent text-white hover:bg-[#0a0a0a]/10"
+              className="border-white/30 bg-transparent text-white hover:bg-[#0a0a0a]/10 w-full sm:w-auto min-h-[44px]"
             >
               See Pricing
             </CTAButton>
@@ -1057,8 +1057,8 @@ export function SolutionPage() {
       </section>
 
       {/* ── Trust ──────────────────────────────────── */}
-      <section className="bg-[#0a0a0a] py-20 sm:py-24">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <section className="bg-[#0a0a0a] py-16 sm:py-20 md:py-24">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-center text-[clamp(1.5rem,3vw,2rem)] font-bold tracking-[-0.02em] text-white">
             Why Hotels Trust Persept
           </h2>
@@ -1083,15 +1083,15 @@ export function SolutionPage() {
       </section>
 
       {/* ── Final CTA ──────────────────────────────── */}
-      <section className="bg-[#111111] py-16">
-        <div className="mx-auto max-w-2xl px-6 text-center lg:px-8">
+      <section className="bg-[#111111] py-12 sm:py-16">
+        <div className="mx-auto max-w-2xl px-4 sm:px-6 text-center lg:px-8">
           <h2 className="text-[20px] font-bold text-white">
             Your Team Deserves Better Than Copy-Pasting All Day. 💪
           </h2>
           <p className="mt-2 text-[14px] text-[#a3a3a3]">
             Let Sarah handle the messages. Marcus tackle the reviews. Olivia fix the schedule. Alex crunch the numbers. Your team? They'll finally get to do the hospitality work they actually signed up for.
           </p>
-          <CTAButton className="mt-5" size="lg">
+          <CTAButton className="mt-5 w-full max-w-xs sm:w-auto min-h-[44px]" size="lg">
             Book Free Consultation
           </CTAButton>
         </div>
