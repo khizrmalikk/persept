@@ -13,33 +13,33 @@ import { StaggerContainer, StaggerItem, FadeUp } from "@/components/ui/scroll-an
 const painPoints = [
   {
     icon: MessageSquareWarning,
-    title: "Drowning in guest messages",
-    desc: "WhatsApp, email, OTAs — your team copies and pastes the same replies hundreds of times a week.",
+    title: "WhatsApp won't stop buzzing",
+    desc: "Your phone won't stop buzzing with guest messages. Your thumb has carpal tunnel from copy-pasting the same replies.",
   },
   {
     icon: Star,
-    title: "Reviews slipping through the cracks",
-    desc: "Negative reviews sit unanswered for days. Positive ones never get a thank-you that drives loyalty.",
+    title: "That review is still sitting there",
+    desc: "That 2-star review from last week? Still sitting there. Unanswered. Mocking you. Ruining your rating.",
   },
   {
     icon: CalendarX,
-    title: "Staff scheduling nightmares",
-    desc: "Building rosters manually, scrambling for cover, overtime surprises eating into margins.",
+    title: "Scheduling is a nightmare",
+    desc: "Making the staff rota feels like playing Tetris blindfolded. With angry pieces that call in sick.",
   },
   {
     icon: BarChart3,
-    title: "Reporting takes all Monday morning",
-    desc: "Pulling numbers from 5 different dashboards into a spreadsheet nobody reads until Tuesday.",
+    title: "Monday morning reporting hell",
+    desc: "It's Monday. You're pulling data from 6 different systems into Excel. Again. Your soul dies a little.",
   },
   {
     icon: Clock,
-    title: "15–20 hours per week wasted",
-    desc: "Your best people spend their days on tasks a well-trained AI agent could handle instantly.",
+    title: "15–20 hours per week — gone",
+    desc: "Your best people spend their days on tasks a well-trained AI agent could handle instantly. That's not a team, that's a copy machine.",
   },
   {
     icon: Users,
-    title: "Can't scale without headcount",
-    desc: "Every new property or outlet means hiring more operations staff — and that takes months.",
+    title: "Can't grow without hiring",
+    desc: "Every new property means hiring more ops staff — and that takes months. Your ambition moves faster than your headcount.",
   },
 ];
 
@@ -55,13 +55,14 @@ export function Problem() {
           </FadeUp>
           <FadeUp delay={0.1}>
             <h2 className="mt-3 text-[clamp(1.75rem,3.5vw,2.5rem)] font-bold leading-tight tracking-[-0.02em] text-white">
-              Is Your Team Drowning In&hellip;
+              Sound Familiar?&nbsp;🤦
             </h2>
           </FadeUp>
           <FadeUp delay={0.15}>
             <p className="mt-3 text-[15px] leading-relaxed text-white/50">
-              These operational bottlenecks cost Dubai hospitality businesses
-              thousands of dirhams every month.
+              If you&apos;re nodding along, you&apos;re not alone. These
+              operational headaches cost Dubai hospitality businesses thousands
+              of dirhams every month.
             </p>
           </FadeUp>
         </div>

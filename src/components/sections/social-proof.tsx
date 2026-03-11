@@ -45,7 +45,7 @@ export function SocialProof() {
         <div className="mx-auto max-w-2xl text-center">
           <FadeUp>
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-red-500">
-              Proven results
+              Don&apos;t just take our word for it
             </p>
           </FadeUp>
           <FadeUp delay={0.1}>
@@ -80,39 +80,50 @@ export function SocialProof() {
           ))}
         </StaggerContainer>
 
-        <FadeUp delay={0.3} className="mx-auto mt-12 max-w-3xl">
-          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-8 sm:p-10">
-            <div className="flex flex-col items-center gap-5 text-center">
-              <div className="flex gap-0.5">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-amber-500 text-amber-500" />
-                ))}
-              </div>
-
-              <blockquote className="text-[15px] leading-relaxed text-white/60 sm:text-[16px]">
-                &ldquo;We deployed Persept&apos;s AI agents across our three
-                properties in Dubai Marina. Within the first month, our front
-                office team reclaimed over 18 hours per week. The review
-                response time went from 48 hours to under 10 minutes. It&apos;s
-                been transformational.&rdquo;
-              </blockquote>
-
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10 text-[13px] font-bold text-red-500">
-                  OD
+        <StaggerContainer className="mt-12 grid gap-4 md:grid-cols-3">
+          {[
+            {
+              quote: "Finally, someone who responds to guest messages faster than I can say 'check availability.'",
+              initials: "HM",
+              name: "Hotel Manager",
+              location: "Palm Jumeirah",
+            },
+            {
+              quote: "Marcus saved my Google rating. I owe him a drink. Except he's AI. So I owe the developers a drink.",
+              initials: "RO",
+              name: "Resort Owner",
+              location: "Downtown Dubai",
+            },
+            {
+              quote: "We deployed Persept's AI agents across our three properties. Within the first month, our front office team reclaimed over 18 hours per week. It's been transformational.",
+              initials: "OD",
+              name: "Operations Director",
+              location: "Boutique Hotel Group, Dubai Marina",
+            },
+          ].map((t, idx) => (
+            <StaggerItem key={idx}>
+              <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 sm:p-8 transition-all duration-300 hover:border-red-500/20 hover:bg-white/[0.04] h-full flex flex-col">
+                <div className="flex gap-0.5 mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
+                  ))}
                 </div>
-                <div className="text-left">
-                  <p className="text-[13px] font-semibold text-white">
-                    Operations Director
-                  </p>
-                  <p className="text-[12px] text-white/40">
-                    Boutique Hotel Group, Dubai Marina
-                  </p>
+                <blockquote className="text-[14px] leading-relaxed text-white/50 flex-1">
+                  &ldquo;{t.quote}&rdquo;
+                </blockquote>
+                <div className="mt-4 flex items-center gap-3 pt-2 border-t border-white/5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-red-500/10 text-[12px] font-bold text-red-500">
+                    {t.initials}
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[13px] font-semibold text-white/80">{t.name}</p>
+                    <p className="text-[11px] text-white/30">{t.location}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </FadeUp>
+            </StaggerItem>
+          ))}
+        </StaggerContainer>
       </div>
     </section>
   );

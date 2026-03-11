@@ -17,22 +17,25 @@ export function FinalCTA() {
         <div className="mx-auto max-w-2xl text-center">
           <FadeUp>
             <h2 className="text-[clamp(1.75rem,4vw,2.75rem)] font-bold leading-tight tracking-[-0.02em] text-white red-glow-text">
-              Ready to Build Your AI Workforce?
+              Ready to Stop Drowning in Admin?
             </h2>
           </FadeUp>
           <FadeUp delay={0.1}>
             <p className="mt-4 text-[15px] leading-relaxed text-white/50">
-              Book a free 30-minute consultation. We&apos;ll assess your
-              operations and show you exactly where AI agents can save you time
-              and money.
+              Book a 30-minute call. We&apos;ll show you exactly how much time
+              these AI agents can save you. Then you can decide if you want your
+              life back or not.
             </p>
           </FadeUp>
 
           <FadeUp delay={0.2}>
-            <div className="mt-10">
-              <CTAButton size="lg">
-                Book Free Consultation
+            <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-4">
+              <CTAButton size="lg" className="animate-pulse-subtle">
+                Yes, I Want My Life Back
                 <ArrowRight className="h-4 w-4" />
+              </CTAButton>
+              <CTAButton variant="secondary" size="lg">
+                Show Me a Demo First
               </CTAButton>
             </div>
           </FadeUp>

@@ -8,11 +8,12 @@ const steps = [
   {
     number: "01",
     icon: Search,
-    title: "2-Day AI Audit",
+    title: "We Audit Your Chaos",
+    subtitle: "30-min call where you tell us your pain points and we nod empathetically.",
     price: "$3,500",
     duration: "2 business days",
     description:
-      "We map your operations, identify the highest-impact automation opportunities, and deliver a concrete implementation plan.",
+      "We map your operations, identify the highest-impact automation opportunities, and deliver a concrete plan. No jargon, no fluff — just a clear picture of what's eating your time.",
     deliverables: [
       "Operations workflow audit",
       "AI opportunity scoring matrix",
@@ -23,11 +24,12 @@ const steps = [
   {
     number: "02",
     icon: Rocket,
-    title: "30-Day Deployment",
+    title: "We Build Your AI Team",
+    subtitle: "Sarah, Marcus, Olivia, and Alex get trained on YOUR hotel's vibe.",
     price: "$12,000",
     duration: "30 days",
     description:
-      "We build, train, and deploy your custom AI agents — fully integrated with your existing systems and tested with real scenarios.",
+      "We build, train, and deploy your custom AI agents — fully integrated with your existing systems. They learn your tone, your processes, your quirks.",
     deliverables: [
       "Custom AI agents for your operations",
       "Integration with PMS, POS, OTAs, and channels",
@@ -38,11 +40,12 @@ const steps = [
   {
     number: "03",
     icon: RefreshCw,
-    title: "Ongoing Optimization",
+    title: "We Deploy the Magic",
+    subtitle: "30 days later, your AI workforce is handling tasks while you look like a genius.",
     price: "$5,000/mo",
     duration: "Monthly",
     description:
-      "Continuous monitoring, improvement, and expansion of your AI workforce — plus priority support and new capabilities.",
+      "Continuous monitoring, improvement, and expansion of your AI workforce. Your agents get smarter every month.",
     deliverables: [
       "Monthly performance reports and tuning",
       "New agent training as your needs evolve",
@@ -101,6 +104,11 @@ export function HowItWorks() {
                   <h3 className="text-[18px] font-bold text-white">
                     {step.title}
                   </h3>
+                  {step.subtitle && (
+                    <p className="mt-1.5 text-[13px] italic text-red-400/70">
+                      {step.subtitle}
+                    </p>
+                  )}
                   <p className="mt-2 text-[13px] leading-relaxed text-white/40">
                     {step.description}
                   </p>
@@ -121,6 +129,17 @@ export function HowItWorks() {
             </StaggerItem>
           ))}
         </StaggerContainer>
+
+        <FadeUp delay={0.25} className="mx-auto mt-8 max-w-lg">
+          <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 text-center">
+            <p className="text-[15px] font-semibold text-white">
+              Step 4: You Reclaim Your Life
+            </p>
+            <p className="mt-2 text-[13px] text-white/40">
+              15–20 hours back every week. Use them wisely. Or don&apos;t. We&apos;re not your boss.
+            </p>
+          </div>
+        </FadeUp>
 
         <FadeUp delay={0.3} className="mt-12 text-center">
           <CTAButton size="lg">

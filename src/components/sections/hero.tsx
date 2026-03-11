@@ -34,28 +34,34 @@ export function Hero() {
 
           <FadeUp delay={0.1}>
             <h1 className="mt-5 text-[clamp(2.25rem,5.5vw,4.25rem)] font-bold leading-[1.08] tracking-[-0.035em] text-white red-glow-text">
-              Save 15–20 Hours Per Week
+              Your Hotel&apos;s AI Dream Team.
               <br />
-              <span className="text-red-500">with Your Own AI Workforce</span>
+              <span className="text-red-500">They Work 24/7 and Never Ask for Eid Holidays.&nbsp;🌙</span>
             </h1>
           </FadeUp>
 
           <FadeUp delay={0.2}>
             <p className="mx-auto mt-6 max-w-2xl text-[clamp(1rem,1.5vw,1.15rem)] leading-relaxed text-white/50">
-              Purpose-built AI agents that handle guest communications, review
-              management, staff scheduling, and reporting — so your team focuses
-              on delivering exceptional hospitality.
+              Four tireless AI agents who handle guest messages, reviews,
+              scheduling, and reports while your team focuses on the parts of
+              hospitality that actually require a heartbeat.
+            </p>
+          </FadeUp>
+
+          <FadeUp delay={0.25}>
+            <p className="mx-auto mt-3 max-w-xl text-[14px] italic text-white/30">
+              No sick days. No drama. No &ldquo;I forgot to check WhatsApp.&rdquo; Just results.
             </p>
           </FadeUp>
 
           <FadeUp delay={0.3}>
             <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
               <CTAButton size="lg">
-                Book a Free Consultation
+                Yes, I Want My Life Back
                 <ArrowRight className="h-4 w-4" />
               </CTAButton>
               <CTAButton variant="secondary" size="lg" href="#how-it-works">
-                See How It Works
+                Show Me a Demo First
               </CTAButton>
             </div>
           </FadeUp>
