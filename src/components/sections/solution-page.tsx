@@ -22,9 +22,11 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Footer } from "@/components/sections/footer";
 import { Header } from "@/components/sections/header";
 import { CTAButton } from "@/components/ui/cta-button";
+import { FadeUp, StaggerContainer, SlideIn } from "@/components/ui/scroll-animations";
 
 /* ================================================================== */
 /*  Data                                                               */
@@ -370,17 +372,23 @@ function SectionHeader({
   return (
     <div className="mx-auto max-w-2xl text-center">
       {label && (
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#b91c1c]">
-          {label}
-        </p>
+        <FadeUp>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#b91c1c]">
+            {label}
+          </p>
+        </FadeUp>
       )}
-      <h2 className="mt-2 text-[clamp(1.5rem,3.5vw,2.25rem)] font-bold leading-tight tracking-[-0.02em] text-white">
-        {title}
-      </h2>
+      <FadeUp delay={0.1}>
+        <h2 className="mt-2 text-[clamp(1.5rem,3.5vw,2.25rem)] font-bold leading-tight tracking-[-0.02em] text-white">
+          {title}
+        </h2>
+      </FadeUp>
       {subtitle && (
-        <p className="mt-3 text-[15px] leading-relaxed text-[#a3a3a3]">
-          {subtitle}
-        </p>
+        <FadeUp delay={0.2}>
+          <p className="mt-3 text-[15px] leading-relaxed text-[#a3a3a3]">
+            {subtitle}
+          </p>
+        </FadeUp>
       )}
     </div>
   );
@@ -389,7 +397,11 @@ function SectionHeader({
 function ProblemCard({ problem }: { problem: (typeof problems)[number] }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="rounded-2xl border border-[#262626] bg-[#0a0a0a] p-6 md:p-8">
+    <motion.div 
+      className="rounded-2xl border border-[#262626] bg-[#0a0a0a] p-6 md:p-8 transition-all duration-300 hover:border-[#b91c1c]/30 hover:shadow-[0_0_30px_rgba(185,28,28,0.1)]"
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.2 }}
+    >
       <div className="flex items-start gap-4">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[rgba(185,28,28,0.1)]">
           <problem.icon className="h-5 w-5 text-[#b91c1c]" />
@@ -425,14 +437,19 @@ function ProblemCard({ problem }: { problem: (typeof problems)[number] }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="mt-4 flex cursor-pointer items-center gap-1.5 text-[13px] font-medium text-[#b91c1c]"
+        className="mt-4 flex cursor-pointer items-center gap-1.5 text-[13px] font-medium text-[#b91c1c] hover:text-[#dc2626] transition-colors"
       >
         What you've tried
         <ChevronDown
           className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`}
         />
       </button>
-      {open && (
+      <motion.div
+        initial={false}
+        animate={{ height: open ? "auto" : 0, opacity: open ? 1 : 0 }}
+        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        className="overflow-hidden"
+      >
         <ul className="mt-3 space-y-1.5 border-t border-[#1f1f1f] pt-3">
           {problem.tried.map((t) => (
             <li key={t} className="text-[13px] text-[#a3a3a3]">
@@ -440,14 +457,18 @@ function ProblemCard({ problem }: { problem: (typeof problems)[number] }) {
             </li>
           ))}
         </ul>
-      )}
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
 function OldSolutionCard({ sol }: { sol: (typeof oldSolutions)[number] }) {
   return (
-    <div className="rounded-2xl border border-[#262626] bg-[#0a0a0a] p-6 md:p-8">
+    <motion.div 
+      className="rounded-2xl border border-[#262626] bg-[#0a0a0a] p-6 md:p-8 transition-all duration-300 hover:border-[#525252]"
+      whileHover={{ scale: 1.02 }}
+      transition={{ duration: 0.2 }}
+    >
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#111111]">
           <sol.icon className="h-5 w-5 text-[#a3a3a3]" />
@@ -494,7 +515,7 @@ function OldSolutionCard({ sol }: { sol: (typeof oldSolutions)[number] }) {
       <p className="mt-5 rounded-lg border border-[#991b1b/30] bg-[rgba(185,28,28,0.1)] p-3 text-[13px] font-medium text-[#991b1b]">
         {sol.verdict}
       </p>
-    </div>
+    </motion.div>
   );
 }
 
@@ -508,7 +529,11 @@ function AgentProfile({
   const [showExample, setShowExample] = useState(false);
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className={`flex flex-col gap-6 md:gap-10 ${reversed ? "md:flex-row-reverse" : "md:flex-row"}`}
     >
       {/* Info */}
@@ -552,7 +577,7 @@ function AgentProfile({
         <button
           type="button"
           onClick={() => setShowExample((v) => !v)}
-          className="mb-3 flex cursor-pointer items-center gap-1.5 text-[13px] font-medium"
+          className="mb-3 flex cursor-pointer items-center gap-1.5 text-[13px] font-medium hover:opacity-80 transition-opacity"
           style={{ color: agent.color }}
         >
           {showExample ? "Hide" : "See"} example: {agent.exampleLabel}
@@ -561,6 +586,15 @@ function AgentProfile({
           />
         </button>
 
+        <motion.div
+          initial={false}
+          animate={{ 
+            height: showExample ? "auto" : 240,
+            opacity: 1
+          }}
+          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          className="overflow-hidden"
+        >
         {showExample && (
           <div className="rounded-2xl border border-[#262626] bg-[#111111] p-5">
             {agent.exampleGuest && (
@@ -601,8 +635,9 @@ function AgentProfile({
             />
           </div>
         )}
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -645,11 +680,13 @@ export function SolutionPage() {
             title="Running a Hotel Shouldn't Feel Like Surviving a Disaster Movie 🔥"
             subtitle="If any of these sound familiar, you're not alone. (And no, it's not your fault.)"
           />
-          <div className="mx-auto mt-12 grid max-w-4xl gap-6 md:grid-cols-2">
-            {problems.map((p) => (
-              <ProblemCard key={p.title} problem={p} />
+          <StaggerContainer className="mx-auto mt-12 grid max-w-4xl gap-6 md:grid-cols-2">
+            {problems.map((p, idx) => (
+              <FadeUp key={p.title} delay={idx * 0.1}>
+                <ProblemCard problem={p} />
+              </FadeUp>
             ))}
-          </div>
+          </StaggerContainer>
         </div>
       </section>
 
@@ -661,11 +698,13 @@ export function SolutionPage() {
             title="You've Tried Everything. Nothing Worked. We Know. 🤷"
             subtitle="Zapier, chatbots, hiring more people... Here's why they all missed the mark."
           />
-          <div className="mx-auto mt-12 grid max-w-5xl gap-6 lg:grid-cols-3">
-            {oldSolutions.map((s) => (
-              <OldSolutionCard key={s.title} sol={s} />
+          <StaggerContainer className="mx-auto mt-12 grid max-w-5xl gap-6 lg:grid-cols-3">
+            {oldSolutions.map((s, idx) => (
+              <FadeUp key={s.title} delay={idx * 0.15}>
+                <OldSolutionCard sol={s} />
+              </FadeUp>
             ))}
-          </div>
+          </StaggerContainer>
         </div>
       </section>
 
@@ -679,7 +718,7 @@ export function SolutionPage() {
           />
 
           {/* Comparison callout */}
-          <div className="mx-auto mt-10 grid max-w-3xl gap-4 sm:grid-cols-3">
+          <StaggerContainer className="mx-auto mt-10 grid max-w-3xl gap-4 sm:grid-cols-3">
             {[
               {
                 label: "Zapier",
@@ -696,20 +735,23 @@ export function SolutionPage() {
                 desc: "A trained team member — understands, adapts, handles complexity",
                 muted: false,
               },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className={`rounded-xl border p-4 text-center ${item.muted ? "border-[#262626] bg-[#111111]" : "border-[#b91c1c] bg-[rgba(185,28,28,0.1)]"}`}
-              >
+            ].map((item, idx) => (
+              <FadeUp key={item.label} delay={idx * 0.1}>
+                <motion.div
+                  className={`rounded-xl border p-4 text-center transition-all duration-300 ${item.muted ? "border-[#262626] bg-[#111111]" : "border-[#b91c1c] bg-[rgba(185,28,28,0.1)]"}`}
+                  whileHover={{ scale: item.muted ? 1 : 1.05 }}
+                  transition={{ duration: 0.2 }}
+                >
                 <p
                   className={`text-[14px] font-bold ${item.muted ? "text-[#a3a3a3]" : "text-[#b91c1c]"}`}
                 >
                   {item.label}
                 </p>
                 <p className="mt-1 text-[12px] text-[#a3a3a3]">{item.desc}</p>
-              </div>
+                </motion.div>
+              </FadeUp>
             ))}
-          </div>
+          </StaggerContainer>
 
           {/* Agent profiles */}
           <div className="mx-auto mt-16 max-w-5xl space-y-16">
@@ -739,7 +781,7 @@ export function SolutionPage() {
             </p>
           </div>
 
-          <div className="mt-10 space-y-4">
+          <StaggerContainer className="mt-10 space-y-4">
             {[
               {
                 time: "Friday 8 AM",
@@ -777,11 +819,13 @@ export function SolutionPage() {
                 color: "#1d4ed8",
                 text: "Alerts GM: F&B revenue up 25% vs. last Saturday. Suggests Sunday brunch promo.",
               },
-            ].map((event) => (
-              <div
-                key={event.time}
-                className="flex items-start gap-4 rounded-xl bg-[#0a0a0a]/5 p-4"
-              >
+            ].map((event, idx) => (
+              <FadeUp key={event.time} delay={idx * 0.1}>
+                <motion.div
+                  className="flex items-start gap-4 rounded-xl bg-[#0a0a0a]/5 p-4 hover:bg-[#111111] transition-colors duration-300"
+                  whileHover={{ x: 4 }}
+                  transition={{ duration: 0.2 }}
+                >
                 <div
                   className="mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full"
                   style={{ backgroundColor: event.color }}
