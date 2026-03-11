@@ -51,6 +51,10 @@ export const metadata: Metadata = {
     shortcut: "/logo_persept_red.png",
     apple: "/logo_persept_red.png",
   },
+  other: {
+    'theme-color': '#0a0a0a',
+    'color-scheme': 'dark',
+  },
   openGraph: {
     title: "Persept AI Workforce Solutions — AI Agents for Dubai Hospitality",
     description:

@@ -374,11 +374,11 @@ function SectionHeader({
           {label}
         </p>
       )}
-      <h2 className="mt-2 text-[clamp(1.5rem,3.5vw,2.25rem)] font-bold leading-tight tracking-[-0.02em] text-[#0c1222]">
+      <h2 className="mt-2 text-[clamp(1.5rem,3.5vw,2.25rem)] font-bold leading-tight tracking-[-0.02em] text-white">
         {title}
       </h2>
       {subtitle && (
-        <p className="mt-3 text-[15px] leading-relaxed text-[#5a6785]">
+        <p className="mt-3 text-[15px] leading-relaxed text-[#a3a3a3]">
           {subtitle}
         </p>
       )}
@@ -389,27 +389,27 @@ function SectionHeader({
 function ProblemCard({ problem }: { problem: (typeof problems)[number] }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="rounded-2xl border border-[#e4e8ef] bg-white p-6 md:p-8">
+    <div className="rounded-2xl border border-[#262626] bg-[#0a0a0a] p-6 md:p-8">
       <div className="flex items-start gap-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#fef2f2]">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[rgba(185,28,28,0.1)]">
           <problem.icon className="h-5 w-5 text-[#b91c1c]" />
         </div>
         <div className="flex-1">
-          <h3 className="text-[17px] font-bold text-[#0c1222]">
+          <h3 className="text-[17px] font-bold text-white">
             {problem.title}
           </h3>
           <div className="mt-1 flex items-baseline gap-2">
             <span className="text-[22px] font-bold text-[#b91c1c]">
               {problem.stat}
             </span>
-            <span className="text-[13px] text-[#5a6785]">
+            <span className="text-[13px] text-[#a3a3a3]">
               {problem.statLabel}
             </span>
           </div>
         </div>
       </div>
 
-      <p className="mt-4 text-[14px] leading-relaxed text-[#5a6785]">
+      <p className="mt-4 text-[14px] leading-relaxed text-[#a3a3a3]">
         {problem.description}
       </p>
 
@@ -417,7 +417,7 @@ function ProblemCard({ problem }: { problem: (typeof problems)[number] }) {
         {problem.damages.map((d) => (
           <li key={d} className="flex items-start gap-2 text-[13px]">
             <X className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#ef4444]" />
-            <span className="text-[#3d4b63]">{d}</span>
+            <span className="text-[#a3a3a3]">{d}</span>
           </li>
         ))}
       </ul>
@@ -433,9 +433,9 @@ function ProblemCard({ problem }: { problem: (typeof problems)[number] }) {
         />
       </button>
       {open && (
-        <ul className="mt-3 space-y-1.5 border-t border-[#f0f2f5] pt-3">
+        <ul className="mt-3 space-y-1.5 border-t border-[#1f1f1f] pt-3">
           {problem.tried.map((t) => (
-            <li key={t} className="text-[13px] text-[#5a6785]">
+            <li key={t} className="text-[13px] text-[#a3a3a3]">
               • {t}
             </li>
           ))}
@@ -447,18 +447,18 @@ function ProblemCard({ problem }: { problem: (typeof problems)[number] }) {
 
 function OldSolutionCard({ sol }: { sol: (typeof oldSolutions)[number] }) {
   return (
-    <div className="rounded-2xl border border-[#e4e8ef] bg-white p-6 md:p-8">
+    <div className="rounded-2xl border border-[#262626] bg-[#0a0a0a] p-6 md:p-8">
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f7f8fa]">
-          <sol.icon className="h-5 w-5 text-[#5a6785]" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#111111]">
+          <sol.icon className="h-5 w-5 text-[#a3a3a3]" />
         </div>
         <div>
-          <h3 className="text-[16px] font-bold text-[#0c1222]">{sol.title}</h3>
-          <p className="text-[12px] text-[#5a6785]">{sol.subtitle}</p>
+          <h3 className="text-[16px] font-bold text-white">{sol.title}</h3>
+          <p className="text-[12px] text-[#a3a3a3]">{sol.subtitle}</p>
         </div>
       </div>
 
-      <p className="mt-4 rounded-lg bg-[#f7f8fa] p-3 text-[13px] italic text-[#5a6785]">
+      <p className="mt-4 rounded-lg bg-[#111111] p-3 text-[13px] italic text-[#a3a3a3]">
         "{sol.promise}"
       </p>
 
@@ -471,7 +471,7 @@ function OldSolutionCard({ sol }: { sol: (typeof oldSolutions)[number] }) {
             {sol.canDo.map((c) => (
               <li key={c} className="flex items-start gap-2 text-[13px]">
                 <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#047857]" />
-                <span className="text-[#3d4b63]">{c}</span>
+                <span className="text-[#a3a3a3]">{c}</span>
               </li>
             ))}
           </ul>
@@ -484,14 +484,14 @@ function OldSolutionCard({ sol }: { sol: (typeof oldSolutions)[number] }) {
             {sol.cantDo.map((c) => (
               <li key={c} className="flex items-start gap-2 text-[13px]">
                 <X className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#ef4444]" />
-                <span className="text-[#3d4b63]">{c}</span>
+                <span className="text-[#a3a3a3]">{c}</span>
               </li>
             ))}
           </ul>
         </div>
       </div>
 
-      <p className="mt-5 rounded-lg border border-[#fecaca] bg-[#fef2f2] p-3 text-[13px] font-medium text-[#991b1b]">
+      <p className="mt-5 rounded-lg border border-[#991b1b/30] bg-[rgba(185,28,28,0.1)] p-3 text-[13px] font-medium text-[#991b1b]">
         {sol.verdict}
       </p>
     </div>
@@ -521,10 +521,10 @@ function AgentProfile({
             <agent.icon className="h-5 w-5" style={{ color: agent.color }} />
           </div>
           <div>
-            <h3 className="text-[18px] font-bold text-[#0c1222]">
+            <h3 className="text-[18px] font-bold text-white">
               {agent.name}
             </h3>
-            <p className="text-[13px] font-medium text-[#5a6785]">
+            <p className="text-[13px] font-medium text-[#a3a3a3]">
               {agent.role}
             </p>
           </div>
@@ -537,12 +537,12 @@ function AgentProfile({
                 className="mt-0.5 h-4 w-4 shrink-0"
                 style={{ color: agent.color }}
               />
-              <span className="text-[#3d4b63]">{c}</span>
+              <span className="text-[#a3a3a3]">{c}</span>
             </li>
           ))}
         </ul>
 
-        <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#f7f8fa] px-4 py-2 text-[13px] font-semibold text-[#0c1222]">
+        <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#111111] px-4 py-2 text-[13px] font-semibold text-white">
           {agent.impact}
         </div>
       </div>
@@ -562,13 +562,13 @@ function AgentProfile({
         </button>
 
         {showExample && (
-          <div className="rounded-2xl border border-[#e4e8ef] bg-[#f7f8fa] p-5">
+          <div className="rounded-2xl border border-[#262626] bg-[#111111] p-5">
             {agent.exampleGuest && (
               <div className="mb-3">
-                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#5a6785]">
+                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#a3a3a3]">
                   Guest
                 </p>
-                <div className="rounded-xl rounded-tl-sm bg-white p-3 text-[13px] leading-relaxed text-[#3d4b63]">
+                <div className="rounded-xl rounded-tl-sm bg-[#0a0a0a] p-3 text-[13px] leading-relaxed text-[#a3a3a3]">
                   {agent.exampleGuest}
                 </div>
               </div>
@@ -616,12 +616,12 @@ export function SolutionPage() {
       <Header />
 
       {/* ── Hero ───────────────────────────────────── */}
-      <section className="bg-gradient-to-b from-[#f7f8fa] to-white py-24 sm:py-32">
+      <section className="bg-gradient-to-b from-[#111111] to-[#0a0a0a] py-24 sm:py-32">
         <div className="mx-auto max-w-3xl px-6 text-center lg:px-8">
-          <h1 className="fade-up text-[clamp(1.75rem,4.5vw,3rem)] font-bold leading-tight tracking-[-0.02em] text-[#0c1222]">
+          <h1 className="fade-up text-[clamp(1.75rem,4.5vw,3rem)] font-bold leading-tight tracking-[-0.02em] text-white">
             Hotel Operations Shouldn't Feel Like Chaos
           </h1>
-          <p className="fade-up delay-1 mt-5 text-[16px] leading-relaxed text-[#5a6785]">
+          <p className="fade-up delay-1 mt-5 text-[16px] leading-relaxed text-[#a3a3a3]">
             Your team is drowning in repetitive tasks. Guests wait hours for
             responses. Staff turnover is constant. There has to be a better way.
           </p>
@@ -638,7 +638,7 @@ export function SolutionPage() {
       </section>
 
       {/* ── Section 1: The Problems ────────────────── */}
-      <section className="bg-white py-20 sm:py-24">
+      <section className="bg-[#0a0a0a] py-20 sm:py-24">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <SectionHeader
             label="The reality"
@@ -654,7 +654,7 @@ export function SolutionPage() {
       </section>
 
       {/* ── Section 2: Old Solutions ───────────────── */}
-      <section className="bg-[#f7f8fa] py-20 sm:py-24">
+      <section className="bg-[#111111] py-20 sm:py-24">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <SectionHeader
             label="Why they fail"
@@ -670,7 +670,7 @@ export function SolutionPage() {
       </section>
 
       {/* ── Section 3: Our Solution — The Agents ──── */}
-      <section className="bg-white py-20 sm:py-24">
+      <section className="bg-[#0a0a0a] py-20 sm:py-24">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <SectionHeader
             label="Our solution"
@@ -699,14 +699,14 @@ export function SolutionPage() {
             ].map((item) => (
               <div
                 key={item.label}
-                className={`rounded-xl border p-4 text-center ${item.muted ? "border-[#e4e8ef] bg-[#f7f8fa]" : "border-[#b91c1c] bg-[#fef2f2]"}`}
+                className={`rounded-xl border p-4 text-center ${item.muted ? "border-[#262626] bg-[#111111]" : "border-[#b91c1c] bg-[rgba(185,28,28,0.1)]"}`}
               >
                 <p
-                  className={`text-[14px] font-bold ${item.muted ? "text-[#5a6785]" : "text-[#b91c1c]"}`}
+                  className={`text-[14px] font-bold ${item.muted ? "text-[#a3a3a3]" : "text-[#b91c1c]"}`}
                 >
                   {item.label}
                 </p>
-                <p className="mt-1 text-[12px] text-[#5a6785]">{item.desc}</p>
+                <p className="mt-1 text-[12px] text-[#a3a3a3]">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -725,7 +725,7 @@ export function SolutionPage() {
       </section>
 
       {/* ── Scenario: How It All Works Together ───── */}
-      <section className="bg-[#0c1222] py-20 sm:py-24">
+      <section className="bg-[#0a0a0a] py-20 sm:py-24 border-y border-[#262626]">
         <div className="mx-auto max-w-4xl px-6 lg:px-8">
           <div className="text-center">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#b91c1c]">
@@ -780,7 +780,7 @@ export function SolutionPage() {
             ].map((event) => (
               <div
                 key={event.time}
-                className="flex items-start gap-4 rounded-xl bg-white/5 p-4"
+                className="flex items-start gap-4 rounded-xl bg-[#0a0a0a]/5 p-4"
               >
                 <div
                   className="mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full"
@@ -804,7 +804,7 @@ export function SolutionPage() {
             ))}
           </div>
 
-          <div className="mt-8 rounded-xl bg-white/10 p-5">
+          <div className="mt-8 rounded-xl bg-[#0a0a0a]/10 p-5">
             <p className="text-[13px] font-semibold text-white">
               Weekend result:
             </p>
@@ -823,7 +823,7 @@ export function SolutionPage() {
       </section>
 
       {/* ── Section 4: Why Different ───────────────── */}
-      <section className="bg-white py-20 sm:py-24">
+      <section className="bg-[#0a0a0a] py-20 sm:py-24">
         <div className="mx-auto max-w-5xl px-6 lg:px-8">
           <SectionHeader
             label="The difference"
@@ -833,28 +833,28 @@ export function SolutionPage() {
             {differences.map((d) => (
               <div
                 key={d.title}
-                className="rounded-2xl border border-[#e4e8ef] p-6"
+                className="rounded-2xl border border-[#262626] p-6"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fef2f2]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(185,28,28,0.1)]">
                     <d.icon className="h-5 w-5 text-[#b91c1c]" />
                   </div>
-                  <h3 className="text-[15px] font-bold text-[#0c1222]">
+                  <h3 className="text-[15px] font-bold text-white">
                     {d.title}
                   </h3>
                 </div>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-lg bg-[#f7f8fa] p-3">
+                  <div className="rounded-lg bg-[#111111] p-3">
                     <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#ef4444]">
                       Typical tools
                     </p>
-                    <p className="text-[13px] text-[#5a6785]">{d.old}</p>
+                    <p className="text-[13px] text-[#a3a3a3]">{d.old}</p>
                   </div>
-                  <div className="rounded-lg bg-[#ecfdf5] p-3">
+                  <div className="rounded-lg bg-[rgba(4,120,87,0.1)] p-3">
                     <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#047857]">
                       Persept
                     </p>
-                    <p className="text-[13px] text-[#3d4b63]">{d.ours}</p>
+                    <p className="text-[13px] text-[#a3a3a3]">{d.ours}</p>
                   </div>
                 </div>
               </div>
@@ -864,7 +864,7 @@ export function SolutionPage() {
       </section>
 
       {/* ── Section 5: Before / After ─────────────── */}
-      <section className="bg-[#f7f8fa] py-20 sm:py-24">
+      <section className="bg-[#111111] py-20 sm:py-24">
         <div className="mx-auto max-w-5xl px-6 lg:px-8">
           <SectionHeader
             label="The transformation"
@@ -874,11 +874,11 @@ export function SolutionPage() {
 
           <div className="mt-12 grid gap-6 md:grid-cols-2">
             {/* Before */}
-            <div className="rounded-2xl border border-[#fecaca] bg-white p-6 md:p-8">
+            <div className="rounded-2xl border border-[#991b1b/30] bg-[#0a0a0a] p-6 md:p-8">
               <p className="text-[13px] font-bold uppercase tracking-wide text-[#ef4444]">
                 Before Persept
               </p>
-              <ul className="mt-4 space-y-3 text-[13px] text-[#5a6785]">
+              <ul className="mt-4 space-y-3 text-[13px] text-[#a3a3a3]">
                 <li>7 AM — Spend 2 hours answering 20+ guest emails</li>
                 <li>
                   9 AM — Answer phone calls (same questions, over and over)
@@ -894,11 +894,11 @@ export function SolutionPage() {
             </div>
 
             {/* After */}
-            <div className="rounded-2xl border border-[#86efac] bg-white p-6 md:p-8">
+            <div className="rounded-2xl border border-[#047857/30] bg-[#0a0a0a] p-6 md:p-8">
               <p className="text-[13px] font-bold uppercase tracking-wide text-[#047857]">
                 After Persept
               </p>
-              <ul className="mt-4 space-y-3 text-[13px] text-[#3d4b63]">
+              <ul className="mt-4 space-y-3 text-[13px] text-[#a3a3a3]">
                 <li>7 AM — Check Sarah's escalations (5 min)</li>
                 <li>8 AM — Review Alex's revenue report (5 min)</li>
                 <li>8:30 AM — Approve Olivia's schedule (10 min)</li>
@@ -920,12 +920,12 @@ export function SolutionPage() {
             ].map((s) => (
               <div
                 key={s.label}
-                className="rounded-xl border border-[#e4e8ef] bg-white p-5 text-center"
+                className="rounded-xl border border-[#262626] bg-[#0a0a0a] p-5 text-center"
               >
                 <p className="text-[28px] font-bold tracking-tight text-[#b91c1c]">
                   {s.value}
                 </p>
-                <p className="mt-1 text-[13px] text-[#5a6785]">{s.label}</p>
+                <p className="mt-1 text-[13px] text-[#a3a3a3]">{s.label}</p>
               </div>
             ))}
           </div>
@@ -933,7 +933,7 @@ export function SolutionPage() {
       </section>
 
       {/* ── Section 6: Implementation Timeline ────── */}
-      <section className="bg-white py-20 sm:py-24">
+      <section className="bg-[#0a0a0a] py-20 sm:py-24">
         <div className="mx-auto max-w-4xl px-6 lg:px-8">
           <SectionHeader
             label="Implementation"
@@ -946,11 +946,11 @@ export function SolutionPage() {
                   <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#b91c1c] text-[12px] font-bold text-white">
                     {idx + 1}
                   </span>
-                  <span className="text-[12px] font-medium text-[#5a6785]">
+                  <span className="text-[12px] font-medium text-[#a3a3a3]">
                     {step.day}
                   </span>
                 </div>
-                <h3 className="text-[15px] font-bold text-[#0c1222]">
+                <h3 className="text-[15px] font-bold text-white">
                   {step.title}
                 </h3>
                 <ul className="mt-3 space-y-1.5">
@@ -960,7 +960,7 @@ export function SolutionPage() {
                       className="flex items-start gap-2 text-[13px]"
                     >
                       <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#b91c1c]" />
-                      <span className="text-[#5a6785]">{item}</span>
+                      <span className="text-[#a3a3a3]">{item}</span>
                     </li>
                   ))}
                 </ul>
@@ -984,7 +984,7 @@ export function SolutionPage() {
             <CTAButton
               variant="secondary"
               size="lg"
-              className="border-white/20 bg-white text-[#b91c1c] hover:bg-white/90"
+              className="border-white/20 bg-[#0a0a0a] text-[#b91c1c] hover:bg-[#0a0a0a]/90"
             >
               Book Free Consultation
             </CTAButton>
@@ -992,7 +992,7 @@ export function SolutionPage() {
               variant="secondary"
               size="lg"
               href="/pricing"
-              className="border-white/30 bg-transparent text-white hover:bg-white/10"
+              className="border-white/30 bg-transparent text-white hover:bg-[#0a0a0a]/10"
             >
               See Pricing
             </CTAButton>
@@ -1001,22 +1001,22 @@ export function SolutionPage() {
       </section>
 
       {/* ── Trust ──────────────────────────────────── */}
-      <section className="bg-white py-20 sm:py-24">
+      <section className="bg-[#0a0a0a] py-20 sm:py-24">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <h2 className="text-center text-[clamp(1.5rem,3vw,2rem)] font-bold tracking-[-0.02em] text-[#0c1222]">
+          <h2 className="text-center text-[clamp(1.5rem,3vw,2rem)] font-bold tracking-[-0.02em] text-white">
             Why Hotels Trust Persept
           </h2>
           <div className="mx-auto mt-10 grid max-w-4xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {trustPoints.map((tp) => (
               <div key={tp.title} className="flex gap-3.5">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fef2f2]">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[rgba(185,28,28,0.1)]">
                   <tp.icon className="h-5 w-5 text-[#b91c1c]" />
                 </div>
                 <div>
-                  <h3 className="text-[14px] font-bold text-[#0c1222]">
+                  <h3 className="text-[14px] font-bold text-white">
                     {tp.title}
                   </h3>
-                  <p className="mt-0.5 text-[13px] leading-relaxed text-[#5a6785]">
+                  <p className="mt-0.5 text-[13px] leading-relaxed text-[#a3a3a3]">
                     {tp.desc}
                   </p>
                 </div>
@@ -1027,12 +1027,12 @@ export function SolutionPage() {
       </section>
 
       {/* ── Final CTA ──────────────────────────────── */}
-      <section className="bg-[#f7f8fa] py-16">
+      <section className="bg-[#111111] py-16">
         <div className="mx-auto max-w-2xl px-6 text-center lg:px-8">
-          <h2 className="text-[20px] font-bold text-[#0c1222]">
+          <h2 className="text-[20px] font-bold text-white">
             Stop Fighting the Chaos. Let AI Handle the Repetitive Work.
           </h2>
-          <p className="mt-2 text-[14px] text-[#5a6785]">
+          <p className="mt-2 text-[14px] text-[#a3a3a3]">
             Your team deserves to focus on what matters: delivering exceptional
             guest experiences. Let Sarah, Marcus, Olivia, and Alex handle the
             rest.

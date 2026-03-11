@@ -327,7 +327,7 @@ function TrustBadges() {
       {badges.map((b) => (
         <span
           key={b}
-          className="flex items-center gap-2 text-[13px] font-medium text-[#3d4b63]"
+          className="flex items-center gap-2 text-[13px] font-medium text-[#a3a3a3]"
         >
           <Check className="h-3.5 w-3.5 text-[#b91c1c]" />
           {b}
@@ -345,18 +345,18 @@ function CurrencyToggle({
   setCurrency: (c: Currency) => void;
 }) {
   return (
-    <div className="inline-flex items-center rounded-full border border-[#e4e8ef] bg-white p-1">
+    <div className="inline-flex items-center rounded-full border border-[#262626] bg-[#0a0a0a] p-1">
       <button
         type="button"
         onClick={() => setCurrency("usd")}
-        className={`cursor-pointer rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors ${currency === "usd" ? "bg-[#0c1222] text-white" : "text-[#5a6785] hover:text-[#0c1222]"}`}
+        className={`cursor-pointer rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors ${currency === "usd" ? "bg-white text-[#0a0a0a]" : "text-[#a3a3a3] hover:text-white"}`}
       >
         USD
       </button>
       <button
         type="button"
         onClick={() => setCurrency("aed")}
-        className={`cursor-pointer rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors ${currency === "aed" ? "bg-[#0c1222] text-white" : "text-[#5a6785] hover:text-[#0c1222]"}`}
+        className={`cursor-pointer rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors ${currency === "aed" ? "bg-white text-[#0a0a0a]" : "text-[#a3a3a3] hover:text-white"}`}
       >
         AED
       </button>
@@ -377,7 +377,7 @@ function TierCard({
 
   return (
     <div
-      className={`relative flex flex-col rounded-2xl border p-8 ${popular ? "border-[#b91c1c] shadow-lg shadow-[#b91c1c]/8" : "border-[#e4e8ef]"} bg-white`}
+      className={`relative flex flex-col rounded-2xl border p-8 ${popular ? "border-[#b91c1c] shadow-lg shadow-[#b91c1c]/8" : "border-[#262626]"} bg-[#0a0a0a]`}
     >
       {popular && (
         <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-[#b91c1c] px-4 py-1 text-[11px] font-semibold uppercase tracking-wide text-white">
@@ -385,35 +385,35 @@ function TierCard({
         </span>
       )}
 
-      <h3 className="text-[20px] font-bold text-[#0c1222]">{tier.name}</h3>
-      <p className="mt-1 text-[13px] text-[#5a6785]">{tier.bestFor}</p>
+      <h3 className="text-[20px] font-bold text-white">{tier.name}</h3>
+      <p className="mt-1 text-[13px] text-[#a3a3a3]">{tier.bestFor}</p>
 
-      <div className="mt-6 border-t border-[#e4e8ef] pt-6">
+      <div className="mt-6 border-t border-[#262626] pt-6">
         <div className="flex items-baseline gap-1">
-          <span className="text-[32px] font-bold tracking-tight text-[#0c1222]">
+          <span className="text-[32px] font-bold tracking-tight text-white">
             {sym}
             {fmt(tier.monthly[c])}
           </span>
-          <span className="text-[14px] text-[#5a6785]">/month</span>
+          <span className="text-[14px] text-[#a3a3a3]">/month</span>
         </div>
-        <p className="mt-1 text-[12px] text-[#5a6785]">
+        <p className="mt-1 text-[12px] text-[#a3a3a3]">
           Year 1 total: {sym}
           {fmt(tier.year1[c])} &middot; Year 2+: {sym}
           {fmt(tier.year2[c])}/yr
         </p>
       </div>
 
-      <div className="mt-5 space-y-1.5 rounded-xl bg-[#f7f8fa] p-4 text-[12px] text-[#5a6785]">
+      <div className="mt-5 space-y-1.5 rounded-xl bg-[#111111] p-4 text-[12px] text-[#a3a3a3]">
         <div className="flex justify-between">
           <span>AI Automation Audit</span>
-          <span className="font-medium text-[#0c1222]">
+          <span className="font-medium text-white">
             {sym}
             {fmt(tier.audit[c])}
           </span>
         </div>
         <div className="flex justify-between">
           <span>Deployment &amp; Setup</span>
-          <span className="font-medium text-[#0c1222]">
+          <span className="font-medium text-white">
             {sym}
             {fmt(tier.setup[c])}
           </span>
@@ -424,19 +424,19 @@ function TierCard({
         {tier.highlights.map((h) => (
           <li key={h} className="flex items-start gap-2 text-[13px]">
             <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#b91c1c]" />
-            <span className="text-[#3d4b63]">{h}</span>
+            <span className="text-[#a3a3a3]">{h}</span>
           </li>
         ))}
       </ul>
 
-      <div className="mt-6 rounded-xl bg-[#fef2f2] p-4">
+      <div className="mt-6 rounded-xl bg-[rgba(185,28,28,0.1)] p-4">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-[#b91c1c]">
           Estimated ROI ({tier.roi.rooms}-room property)
         </p>
-        <p className="mt-1 text-[22px] font-bold text-[#0c1222]">
+        <p className="mt-1 text-[22px] font-bold text-white">
           {tier.roi.pct}% return
         </p>
-        <p className="text-[12px] text-[#5a6785]">
+        <p className="text-[12px] text-[#a3a3a3]">
           Payback in {tier.roi.payback} &middot; ${fmt(tier.roi.total)}/yr value
         </p>
       </div>
@@ -454,21 +454,21 @@ function TierCard({
 function FAQItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border-b border-[#e4e8ef]">
+    <div className="border-b border-[#262626]">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="flex w-full cursor-pointer items-center justify-between py-5 text-left"
       >
-        <span className="pr-4 text-[15px] font-semibold text-[#0c1222]">
+        <span className="pr-4 text-[15px] font-semibold text-white">
           {q}
         </span>
         <ChevronDown
-          className={`h-4 w-4 shrink-0 text-[#5a6785] transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          className={`h-4 w-4 shrink-0 text-[#a3a3a3] transition-transform duration-200 ${open ? "rotate-180" : ""}`}
         />
       </button>
       {open && (
-        <p className="pb-5 text-[14px] leading-relaxed text-[#5a6785]">{a}</p>
+        <p className="pb-5 text-[14px] leading-relaxed text-[#a3a3a3]">{a}</p>
       )}
     </div>
   );
@@ -486,12 +486,12 @@ export function PricingPage() {
       <Header />
 
       {/* ── Hero ────────────────────────────────────── */}
-      <section className="bg-gradient-to-b from-[#f7f8fa] to-white py-24 sm:py-28">
+      <section className="bg-gradient-to-b from-[#111111] to-[#0a0a0a] py-24 sm:py-28">
         <div className="mx-auto max-w-3xl px-6 text-center lg:px-8">
-          <h1 className="fade-up text-[clamp(1.75rem,4vw,2.75rem)] font-bold leading-tight tracking-[-0.02em] text-[#0c1222]">
+          <h1 className="fade-up text-[clamp(1.75rem,4vw,2.75rem)] font-bold leading-tight tracking-[-0.02em] text-white">
             Transparent Pricing. No Hidden Fees. Cancel Anytime.
           </h1>
-          <p className="fade-up delay-1 mt-4 text-[15px] leading-relaxed text-[#5a6785]">
+          <p className="fade-up delay-1 mt-4 text-[15px] leading-relaxed text-[#a3a3a3]">
             Choose the plan that fits your property. All plans include our full
             AI workforce (Sarah, Marcus, Olivia, Alex), complete PMS/POS
             integration, and ongoing management.
@@ -501,13 +501,13 @@ export function PricingPage() {
       </section>
 
       {/* ── Pricing Tiers ───────────────────────────── */}
-      <section className="bg-white py-20 sm:py-24">
+      <section className="bg-[#0a0a0a] py-20 sm:py-24">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-[clamp(1.5rem,3vw,2.25rem)] font-bold leading-tight tracking-[-0.02em] text-[#0c1222]">
+            <h2 className="text-[clamp(1.5rem,3vw,2.25rem)] font-bold leading-tight tracking-[-0.02em] text-white">
               Pricing Built for Hotels of Every Size
             </h2>
-            <p className="mt-3 text-[15px] text-[#5a6785]">
+            <p className="mt-3 text-[15px] text-[#a3a3a3]">
               From boutique properties to luxury resorts, we have a plan that
               scales with your business.
             </p>
@@ -525,12 +525,12 @@ export function PricingPage() {
       </section>
 
       {/* ── Add-ons ─────────────────────────────────── */}
-      <section className="bg-[#f7f8fa] py-20 sm:py-24">
+      <section className="bg-[#111111] py-20 sm:py-24">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <h2 className="text-center text-[clamp(1.5rem,3vw,2rem)] font-bold tracking-[-0.02em] text-[#0c1222]">
+          <h2 className="text-center text-[clamp(1.5rem,3vw,2rem)] font-bold tracking-[-0.02em] text-white">
             Add-On Services
           </h2>
-          <p className="mt-2 text-center text-[14px] text-[#5a6785]">
+          <p className="mt-2 text-center text-[14px] text-[#a3a3a3]">
             Optional extras to extend your AI workforce.
           </p>
 
@@ -538,15 +538,15 @@ export function PricingPage() {
             {addons.map((a) => (
               <div
                 key={a.title}
-                className="rounded-2xl border border-[#e4e8ef] bg-white p-6"
+                className="rounded-2xl border border-[#262626] bg-[#0a0a0a] p-6"
               >
-                <h3 className="text-[15px] font-bold text-[#0c1222]">
+                <h3 className="text-[15px] font-bold text-white">
                   {a.title}
                 </h3>
                 <p className="mt-1 text-[13px] font-semibold text-[#b91c1c]">
                   {a.price}
                 </p>
-                <p className="mt-2 text-[13px] leading-relaxed text-[#5a6785]">
+                <p className="mt-2 text-[13px] leading-relaxed text-[#a3a3a3]">
                   {a.desc}
                 </p>
               </div>
@@ -556,29 +556,29 @@ export function PricingPage() {
       </section>
 
       {/* ── Comparison Table ────────────────────────── */}
-      <section className="bg-white py-20 sm:py-24">
+      <section className="bg-[#0a0a0a] py-20 sm:py-24">
         <div className="mx-auto max-w-5xl px-6 lg:px-8">
-          <h2 className="text-center text-[clamp(1.5rem,3vw,2rem)] font-bold tracking-[-0.02em] text-[#0c1222]">
+          <h2 className="text-center text-[clamp(1.5rem,3vw,2rem)] font-bold tracking-[-0.02em] text-white">
             Plan Comparison
           </h2>
-          <p className="mt-2 text-center text-[14px] text-[#5a6785]">
+          <p className="mt-2 text-center text-[14px] text-[#a3a3a3]">
             See exactly what's included in every tier.
           </p>
 
           <div className="mt-10 overflow-x-auto">
             <table className="w-full min-w-[600px] text-left text-[13px]">
               <thead>
-                <tr className="border-b border-[#e4e8ef]">
-                  <th className="pb-3 pr-4 text-left text-[12px] font-semibold uppercase tracking-wide text-[#5a6785]">
+                <tr className="border-b border-[#262626]">
+                  <th className="pb-3 pr-4 text-left text-[12px] font-semibold uppercase tracking-wide text-[#a3a3a3]">
                     Feature
                   </th>
-                  <th className="pb-3 px-4 text-center font-semibold text-[#0c1222]">
+                  <th className="pb-3 px-4 text-center font-semibold text-white">
                     Starter
                   </th>
                   <th className="pb-3 px-4 text-center font-semibold text-[#b91c1c]">
                     Professional
                   </th>
-                  <th className="pb-3 pl-4 text-center font-semibold text-[#0c1222]">
+                  <th className="pb-3 pl-4 text-center font-semibold text-white">
                     Enterprise
                   </th>
                 </tr>
@@ -587,18 +587,18 @@ export function PricingPage() {
                 {comparisonRows.map((row) => (
                   <tr
                     key={row.label}
-                    className="border-b border-[#f0f2f5] last:border-0"
+                    className="border-b border-[#1f1f1f] last:border-0"
                   >
-                    <td className="py-3 pr-4 font-medium text-[#3d4b63]">
+                    <td className="py-3 pr-4 font-medium text-[#a3a3a3]">
                       {row.label}
                     </td>
-                    <td className="py-3 px-4 text-center text-[#5a6785]">
+                    <td className="py-3 px-4 text-center text-[#a3a3a3]">
                       <CellValue value={row.starter} />
                     </td>
-                    <td className="py-3 px-4 text-center text-[#5a6785]">
+                    <td className="py-3 px-4 text-center text-[#a3a3a3]">
                       <CellValue value={row.professional} />
                     </td>
-                    <td className="py-3 pl-4 text-center text-[#5a6785]">
+                    <td className="py-3 pl-4 text-center text-[#a3a3a3]">
                       <CellValue value={row.enterprise} />
                     </td>
                   </tr>
@@ -610,9 +610,9 @@ export function PricingPage() {
       </section>
 
       {/* ── FAQ ─────────────────────────────────────── */}
-      <section className="bg-[#f7f8fa] py-20 sm:py-24">
+      <section className="bg-[#111111] py-20 sm:py-24">
         <div className="mx-auto max-w-3xl px-6 lg:px-8">
-          <h2 className="text-center text-[clamp(1.5rem,3vw,2rem)] font-bold tracking-[-0.02em] text-[#0c1222]">
+          <h2 className="text-center text-[clamp(1.5rem,3vw,2rem)] font-bold tracking-[-0.02em] text-white">
             Frequently Asked Questions
           </h2>
           <div className="mt-10">
@@ -624,22 +624,22 @@ export function PricingPage() {
       </section>
 
       {/* ── Trust Section ───────────────────────────── */}
-      <section className="bg-white py-20 sm:py-24">
+      <section className="bg-[#0a0a0a] py-20 sm:py-24">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <h2 className="text-center text-[clamp(1.5rem,3vw,2rem)] font-bold tracking-[-0.02em] text-[#0c1222]">
+          <h2 className="text-center text-[clamp(1.5rem,3vw,2rem)] font-bold tracking-[-0.02em] text-white">
             Why Hotels Choose Persept
           </h2>
           <div className="mx-auto mt-10 grid max-w-4xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {trustPoints.map((tp) => (
               <div key={tp.title} className="flex gap-3.5">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fef2f2]">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[rgba(185,28,28,0.1)]">
                   <tp.icon className="h-5 w-5 text-[#b91c1c]" />
                 </div>
                 <div>
-                  <h3 className="text-[14px] font-bold text-[#0c1222]">
+                  <h3 className="text-[14px] font-bold text-white">
                     {tp.title}
                   </h3>
-                  <p className="mt-0.5 text-[13px] leading-relaxed text-[#5a6785]">
+                  <p className="mt-0.5 text-[13px] leading-relaxed text-[#a3a3a3]">
                     {tp.desc}
                   </p>
                 </div>
@@ -663,7 +663,7 @@ export function PricingPage() {
             <CTAButton
               variant="secondary"
               size="lg"
-              className="border-white/20 bg-white text-[#b91c1c] hover:bg-white/90"
+              className="border-white/20 bg-[#0a0a0a] text-[#b91c1c] hover:bg-[#0a0a0a]/90"
             >
               Book Free Consultation
             </CTAButton>
@@ -672,12 +672,12 @@ export function PricingPage() {
       </section>
 
       {/* ── Not sure section ────────────────────────── */}
-      <section className="bg-[#f7f8fa] py-16">
+      <section className="bg-[#111111] py-16">
         <div className="mx-auto max-w-2xl px-6 text-center lg:px-8">
-          <h2 className="text-[20px] font-bold text-[#0c1222]">
+          <h2 className="text-[20px] font-bold text-white">
             Not Sure Which Plan is Right for You?
           </h2>
-          <p className="mt-2 text-[14px] text-[#5a6785]">
+          <p className="mt-2 text-[14px] text-[#a3a3a3]">
             Book a free consultation and we'll help you choose the best tier for
             your property size, budget, and goals.
           </p>
@@ -688,15 +688,15 @@ export function PricingPage() {
       </section>
 
       {/* ── Footer notes ────────────────────────────── */}
-      <div className="border-t border-[#e4e8ef] bg-[#f7f8fa] px-6 py-8">
-        <div className="mx-auto max-w-3xl text-center text-[12px] leading-relaxed text-[#5a6785]">
+      <div className="border-t border-[#262626] bg-[#111111] px-6 py-8">
+        <div className="mx-auto max-w-3xl text-center text-[12px] leading-relaxed text-[#a3a3a3]">
           <p>
-            <strong className="text-[#3d4b63]">Payment Terms:</strong> 50%
+            <strong className="text-[#a3a3a3]">Payment Terms:</strong> 50%
             deposit on deployment, 50% on go-live. Monthly fees billed on the
             1st of each month.
           </p>
           <p className="mt-2">
-            <strong className="text-[#3d4b63]">Currency:</strong> Prices shown
+            <strong className="text-[#a3a3a3]">Currency:</strong> Prices shown
             in USD and AED. Invoices issued in USD (AED shown for reference).
             Conversion rate: 3.67 AED/USD.
           </p>
