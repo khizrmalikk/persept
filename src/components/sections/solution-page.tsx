@@ -619,11 +619,11 @@ export function SolutionPage() {
       <section className="bg-gradient-to-b from-[#111111] to-[#0a0a0a] py-24 sm:py-32">
         <div className="mx-auto max-w-3xl px-6 text-center lg:px-8">
           <h1 className="fade-up text-[clamp(1.75rem,4.5vw,3rem)] font-bold leading-tight tracking-[-0.02em] text-white">
-            Hotel Operations Shouldn't Feel Like Chaos
+            Stop Fighting the Chaos. <br/>
+            <span className="text-[#b91c1c]">Let AI Do the Boring Stuff.</span> 🎯
           </h1>
           <p className="fade-up delay-1 mt-5 text-[16px] leading-relaxed text-[#a3a3a3]">
-            Your team is drowning in repetitive tasks. Guests wait hours for
-            responses. Staff turnover is constant. There has to be a better way.
+            Your team is drowning in copy-paste replies while guests wait hours. Staff quit because they spend their days doing robot work. There's a better way — and it doesn't involve hiring more humans.
           </p>
           <div className="fade-up delay-2 mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <CTAButton size="lg">
@@ -642,8 +642,8 @@ export function SolutionPage() {
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <SectionHeader
             label="The reality"
-            title="The Reality of Running a Hotel in 2026"
-            subtitle="You're not alone. Most hotels struggle with the same challenges."
+            title="Running a Hotel Shouldn't Feel Like Surviving a Disaster Movie 🔥"
+            subtitle="If any of these sound familiar, you're not alone. (And no, it's not your fault.)"
           />
           <div className="mx-auto mt-12 grid max-w-4xl gap-6 md:grid-cols-2">
             {problems.map((p) => (
@@ -658,8 +658,8 @@ export function SolutionPage() {
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <SectionHeader
             label="Why they fail"
-            title="Why Traditional 'Solutions' Fall Short"
-            subtitle="You've seen the automation tools and AI chatbots. Here's why they're not the answer."
+            title="You've Tried Everything. Nothing Worked. We Know. 🤷"
+            subtitle="Zapier, chatbots, hiring more people... Here's why they all missed the mark."
           />
           <div className="mx-auto mt-12 grid max-w-5xl gap-6 lg:grid-cols-3">
             {oldSolutions.map((s) => (
@@ -674,8 +674,8 @@ export function SolutionPage() {
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <SectionHeader
             label="Our solution"
-            title="The Real Solution: Intelligence, Not Just Automation"
-            subtitle="Persept gives you an AI workforce — specialized agents that think, learn, and integrate deeply with your hotel operations."
+            title="Meet Your New Coworkers. They Never Complain About Shifts. 🤖"
+            subtitle="Four specialized AI agents who actually understand hospitality — not generic chatbots that sound like robots."
           />
 
           {/* Comparison callout */}
@@ -732,10 +732,10 @@ export function SolutionPage() {
               The full picture
             </p>
             <h2 className="mt-2 text-[clamp(1.5rem,3vw,2rem)] font-bold text-white">
-              A Weekend at a 150-Room Hotel
+              A Weekend at a 150-Room Hotel (Without the Panic Attacks) 😌
             </h2>
             <p className="mt-2 text-[14px] text-white/60">
-              See how all four agents work together in a real scenario.
+              Watch Sarah, Marcus, Olivia, and Alex tag-team a busy weekend while your GM actually gets to sleep.
             </p>
           </div>
 
@@ -827,7 +827,8 @@ export function SolutionPage() {
         <div className="mx-auto max-w-5xl px-6 lg:px-8">
           <SectionHeader
             label="The difference"
-            title="Why Persept Isn't Just Another AI Tool"
+            title="Why We're Not Like Every Other 'AI Solution' 🙄"
+            subtitle="We're not trying to sell you a chatbot widget or a Zapier clone with buzzwords."
           />
           <div className="mt-12 grid gap-6 md:grid-cols-2">
             {differences.map((d) => (
@@ -868,8 +869,8 @@ export function SolutionPage() {
         <div className="mx-auto max-w-5xl px-6 lg:px-8">
           <SectionHeader
             label="The transformation"
-            title="What Changes When You Deploy Persept"
-            subtitle="This isn't a marginal improvement. It's a fundamental shift in how your hotel operates."
+            title="Before vs. After: The Difference is Ridiculous 📊"
+            subtitle="This isn't 'save 10% on tasks.' This is 'get your life back' territory."
           />
 
           <div className="mt-12 grid gap-6 md:grid-cols-2">
@@ -974,11 +975,10 @@ export function SolutionPage() {
       <section className="bg-[#b91c1c] py-20 sm:py-24">
         <div className="mx-auto max-w-2xl px-6 text-center lg:px-8">
           <h2 className="text-[clamp(1.5rem,3.5vw,2.25rem)] font-bold leading-tight text-white">
-            Ready to Transform Your Hotel Operations?
+            Ready to Stop the Madness? 🚀
           </h2>
           <p className="mt-3 text-[15px] leading-relaxed text-white/80">
-            Book a free 30-minute consultation. We'll assess your property and
-            show you exactly how Persept can save you 35+ hours per week.
+            Book a free 30-minute call. We'll show you exactly where you're bleeding time (and money) — and how Sarah, Marcus, Olivia, and Alex can plug the leak.
           </p>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <CTAButton
@@ -1030,12 +1030,10 @@ export function SolutionPage() {
       <section className="bg-[#111111] py-16">
         <div className="mx-auto max-w-2xl px-6 text-center lg:px-8">
           <h2 className="text-[20px] font-bold text-white">
-            Stop Fighting the Chaos. Let AI Handle the Repetitive Work.
+            Your Team Deserves Better Than Copy-Pasting All Day. 💪
           </h2>
           <p className="mt-2 text-[14px] text-[#a3a3a3]">
-            Your team deserves to focus on what matters: delivering exceptional
-            guest experiences. Let Sarah, Marcus, Olivia, and Alex handle the
-            rest.
+            Let Sarah handle the messages. Marcus tackle the reviews. Olivia fix the schedule. Alex crunch the numbers. Your team? They'll finally get to do the hospitality work they actually signed up for.
           </p>
           <CTAButton className="mt-5" size="lg">
             Book Free Consultation
