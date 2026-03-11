@@ -80,7 +80,7 @@ function DemoCard({ scenario, isActive, onClick }: { scenario: Scenario; isActiv
   return (
     <motion.button
       onClick={onClick}
-      className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all ${
+      className={`flex items-center gap-3 rounded-xl border px-3 sm:px-4 py-3 text-left transition-all w-full min-h-[60px] ${
         isActive
           ? "border-red-500/30 bg-red-500/10 red-glow"
           : "border-white/5 bg-white/[0.02] hover:border-white/10 hover:bg-white/[0.04]"
@@ -89,17 +89,17 @@ function DemoCard({ scenario, isActive, onClick }: { scenario: Scenario; isActiv
       whileTap={{ scale: 0.98 }}
     >
       <div
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+        className={`flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg ${
           isActive ? "bg-red-500/20" : "bg-white/5"
         }`}
       >
         <scenario.icon className={`h-4 w-4 ${isActive ? "text-red-400" : "text-white/40"}`} />
       </div>
-      <div>
-        <p className={`text-sm font-medium ${isActive ? "text-white" : "text-white/60"}`}>
+      <div className="flex-1 min-w-0">
+        <p className={`text-sm font-medium truncate ${isActive ? "text-white" : "text-white/60"}`}>
           {scenario.title}
         </p>
-        <p className="text-xs text-white/30">{scenario.trigger}</p>
+        <p className="text-xs text-white/30 truncate">{scenario.trigger}</p>
       </div>
     </motion.button>
   );
@@ -119,8 +119,8 @@ export function InteractiveDemo() {
   };
 
   return (
-    <section className="relative py-24 sm:py-28">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+    <section className="relative py-16 sm:py-20 md:py-24 lg:py-28">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-red-500">
             Live Preview
@@ -133,9 +133,9 @@ export function InteractiveDemo() {
           </p>
         </div>
 
-        <div className="mt-14 grid gap-6 lg:grid-cols-[280px_1fr]">
-          {/* Scenario selector */}
-          <div className="flex flex-row gap-3 lg:flex-col">
+        <div className="mt-10 sm:mt-14 grid gap-4 sm:gap-6 lg:grid-cols-[280px_1fr]">
+          {/* Scenario selector - stacks vertically on mobile, horizontal on tablet+ */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:gap-3 lg:flex-col">
             {scenarios.map((s) => (
               <DemoCard
                 key={s.id}
@@ -147,7 +147,7 @@ export function InteractiveDemo() {
           </div>
 
           {/* Demo canvas */}
-          <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] p-6 sm:p-8">
+          <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] p-4 sm:p-6 lg:p-8">
             {/* Step indicator */}
             <div className="mb-6 flex items-center gap-2">
               {(["input", "processing", "output"] as const).map((s, i) => (
@@ -184,8 +184,8 @@ export function InteractiveDemo() {
                     <active.icon className="h-3.5 w-3.5" />
                     {active.trigger}
                   </div>
-                  <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
-                    <p className="text-sm leading-relaxed text-white/70">{active.input}</p>
+                  <div className="rounded-xl border border-white/5 bg-white/[0.03] p-3 sm:p-4">
+                    <p className="text-sm leading-relaxed text-white/70 break-words">{active.input}</p>
                   </div>
                 </motion.div>
               )}
@@ -225,8 +225,8 @@ export function InteractiveDemo() {
                     <ArrowRight className="h-3.5 w-3.5" />
                     AI Response
                   </div>
-                  <div className="rounded-xl border border-red-500/10 bg-red-500/[0.03] p-4">
-                    <p className="text-sm leading-relaxed text-white/80">
+                  <div className="rounded-xl border border-red-500/10 bg-red-500/[0.03] p-3 sm:p-4">
+                    <p className="text-sm leading-relaxed text-white/80 break-words">
                       <TypeWriter text={active.output} speed={15} />
                     </p>
                   </div>
