@@ -2,29 +2,19 @@
 
 import { ArrowRight } from "lucide-react";
 import { CTAButton } from "@/components/ui/cta-button";
-import { NetworkCanvas } from "@/components/ui/network-canvas";
+import { AnimatedBackground } from "@/components/ui/animated-background";
 import { AnimatedCounter, FadeUp, GlowPulse } from "@/components/ui/scroll-animations";
-import dynamic from "next/dynamic";
-
-const HotelScene = dynamic(
-  () => import("@/components/ui/hotel-scene").then((mod) => ({ default: mod.HotelScene })),
-  { ssr: false }
-);
 
 export function Hero() {
   return (
     <section className="relative overflow-hidden py-16 sm:py-20 md:py-28 lg:py-32">
-      <div className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true">
-        <NetworkCanvas />
+      {/* Particle background only - no 3D shapes */}
+      <div className="pointer-events-none absolute inset-0 opacity-30">
+        <AnimatedBackground />
       </div>
 
-      {/* Hero 3D Scene */}
-      <div className="pointer-events-none absolute inset-0 opacity-40">
-        <HotelScene />
-      </div>
-
-      {/* Top gradient overlay for readability */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#0a0a0a]/80 via-transparent to-[#0a0a0a]/60" />
+      {/* Gradient overlay for readability */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#0a0a0a]/60 via-transparent to-[#0a0a0a]/80" />
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">

@@ -23,12 +23,11 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import dynamic from "next/dynamic";
 import { Footer } from "@/components/sections/footer";
 import { Header } from "@/components/sections/header";
 import { CTAButton } from "@/components/ui/cta-button";
 import { FadeUp, StaggerContainer, SlideIn } from "@/components/ui/scroll-animations";
-import { NetworkCanvas } from "@/components/ui/network-canvas";
+import { AnimatedBackground } from "@/components/ui/animated-background";
 
 /* ================================================================== */
 /*  Data                                                               */
@@ -654,8 +653,9 @@ export function SolutionPage() {
 
       {/* ── Hero ───────────────────────────────────── */}
       <section className="relative bg-gradient-to-b from-[#111111] to-[#0a0a0a] py-16 sm:py-20 md:py-24 lg:py-32 overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 h-full w-full opacity-40" aria-hidden="true">
-          <NetworkCanvas />
+        {/* Particle background only - no 3D shapes */}
+        <div className="pointer-events-none absolute inset-0 opacity-30">
+          <AnimatedBackground />
         </div>
         <div className="relative z-10 mx-auto max-w-3xl px-4 sm:px-6 text-center lg:px-8">
           <h1 className="fade-up text-[clamp(1.75rem,4.5vw,3rem)] font-bold leading-tight tracking-[-0.02em] text-white">
