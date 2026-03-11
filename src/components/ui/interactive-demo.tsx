@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Star, Calendar, ArrowRight, Sparkles } from "lucide-react";
 
@@ -52,7 +52,9 @@ function TypeWriter({ text, speed = 20 }: { text: string; speed?: number }) {
   const [displayed, setDisplayed] = useState("");
   const [done, setDone] = useState(false);
 
-  useState(() => {
+  useEffect(() => {
+    setDisplayed("");
+    setDone(false);
     let i = 0;
     const interval = setInterval(() => {
       if (i < text.length) {
@@ -64,7 +66,7 @@ function TypeWriter({ text, speed = 20 }: { text: string; speed?: number }) {
       }
     }, speed);
     return () => clearInterval(interval);
-  });
+  }, [text, speed]);
 
   return (
     <span>
