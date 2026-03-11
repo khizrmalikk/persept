@@ -33,23 +33,23 @@
 
 :root {
   --radius: 0.75rem;
-  --background: #ffffff;
-  --foreground: #0c1222;
-  --card: #ffffff;
-  --card-foreground: #0c1222;
-  --popover: #ffffff;
-  --popover-foreground: #0c1222;
+  --background: #0a0a0a;
+  --foreground: #ffffff;
+  --card: #1a1a1a;
+  --card-foreground: #ffffff;
+  --popover: #1a1a1a;
+  --popover-foreground: #ffffff;
   --primary: #b91c1c;
   --primary-foreground: #ffffff;
-  --secondary: #f9f1f1;
-  --secondary-foreground: #0c1222;
-  --muted: #f7f8fa;
-  --muted-foreground: #5a6785;
+  --secondary: #1f1f1f;
+  --secondary-foreground: #ffffff;
+  --muted: #1a1a1a;
+  --muted-foreground: #a3a3a3;
   --accent: #b91c1c;
   --accent-foreground: #ffffff;
   --destructive: #dc2626;
-  --border: #e4e8ef;
-  --input: #e4e8ef;
+  --border: #262626;
+  --input: #262626;
   --ring: #b91c1c;
 }
 
@@ -61,11 +61,27 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #0a0a0a;
+  color: #ffffff;
 }
 
 ::selection {
-  background: rgba(185, 28, 28, 0.12);
-  color: #0c1222;
+  background: rgba(185, 28, 28, 0.3);
+  color: #ffffff;
+}
+
+/* ── Red Glow Effects ──────────────────────────── */
+
+.red-glow {
+  box-shadow: 0 0 60px rgba(185, 28, 28, 0.15);
+}
+
+.red-glow-hover:hover {
+  box-shadow: 0 0 40px rgba(185, 28, 28, 0.2);
+}
+
+.red-glow-text {
+  text-shadow: 0 0 40px rgba(185, 28, 28, 0.3);
 }
 
 /* ── Animations ────────────────────────────────── */
@@ -95,6 +111,31 @@ body {
   }
 }
 
+/* ── Smooth transitions for future animations ── */
+
+* {
+  transition-property: background-color, border-color, box-shadow;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
+}
+
+a, button {
+  transition-property: all;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
+}
+
+/* ── Pulse subtle (CTA glow) ───────────────────── */
+
+@keyframes pulseSubtle {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+  50% { box-shadow: 0 0 24px 4px rgba(239, 68, 68, 0.3); }
+}
+
+.animate-pulse-subtle {
+  animation: pulseSubtle 2s ease-in-out infinite;
+}
+
 /* ── Reduced motion ────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
@@ -102,6 +143,9 @@ body {
     opacity: 1;
     transform: none;
     animation: none;
+  }
+  * {
+    transition-duration: 0s !important;
   }
 }
 
