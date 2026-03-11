@@ -28,10 +28,11 @@ export function CTAButton({
   href,
 }: CTAButtonProps) {
   const styles = cn(
-    "group inline-flex items-center justify-center gap-2 rounded-full font-medium transition-colors duration-200 cursor-pointer",
-    variant === "primary" && "bg-[#b91c1c] text-white hover:bg-[#991b1b]",
+    "group inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-200 cursor-pointer",
+    variant === "primary" &&
+      "bg-red-600 text-white hover:bg-red-700 hover:shadow-[0_0_30px_rgba(185,28,28,0.3)]",
     variant === "secondary" &&
-      "border border-[#262626] bg-transparent text-white hover:bg-white/5",
+      "border border-white/10 bg-white/[0.03] text-white/70 hover:bg-white/[0.06] hover:text-white hover:border-white/20",
     size === "default" && "px-5 py-2.5 text-sm",
     size === "lg" && "px-7 py-3.5 text-[15px]",
     className,
