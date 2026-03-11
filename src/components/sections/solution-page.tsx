@@ -28,11 +28,7 @@ import { Footer } from "@/components/sections/footer";
 import { Header } from "@/components/sections/header";
 import { CTAButton } from "@/components/ui/cta-button";
 import { FadeUp, StaggerContainer, SlideIn } from "@/components/ui/scroll-animations";
-
-const AnimatedBackground = dynamic(
-  () => import("@/components/ui/animated-background").then((mod) => mod.AnimatedBackground),
-  { ssr: false }
-);
+import { NetworkCanvas } from "@/components/ui/network-canvas";
 
 /* ================================================================== */
 /*  Data                                                               */
@@ -658,8 +654,8 @@ export function SolutionPage() {
 
       {/* ── Hero ───────────────────────────────────── */}
       <section className="relative bg-gradient-to-b from-[#111111] to-[#0a0a0a] py-16 sm:py-20 md:py-24 lg:py-32 overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 opacity-40">
-          <AnimatedBackground />
+        <div className="pointer-events-none absolute inset-0 h-full w-full opacity-40" aria-hidden="true">
+          <NetworkCanvas />
         </div>
         <div className="relative z-10 mx-auto max-w-3xl px-4 sm:px-6 text-center lg:px-8">
           <h1 className="fade-up text-[clamp(1.75rem,4.5vw,3rem)] font-bold leading-tight tracking-[-0.02em] text-white">
