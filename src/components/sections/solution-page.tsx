@@ -24,7 +24,7 @@ import {
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Footer } from "@/components/sections/footer";
-import { Header } from "@/components/sections/header";
+import { Navbar } from "@/components/sections/navbar";
 import { CTAButton } from "@/components/ui/cta-button";
 import { FadeUp, StaggerContainer, SlideIn } from "@/components/ui/scroll-animations";
 import { NetworkCanvas } from "@/components/ui/network-canvas";
