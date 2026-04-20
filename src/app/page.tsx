@@ -1,9 +1,10 @@
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
 import Link from 'next/link';
-import { ArrowRight, Bot, Briefcase, Plane } from 'lucide-react';
+import { ArrowRight, Bot, Briefcase, Plane, Sparkles, Zap, Target } from 'lucide-react';
 import { NetworkCanvas } from "@/components/ui/network-canvas";
-import { FadeUp, SlideIn } from "@/components/ui/scroll-animations";
+import { FadeUp, SlideIn, GlowPulse, AnimatedCounter } from "@/components/ui/scroll-animations";
+import { InteractiveDemo } from "@/components/ui/interactive-demo";
 
 export default function Home() {
   return (
@@ -53,8 +54,36 @@ export default function Home() {
                 </Link>
               </div>
             </FadeUp>
+
+            <FadeUp delay={0.4}>
+              <div className="mt-10 sm:mt-14 flex flex-col items-center gap-3 sm:gap-4 md:flex-row md:justify-center md:gap-8">
+                {[
+                  { icon: Sparkles, value: 3, suffix: "", label: "AI Solutions" },
+                  { icon: Zap, value: 24, suffix: "/7", label: "Automation" },
+                  { icon: Target, value: 100, suffix: "%", label: "ROI Focus" },
+                ].map((stat) => (
+                  <GlowPulse key={stat.label}>
+                    <div className="flex items-center gap-3 rounded-full border border-white/5 bg-white/[0.03] px-5 py-2.5">
+                      <stat.icon className="h-4 w-4 text-[#b91c1c]" />
+                      <span className="text-[15px] font-bold text-white">
+                        <AnimatedCounter
+                          value={stat.value}
+                          suffix={stat.suffix}
+                        />
+                      </span>
+                      <span className="text-[13px] text-white/40">{stat.label}</span>
+                    </div>
+                  </GlowPulse>
+                ))}
+              </div>
+            </FadeUp>
           </div>
         </div>
+      </section>
+
+      {/* Interactive Visual Demo */}
+      <section className="relative -mt-8 sm:-mt-12">
+        <InteractiveDemo />
       </section>
 
       {/* Solutions Showcase */}

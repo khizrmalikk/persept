@@ -31,74 +31,58 @@ export function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            {/* Solutions Dropdown */}
+            {/* Hotel Dropdown */}
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setSolutionsOpen(!solutionsOpen)}
                 className="flex items-center gap-1 text-white/80 hover:text-white transition-colors"
               >
-                Solutions
+                Hotel AI Workforce
                 <ChevronDown className={`w-4 h-4 transition-transform ${solutionsOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {/* Dropdown Menu */}
               {solutionsOpen && (
-                <div className="absolute top-full left-0 mt-2 w-64 bg-black/95 backdrop-blur-xl border border-white/10 rounded-lg shadow-2xl overflow-hidden">
-                  {/* Hotel AI Workforce - with nested menu */}
-                  <div className="border-b border-white/5">
-                    <div className="px-4 py-3 text-white/60 text-xs font-semibold uppercase tracking-wider">
-                      Hotel AI Workforce
-                    </div>
-                    <Link
-                      href="/hotel"
-                      className="block px-6 py-2.5 text-white/80 hover:text-white hover:bg-white/5 transition-all"
-                      onClick={() => setSolutionsOpen(false)}
-                    >
-                      Overview
-                    </Link>
-                    <Link
-                      href="/hotel/sarah"
-                      className="block px-6 py-2.5 text-white/80 hover:text-white hover:bg-white/5 transition-all"
-                      onClick={() => setSolutionsOpen(false)}
-                    >
-                      Meet Sarah
-                    </Link>
-                    <Link
-                      href="/hotel/marcus"
-                      className="block px-6 py-2.5 text-white/80 hover:text-white hover:bg-white/5 transition-all mb-2"
-                      onClick={() => setSolutionsOpen(false)}
-                    >
-                      Meet Marcus
-                    </Link>
-                  </div>
-
-                  {/* GYST */}
+                <div className="absolute top-full left-0 mt-2 w-56 bg-black/95 backdrop-blur-xl border border-white/10 rounded-lg shadow-2xl overflow-hidden">
                   <Link
-                    href="https://www.startgyst.com"
-                    target="_blank"
+                    href="/hotel"
                     className="block px-6 py-3 text-white/80 hover:text-white hover:bg-white/5 transition-all border-b border-white/5"
                     onClick={() => setSolutionsOpen(false)}
                   >
-                    <div className="font-medium">GYST</div>
-                    <div className="text-xs text-white/50 mt-0.5">Job Application Platform</div>
+                    <div className="font-medium">Overview</div>
+                    <div className="text-xs text-white/50 mt-0.5">AI agents for hotels</div>
                   </Link>
-
-                  {/* DAP */}
                   <Link
-                    href="/solutions/dap"
+                    href="/solution"
+                    className="block px-6 py-3 text-white/80 hover:text-white hover:bg-white/5 transition-all border-b border-white/5"
+                    onClick={() => setSolutionsOpen(false)}
+                  >
+                    <div className="font-medium">Our Solution</div>
+                    <div className="text-xs text-white/50 mt-0.5">How it works</div>
+                  </Link>
+                  <Link
+                    href="/pricing"
                     className="block px-6 py-3 text-white/80 hover:text-white hover:bg-white/5 transition-all"
                     onClick={() => setSolutionsOpen(false)}
                   >
-                    <div className="font-medium">Double Apple Pay</div>
-                    <div className="text-xs text-white/50 mt-0.5">Travel Expense Tracker</div>
+                    <div className="font-medium">Pricing</div>
+                    <div className="text-xs text-white/50 mt-0.5">Plans & ROI</div>
                   </Link>
                 </div>
               )}
             </div>
 
-            <Link href="/about" className="text-white/80 hover:text-white transition-colors">
-              About
+            <Link
+              href="https://www.startgyst.com"
+              target="_blank"
+              className="text-white/80 hover:text-white transition-colors"
+            >
+              GYST
             </Link>
+            <Link href="/solutions/dap" className="text-white/80 hover:text-white transition-colors">
+              DAP
+            </Link>
+
             <Link href="/contact" className="text-white/80 hover:text-white transition-colors">
               Contact
             </Link>
@@ -125,31 +109,30 @@ export function Navbar() {
           <div className="md:hidden mt-4 pb-4 space-y-2">
             <div className="space-y-1">
               <div className="text-white/60 text-xs font-semibold uppercase tracking-wider px-4 py-2">
-                Solutions
+                Hotel AI Workforce
               </div>
               
               <div className="pl-4 space-y-1">
-                <div className="text-white/50 text-xs px-4 py-1">Hotel AI Workforce</div>
                 <Link
                   href="/hotel"
-                  className="block px-8 py-2 text-white/80 hover:text-white hover:bg-white/5 rounded transition-all"
+                  className="block px-6 py-2 text-white/80 hover:text-white hover:bg-white/5 rounded transition-all"
                   onClick={() => setIsOpen(false)}
                 >
                   Overview
                 </Link>
                 <Link
-                  href="/hotel/sarah"
-                  className="block px-8 py-2 text-white/80 hover:text-white hover:bg-white/5 rounded transition-all"
+                  href="/solution"
+                  className="block px-6 py-2 text-white/80 hover:text-white hover:bg-white/5 rounded transition-all"
                   onClick={() => setIsOpen(false)}
                 >
-                  Meet Sarah
+                  Our Solution
                 </Link>
                 <Link
-                  href="/hotel/marcus"
-                  className="block px-8 py-2 text-white/80 hover:text-white hover:bg-white/5 rounded transition-all mb-2"
+                  href="/pricing"
+                  className="block px-6 py-2 text-white/80 hover:text-white hover:bg-white/5 rounded transition-all mb-2"
                   onClick={() => setIsOpen(false)}
                 >
-                  Meet Marcus
+                  Pricing
                 </Link>
               </div>
 
@@ -166,17 +149,10 @@ export function Navbar() {
                 className="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/5 rounded transition-all"
                 onClick={() => setIsOpen(false)}
               >
-                Double Apple Pay
+                DAP
               </Link>
             </div>
 
-            <Link
-              href="/about"
-              className="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/5 rounded transition-all"
-              onClick={() => setIsOpen(false)}
-            >
-              About
-            </Link>
             <Link
               href="/contact"
               className="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/5 rounded transition-all"

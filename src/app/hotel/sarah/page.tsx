@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { ArrowRight, Bot, MessageCircle, Clock, Users } from 'lucide-react';
 
 export default function SarahPage() {
+import { NetworkCanvas } from "@/components/ui/network-canvas";
+import { FadeUp } from "@/components/ui/scroll-animations";
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
       <Navbar />
