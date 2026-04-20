@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Footer } from "@/components/sections/footer";
-import { Header } from "@/components/sections/header";
+import { Navbar } from "@/components/sections/navbar";
 import { CTAButton } from "@/components/ui/cta-button";
 
 /* ================================================================== */
@@ -483,7 +483,7 @@ export function PricingPage() {
 
   return (
     <>
-      <Header />
+      <Navbar />
 
       {/* ── Hero ────────────────────────────────────── */}
       <section className="bg-gradient-to-b from-[#111111] to-[#0a0a0a] py-24 sm:py-28">

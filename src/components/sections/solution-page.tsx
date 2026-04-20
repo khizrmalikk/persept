@@ -24,7 +24,7 @@ import {
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Footer } from "@/components/sections/footer";
-import { Header } from "@/components/sections/header";
+import { Navbar } from "@/components/sections/navbar";
 import { CTAButton } from "@/components/ui/cta-button";
 import { FadeUp, StaggerContainer, SlideIn } from "@/components/ui/scroll-animations";
 import { NetworkCanvas } from "@/components/ui/network-canvas";
@@ -649,7 +649,7 @@ function AgentProfile({
 export function SolutionPage() {
   return (
     <>
-      <Header />
+      <Navbar />
 
       {/* ── Hero ───────────────────────────────────── */}
       <section className="relative bg-gradient-to-b from-[#111111] to-[#0a0a0a] py-16 sm:py-20 md:py-24 lg:py-32 overflow-hidden">
