@@ -649,7 +649,7 @@ function AgentProfile({
 export function SolutionPage() {
   return (
     <>
-      <Header />
+      <Navbar />
 
       {/* ── Hero ───────────────────────────────────── */}
       <section className="relative bg-gradient-to-b from-[#111111] to-[#0a0a0a] py-16 sm:py-20 md:py-24 lg:py-32 overflow-hidden">
