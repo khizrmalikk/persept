@@ -2,6 +2,8 @@ import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
 import Link from 'next/link';
 import { ArrowRight, Briefcase, FileText, Target, Zap, BarChart3, Clock } from 'lucide-react';
+import { NetworkCanvas } from "@/components/ui/network-canvas";
+import { FadeUp, SlideIn } from "@/components/ui/scroll-animations";
 
 export default function GYST() {
   return (
@@ -9,229 +11,193 @@ export default function GYST() {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden pt-20">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-950 via-black to-cyan-950" />
-        
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute inset-0" style={{
-            backgroundImage: 'linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px)',
-            backgroundSize: '50px 50px'
-          }} />
+      <section className="relative overflow-hidden py-16 sm:py-20 md:py-28 lg:py-32">
+        <div className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true">
+          <NetworkCanvas />
         </div>
 
-        <div className="relative z-10 container mx-auto px-6 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-sm mb-6">
-            <Briefcase className="w-4 h-4" />
-            Job Application Platform
-          </div>
-          
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-            GYST
-          </h1>
-          <p className="text-xl md:text-2xl text-white/80 mb-4 max-w-3xl mx-auto">
-            Get Your Shit Together
-          </p>
-          <p className="text-lg text-white/60 mb-12 max-w-2xl mx-auto">
-            The AI-powered job application platform that finds jobs, customizes your CV, auto-applies, and tracks everything for you.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="https://www.startgyst.com"
-              target="_blank"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-lg font-medium rounded-lg hover:shadow-2xl hover:shadow-blue-500/50 transition-all"
-            >
-              Visit GYST
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-            <Link
-              href="/contact"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 border border-white/20 text-white text-lg font-medium rounded-lg hover:bg-white/20 transition-all"
-            >
-              Contact Us
-            </Link>
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#0a0a0a]/60 via-transparent to-[#0a0a0a]/80" />
+
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-3xl text-center">
+            <FadeUp>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#b91c1c]/20 bg-[#b91c1c]/10">
+                <Briefcase className="h-3.5 w-3.5 text-[#b91c1c]" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#b91c1c]">
+                  Job Application Platform
+                </span>
+              </div>
+            </FadeUp>
+            
+            <FadeUp delay={0.1}>
+              <h1 className="mt-5 text-[clamp(2.25rem,5.5vw,4.25rem)] font-bold leading-[1.08] tracking-[-0.035em] text-white">
+                GYST
+              </h1>
+            </FadeUp>
+
+            <FadeUp delay={0.2}>
+              <p className="mt-4 text-[clamp(1rem,1.5vw,1.15rem)] leading-relaxed text-white/50">
+                Get Your Shit Together
+              </p>
+            </FadeUp>
+
+            <FadeUp delay={0.25}>
+              <p className="mx-auto mt-4 max-w-2xl text-[15px] leading-relaxed text-[#a3a3a3]">
+                The AI-powered job application platform that finds jobs, customizes your CV, auto-applies, and tracks everything for you.
+              </p>
+            </FadeUp>
+            
+            <FadeUp delay={0.3}>
+              <div className="mt-8 sm:mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
+                <Link
+                  href="https://www.startgyst.com"
+                  target="_blank"
+                  className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#b91c1c] text-white text-[15px] font-semibold rounded-lg hover:bg-[#991818] transition-all hover:shadow-[0_0_30px_rgba(185,28,28,0.3)]"
+                >
+                  Visit GYST
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  href="/contact"
+                  className="inline-flex items-center gap-2 px-8 py-3.5 bg-white/5 text-white text-[15px] font-semibold rounded-lg border border-white/10 hover:bg-white/10 transition-all"
+                >
+                  Contact Us
+                </Link>
+              </div>
+            </FadeUp>
           </div>
         </div>
       </section>
 
       {/* How It Works */}
-      <section className="relative py-24 px-6">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">
-              How GYST Works
-            </h2>
-            <p className="text-xl text-white/60">
-              Four simple steps to streamline your job search
-            </p>
+      <section className="relative py-16 sm:py-20 md:py-24">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center mb-12">
+            <FadeUp>
+              <h2 className="text-[clamp(1.5rem,3.5vw,2.25rem)] font-bold leading-tight tracking-[-0.02em] text-white">
+                How GYST Works
+              </h2>
+            </FadeUp>
+            <FadeUp delay={0.1}>
+              <p className="mt-3 text-[15px] leading-relaxed text-[#a3a3a3]">
+                Four simple steps to streamline your job search
+              </p>
+            </FadeUp>
           </div>
 
-          <div className="grid md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                1
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">Set Criteria</h3>
-              <p className="text-white/60 text-sm">
-                Define your ideal job: role, location, salary, remote options, industry
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                2
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">AI Finds Jobs</h3>
-              <p className="text-white/60 text-sm">
-                Our AI scans thousands of job boards and matches opportunities to your criteria
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                3
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">Custom CVs</h3>
-              <p className="text-white/60 text-sm">
-                AI creates tailored CVs for each job, highlighting relevant skills and experience
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                4
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">Auto-Apply & Track</h3>
-              <p className="text-white/60 text-sm">
-                Applications submitted automatically. Track status, responses, and interviews in one place
-              </p>
-            </div>
+          <div className="grid gap-6 md:gap-8 lg:grid-cols-4">
+            {[
+              { num: 1, title: 'Set Criteria', desc: 'Define your ideal job: role, location, salary, remote options, industry' },
+              { num: 2, title: 'AI Finds Jobs', desc: 'Our AI scans thousands of job boards and matches opportunities to your criteria' },
+              { num: 3, title: 'Custom CVs', desc: 'AI creates tailored CVs for each job, highlighting relevant skills and experience' },
+              { num: 4, title: 'Auto-Apply & Track', desc: 'Applications submitted automatically. Track status, responses, and interviews in one place' },
+            ].map((step, i) => (
+              <SlideIn key={step.num} delay={i * 0.1}>
+                <div className="text-center">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[rgba(185,28,28,0.1)] text-[20px] font-bold text-[#b91c1c] mb-4">
+                    {step.num}
+                  </div>
+                  <h3 className="text-[17px] font-bold text-white mb-2">{step.title}</h3>
+                  <p className="text-[13px] leading-relaxed text-[#a3a3a3]">{step.desc}</p>
+                </div>
+              </SlideIn>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Features */}
-      <section className="relative py-24 px-6 bg-gradient-to-b from-transparent to-blue-950/20">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">
-              Powerful Features
-            </h2>
-            <p className="text-xl text-white/60">
-              Everything you need to land your dream job
-            </p>
+      <section className="relative py-16 sm:py-20 md:py-24 bg-[#0a0a0a]">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center mb-12">
+            <FadeUp>
+              <h2 className="text-[clamp(1.5rem,3.5vw,2.25rem)] font-bold leading-tight tracking-[-0.02em] text-white">
+                Powerful Features
+              </h2>
+            </FadeUp>
+            <FadeUp delay={0.1}>
+              <p className="mt-3 text-[15px] leading-relaxed text-[#a3a3a3]">
+                Everything you need to land your dream job
+              </p>
+            </FadeUp>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-gradient-to-br from-blue-900/20 to-cyan-900/20 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-              <Target className="w-12 h-12 text-blue-400 mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">Smart Job Matching</h3>
-              <p className="text-white/60">
-                AI-powered algorithm finds jobs that perfectly match your skills, experience, and preferences
-              </p>
-            </div>
-
-            <div className="bg-gradient-to-br from-blue-900/20 to-cyan-900/20 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-              <FileText className="w-12 h-12 text-blue-400 mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">Dynamic CV Generation</h3>
-              <p className="text-white/60">
-                Each CV is tailored to the specific job requirements, highlighting your most relevant qualifications
-              </p>
-            </div>
-
-            <div className="bg-gradient-to-br from-blue-900/20 to-cyan-900/20 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-              <Zap className="w-12 h-12 text-blue-400 mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">Automated Applications</h3>
-              <p className="text-white/60">
-                Apply to dozens of jobs while you sleep. Our AI handles forms, uploads, and submissions
-              </p>
-            </div>
-
-            <div className="bg-gradient-to-br from-blue-900/20 to-cyan-900/20 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-              <BarChart3 className="w-12 h-12 text-blue-400 mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">Application Tracking</h3>
-              <p className="text-white/60">
-                Dashboard to monitor all applications, responses, interview schedules, and follow-ups
-              </p>
-            </div>
-
-            <div className="bg-gradient-to-br from-blue-900/20 to-cyan-900/20 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-              <Clock className="w-12 h-12 text-blue-400 mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">24/7 Job Monitoring</h3>
-              <p className="text-white/60">
-                Continuous scanning of job boards ensures you never miss a new opportunity
-              </p>
-            </div>
-
-            <div className="bg-gradient-to-br from-blue-900/20 to-cyan-900/20 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-              <Briefcase className="w-12 h-12 text-blue-400 mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">Multi-Platform Support</h3>
-              <p className="text-white/60">
-                Integrate with LinkedIn, Indeed, Glassdoor, and hundreds of other job platforms
-              </p>
-            </div>
+          <div className="grid gap-6 md:gap-8 lg:grid-cols-3">
+            {[
+              { icon: Target, title: 'Smart Job Matching', desc: 'AI-powered algorithm finds jobs that perfectly match your skills, experience, and preferences' },
+              { icon: FileText, title: 'Dynamic CV Generation', desc: 'Each CV is tailored to the specific job requirements, highlighting your most relevant qualifications' },
+              { icon: Zap, title: 'Automated Applications', desc: 'Apply to dozens of jobs while you sleep. Our AI handles forms, uploads, and submissions' },
+              { icon: BarChart3, title: 'Application Tracking', desc: 'Dashboard to monitor all applications, responses, interview schedules, and follow-ups' },
+              { icon: Clock, title: '24/7 Job Monitoring', desc: 'Continuous scanning of job boards ensures you never miss a new opportunity' },
+              { icon: Briefcase, title: 'Multi-Platform Support', desc: 'Integrate with LinkedIn, Indeed, Glassdoor, and hundreds of other job platforms' },
+            ].map((feature, i) => (
+              <SlideIn key={feature.title} delay={i * 0.05}>
+                <div className="rounded-2xl border border-[#262626] bg-[#0a0a0a] p-6 transition-all duration-300 hover:border-[#b91c1c]/30 hover:shadow-[0_0_30px_rgba(185,28,28,0.1)]">
+                  <feature.icon className="h-9 w-9 text-[#b91c1c] mb-4" />
+                  <h3 className="text-[17px] font-bold text-white mb-2">{feature.title}</h3>
+                  <p className="text-[14px] leading-relaxed text-[#a3a3a3]">{feature.desc}</p>
+                </div>
+              </SlideIn>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Stats */}
-      <section className="relative py-24 px-6">
-        <div className="container mx-auto max-w-6xl">
-          <div className="grid md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2">
-                10x
-              </div>
-              <p className="text-white/60">More applications</p>
-            </div>
-            <div>
-              <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2">
-                80%
-              </div>
-              <p className="text-white/60">Time saved</p>
-            </div>
-            <div>
-              <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2">
-                3x
-              </div>
-              <p className="text-white/60">Interview rate</p>
-            </div>
-            <div>
-              <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2">
-                24/7
-              </div>
-              <p className="text-white/60">Job hunting</p>
-            </div>
+      <section className="relative py-16 sm:py-20 md:py-24">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-8 md:grid-cols-4 text-center">
+            {[
+              { value: '10x', label: 'More applications' },
+              { value: '80%', label: 'Time saved' },
+              { value: '3x', label: 'Interview rate' },
+              { value: '24/7', label: 'Job hunting' },
+            ].map((stat, i) => (
+              <SlideIn key={stat.label} delay={i * 0.1}>
+                <div>
+                  <div className="text-[clamp(2rem,4vw,3rem)] font-bold text-[#b91c1c] mb-2">
+                    {stat.value}
+                  </div>
+                  <p className="text-[14px] text-[#a3a3a3]">{stat.label}</p>
+                </div>
+              </SlideIn>
+            ))}
           </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="relative py-24 px-6">
-        <div className="container mx-auto max-w-4xl text-center">
-          <div className="bg-gradient-to-br from-blue-900/20 to-cyan-900/20 backdrop-blur-sm border border-white/10 rounded-3xl p-12">
-            <h2 className="text-4xl font-bold text-white mb-6">
-              Ready to Get Your Shit Together?
-            </h2>
-            <p className="text-xl text-white/60 mb-8 max-w-2xl mx-auto">
-              Join the waitlist for early access to GYST
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="https://www.startgyst.com"
-                target="_blank"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-lg font-medium rounded-lg hover:shadow-2xl hover:shadow-blue-500/50 transition-all"
-              >
-                Visit GYST
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-              <Link
-                href="/contact"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 border border-white/20 text-white text-lg font-medium rounded-lg hover:bg-white/20 transition-all"
-              >
-                Contact Us
-              </Link>
-            </div>
+      <section className="relative py-16 sm:py-20 md:py-24">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
+          <div className="rounded-2xl border border-[#262626] bg-[#0a0a0a] p-8 sm:p-12">
+            <FadeUp>
+              <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-bold leading-tight tracking-[-0.02em] text-white">
+                Ready to Get Your Shit Together?
+              </h2>
+            </FadeUp>
+            <FadeUp delay={0.1}>
+              <p className="mt-4 text-[15px] leading-relaxed text-[#a3a3a3] max-w-2xl mx-auto">
+                Join the waitlist for early access to GYST
+              </p>
+            </FadeUp>
+            <FadeUp delay={0.2}>
+              <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
+                <Link
+                  href="https://www.startgyst.com"
+                  target="_blank"
+                  className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#b91c1c] text-white text-[15px] font-semibold rounded-lg hover:bg-[#991818] transition-all hover:shadow-[0_0_30px_rgba(185,28,28,0.3)]"
+                >
+                  Visit GYST
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  href="/contact"
+                  className="inline-flex items-center gap-2 px-8 py-3.5 bg-white/5 text-white text-[15px] font-semibold rounded-lg border border-white/10 hover:bg-white/10 transition-all"
+                >
+                  Contact Us
+                </Link>
+              </div>
+            </FadeUp>
           </div>
         </div>
       </section>
