@@ -74,7 +74,8 @@ export function Navbar() {
 
                   {/* GYST */}
                   <Link
-                    href="/solutions/gyst"
+                    href="https://www.startgyst.com"
+                    target="_blank"
                     className="block px-6 py-3 text-white/80 hover:text-white hover:bg-white/5 transition-all border-b border-white/5"
                     onClick={() => setSolutionsOpen(false)}
                   >
@@ -153,7 +154,8 @@ export function Navbar() {
               </div>
 
               <Link
-                href="/solutions/gyst"
+                href="https://www.startgyst.com"
+                target="_blank"
                 className="block px-4 py-2 text-white/80 hover:text-white hover:bg-white/5 rounded transition-all"
                 onClick={() => setIsOpen(false)}
               >

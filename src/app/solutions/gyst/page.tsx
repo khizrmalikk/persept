@@ -35,13 +35,22 @@ export default function GYST() {
             The AI-powered job application platform that finds jobs, customizes your CV, auto-applies, and tracks everything for you.
           </p>
           
-          <Link
-            href="/contact"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-lg font-medium rounded-lg hover:shadow-2xl hover:shadow-blue-500/50 transition-all"
-          >
-            Get Early Access
-            <ArrowRight className="w-5 h-5" />
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="https://www.startgyst.com"
+              target="_blank"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-lg font-medium rounded-lg hover:shadow-2xl hover:shadow-blue-500/50 transition-all"
+            >
+              Visit GYST
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 border border-white/20 text-white text-lg font-medium rounded-lg hover:bg-white/20 transition-all"
+            >
+              Contact Us
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -207,13 +216,22 @@ export default function GYST() {
             <p className="text-xl text-white/60 mb-8 max-w-2xl mx-auto">
               Join the waitlist for early access to GYST
             </p>
-            <Link
-              href="/contact"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-lg font-medium rounded-lg hover:shadow-2xl hover:shadow-blue-500/50 transition-all"
-            >
-              Request Early Access
-              <ArrowRight className="w-5 h-5" />
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="https://www.startgyst.com"
+                target="_blank"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-lg font-medium rounded-lg hover:shadow-2xl hover:shadow-blue-500/50 transition-all"
+              >
+                Visit GYST
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+              <Link
+                href="/contact"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 border border-white/20 text-white text-lg font-medium rounded-lg hover:bg-white/20 transition-all"
+              >
+                Contact Us
+              </Link>
+            </div>
           </div>
         </div>
       </section>

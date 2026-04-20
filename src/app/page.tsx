@@ -95,13 +95,22 @@ export default function Home() {
                 </div>
               </div>
 
-              <Link
-                href="/solutions/gyst"
-                className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors font-medium"
-              >
-                Learn More
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
+              <div className="flex gap-3">
+                <Link
+                  href="https://www.startgyst.com"
+                  target="_blank"
+                  className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors font-medium"
+                >
+                  Visit Site
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <Link
+                  href="/solutions/gyst"
+                  className="inline-flex items-center gap-2 text-blue-400/60 hover:text-blue-300 transition-colors font-medium"
+                >
+                  Learn More
+                </Link>
+              </div>
             </div>
 
             {/* DAP Card */}
