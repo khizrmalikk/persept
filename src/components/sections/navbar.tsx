@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { ChevronDown, Menu, X } from 'lucide-react';
+import { ChevronDown, Menu, X, Sparkles } from 'lucide-react';
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,12 +21,17 @@ export function Navbar() {
   }, []);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-lg border-b border-white/10">
-      <div className="container mx-auto px-6 py-4">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/5">
+      <div className="container mx-auto px-6 py-3.5">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent hover:opacity-80 transition-opacity">
-            Persept
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[rgba(185,28,28,0.1)] group-hover:bg-[rgba(185,28,28,0.15)] transition-colors">
+              <Sparkles className="h-4 w-4 text-[#b91c1c]" />
+            </div>
+            <span className="text-xl font-bold text-white group-hover:text-[#b91c1c] transition-colors">
+              Persept
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -89,7 +94,7 @@ export function Navbar() {
             
             <Link
               href="/contact"
-              className="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-medium hover:shadow-lg hover:shadow-purple-500/50 transition-all"
+              className="px-6 py-2.5 bg-[#b91c1c] text-white rounded-lg font-medium hover:bg-[#991818] transition-all hover:shadow-[0_0_20px_rgba(185,28,28,0.3)]"
             >
               Get Started
             </Link>
@@ -162,7 +167,7 @@ export function Navbar() {
             </Link>
             <Link
               href="/contact"
-              className="block px-4 py-2 mx-4 mt-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-medium text-center"
+              className="block px-4 py-2 mx-4 mt-4 bg-[#b91c1c] text-white rounded-lg font-medium text-center hover:bg-[#991818] transition-all"
               onClick={() => setIsOpen(false)}
             >
               Get Started
