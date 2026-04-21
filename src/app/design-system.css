@@ -1,0 +1,172 @@
+/**
+ * Persept Design System - Retro Modern
+ * A warm, accessible design system with nostalgic aesthetic
+ */
+
+:root {
+  /* === COLORS === */
+  
+  /* Primary - Warm Coral Red */
+  --color-primary: #ff4757;
+  --color-primary-dark: #ee5a6f;
+  --color-primary-light: #ff6b7a;
+  --color-primary-rgb: 255, 71, 87;
+  
+  /* Accent - Warm Orange */
+  --color-accent: #ffa502;
+  --color-accent-dark: #ff9500;
+  --color-accent-light: #ffb732;
+  
+  /* Backgrounds - Warm Navy (not pure black) */
+  --color-bg: #1a1a2e;
+  --color-surface: #16213e;
+  --color-card: #0f3460;
+  --color-elevated: #1e3a5f;
+  
+  /* Text */
+  --color-text-primary: #eeeeee;
+  --color-text-secondary: #a8b2d1;
+  --color-text-muted: #6b7a99;
+  --color-text-accent: #64ffda;
+  
+  /* Borders */
+  --color-border: rgba(168, 178, 209, 0.12);
+  --color-border-hover: rgba(255, 71, 87, 0.3);
+  
+  /* Overlays */
+  --color-overlay: rgba(26, 26, 46, 0.95);
+  --color-overlay-light: rgba(26, 26, 46, 0.7);
+  
+  /* === SPACING (8px grid) === */
+  --space-1: 0.5rem;   /* 8px */
+  --space-2: 1rem;     /* 16px */
+  --space-3: 1.5rem;   /* 24px */
+  --space-4: 2rem;     /* 32px */
+  --space-6: 3rem;     /* 48px */
+  --space-8: 4rem;     /* 64px */
+  --space-12: 6rem;    /* 96px */
+  --space-16: 8rem;    /* 128px */
+  
+  /* === TYPOGRAPHY === */
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  
+  /* Font Sizes (modular scale 1.25) */
+  --text-xs: 0.75rem;    /* 12px */
+  --text-sm: 0.875rem;   /* 14px */
+  --text-base: 1rem;     /* 16px */
+  --text-lg: 1.125rem;   /* 18px */
+  --text-xl: 1.25rem;    /* 20px */
+  --text-2xl: 1.5rem;    /* 24px */
+  --text-3xl: 1.875rem;  /* 30px */
+  --text-4xl: 2.25rem;   /* 36px */
+  --text-5xl: 3rem;      /* 48px */
+  --text-6xl: 3.75rem;   /* 60px */
+  
+  /* Line Heights */
+  --leading-tight: 1.2;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  
+  /* === BORDER RADIUS === */
+  --radius-sm: 0.5rem;   /* 8px */
+  --radius-md: 0.75rem;  /* 12px */
+  --radius-lg: 1rem;     /* 16px */
+  --radius-xl: 1.5rem;   /* 24px */
+  --radius-full: 9999px;
+  
+  /* === SHADOWS === */
+  --shadow-sm: 0 2px 8px rgba(15, 52, 96, 0.2);
+  --shadow-md: 0 4px 16px rgba(15, 52, 96, 0.3);
+  --shadow-lg: 0 8px 32px rgba(15, 52, 96, 0.4);
+  --shadow-glow: 0 0 20px rgba(255, 71, 87, 0.3);
+  
+  /* === ANIMATIONS === */
+  --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-base: 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-slow: 400ms cubic-bezier(0.16, 1, 0.3, 1);
+  
+  /* === Z-INDEX === */
+  --z-base: 0;
+  --z-dropdown: 1000;
+  --z-sticky: 1100;
+  --z-fixed: 1200;
+  --z-modal-backdrop: 1300;
+  --z-modal: 1400;
+  --z-popover: 1500;
+  --z-tooltip: 1600;
+}
+
+/* === UTILITY CLASSES === */
+
+/* Background Patterns */
+.bg-grain {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+}
+
+.bg-dots {
+  background-image: radial-gradient(circle, rgba(255, 71, 87, 0.1) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Text Gradient */
+.text-gradient-primary {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Glassmorphism */
+.glass {
+  background: rgba(22, 33, 62, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(168, 178, 209, 0.1);
+}
+
+/* Hover Glow Effect */
+.glow-hover {
+  transition: box-shadow var(--transition-base);
+}
+
+.glow-hover:hover {
+  box-shadow: 0 0 20px rgba(255, 71, 87, 0.4),
+              0 0 40px rgba(255, 71, 87, 0.2);
+}
+
+/* Retro Button */
+.btn-retro {
+  position: relative;
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform var(--transition-fast);
+}
+
+.btn-retro::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.btn-retro:hover {
+  transform: translateY(-2px);
+}
+
+.btn-retro:hover::before {
+  opacity: 1;
+}
+
+.btn-retro:active {
+  transform: translateY(0);
+}

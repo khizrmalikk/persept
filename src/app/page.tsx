@@ -1,7 +1,7 @@
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
 import Link from 'next/link';
-import { ArrowRight, Bot, Briefcase, Plane, Sparkles, Zap, Target } from 'lucide-react';
+import { ArrowRight, Bot, Briefcase, Plane, Sparkles, Zap, Target, Settings, Rocket, TrendingUp } from 'lucide-react';
 import { NetworkCanvas } from "@/components/ui/network-canvas";
 import { FadeUp, SlideIn, GlowPulse, AnimatedCounter } from "@/components/ui/scroll-animations";
 import { InteractiveDemo } from "@/components/ui/interactive-demo";
@@ -237,13 +237,15 @@ export default function Home() {
 
           <div className="grid gap-6 md:gap-8 lg:grid-cols-3">
             {[
-              { icon: '🤖', title: 'Agent-Driven', desc: 'Intelligent AI agents that learn, adapt, and improve over time' },
-              { icon: '⚙️', title: 'Custom Built', desc: 'Tailored solutions designed for your specific business needs' },
-              { icon: '📈', title: 'Real Results', desc: 'Measurable impact on efficiency, revenue, and customer satisfaction' },
+              { icon: Bot, title: 'Agent-Driven', desc: 'Intelligent AI agents that learn, adapt, and improve over time' },
+              { icon: Settings, title: 'Custom Built', desc: 'Tailored solutions designed for your specific business needs' },
+              { icon: TrendingUp, title: 'Real Results', desc: 'Measurable impact on efficiency, revenue, and customer satisfaction' },
             ].map((point, i) => (
               <SlideIn key={point.title} delay={i * 0.1}>
                 <div className="rounded-2xl border border-[#262626] bg-[#0a0a0a] p-6 text-center transition-all duration-300 hover:border-[#b91c1c]/20">
-                  <div className="text-4xl mb-4">{point.icon}</div>
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-[rgba(185,28,28,0.1)] mb-4">
+                    <point.icon className="h-7 w-7 text-[#b91c1c]" />
+                  </div>
                   <h3 className="text-[17px] font-bold text-white mb-2">{point.title}</h3>
                   <p className="text-[14px] leading-relaxed text-[#a3a3a3]">{point.desc}</p>
                 </div>
