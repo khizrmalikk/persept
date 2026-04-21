@@ -306,8 +306,8 @@ function fmt(n: number) {
 
 function CellValue({ value }: { value: string }) {
   if (value === "yes")
-    return <Check className="mx-auto h-4 w-4 text-[#b91c1c]" />;
-  if (value === "no") return <X className="mx-auto h-4 w-4 text-[#cbd5e1]" />;
+    return <Check className="mx-auto h-4 w-4 text-[#ff4757]" />;
+  if (value === "no") return <X className="mx-auto h-4 w-4 text-[#6b7a99]" />;
   return <span>{value}</span>;
 }
 
@@ -327,9 +327,9 @@ function TrustBadges() {
       {badges.map((b) => (
         <span
           key={b}
-          className="flex items-center gap-2 text-[13px] font-medium text-[#a3a3a3]"
+          className="flex items-center gap-2 text-[13px] font-medium text-[#a8b2d1]"
         >
-          <Check className="h-3.5 w-3.5 text-[#b91c1c]" />
+          <Check className="h-3.5 w-3.5 text-[#ff4757]" />
           {b}
         </span>
       ))}
@@ -345,18 +345,18 @@ function CurrencyToggle({
   setCurrency: (c: Currency) => void;
 }) {
   return (
-    <div className="inline-flex items-center rounded-full border border-[#262626] bg-[#0a0a0a] p-1">
+    <div className="inline-flex items-center rounded-full border border-[#0f3460] bg-[#16213e] p-1">
       <button
         type="button"
         onClick={() => setCurrency("usd")}
-        className={`cursor-pointer rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors ${currency === "usd" ? "bg-white text-[#0a0a0a]" : "text-[#a3a3a3] hover:text-white"}`}
+        className={`cursor-pointer rounded-full px-4 py-1.5 text-[13px] font-medium transition-all duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${currency === "usd" ? "bg-[#ff4757] text-white shadow-[0_0_20px_rgba(255,71,87,0.3)]" : "text-[#a8b2d1] hover:text-[#eeeeee]"}`}
       >
         USD
       </button>
       <button
         type="button"
         onClick={() => setCurrency("aed")}
-        className={`cursor-pointer rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors ${currency === "aed" ? "bg-white text-[#0a0a0a]" : "text-[#a3a3a3] hover:text-white"}`}
+        className={`cursor-pointer rounded-full px-4 py-1.5 text-[13px] font-medium transition-all duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${currency === "aed" ? "bg-[#ff4757] text-white shadow-[0_0_20px_rgba(255,71,87,0.3)]" : "text-[#a8b2d1] hover:text-[#eeeeee]"}`}
       >
         AED
       </button>
@@ -377,43 +377,43 @@ function TierCard({
 
   return (
     <div
-      className={`relative flex flex-col rounded-2xl border p-8 ${popular ? "border-[#b91c1c] shadow-lg shadow-[#b91c1c]/8" : "border-[#262626]"} bg-[#0a0a0a]`}
+      className={`card-retro relative flex flex-col rounded-xl border p-8 transition-all duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(15,52,96,0.4)] ${popular ? "border-[#ff4757] shadow-[0_4px_16px_rgba(15,52,96,0.3)] hover:shadow-[0_0_20px_rgba(255,71,87,0.3),0_8px_32px_rgba(15,52,96,0.4)]" : "border-[#0f3460] shadow-[0_4px_16px_rgba(15,52,96,0.3)]"} bg-[#16213e]`}
     >
       {popular && (
-        <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-[#b91c1c] px-4 py-1 text-[11px] font-semibold uppercase tracking-wide text-white">
+        <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-[#ff4757] px-4 py-1 text-[11px] font-semibold uppercase tracking-wide text-white shadow-[0_0_20px_rgba(255,71,87,0.3)]">
           {tier.badge}
         </span>
       )}
 
-      <h3 className="text-[20px] font-bold text-white">{tier.name}</h3>
-      <p className="mt-1 text-[13px] text-[#a3a3a3]">{tier.bestFor}</p>
+      <h3 className="text-[20px] font-bold text-[#eeeeee]">{tier.name}</h3>
+      <p className="mt-1 text-[14px] text-[#a8b2d1]">{tier.bestFor}</p>
 
-      <div className="mt-6 border-t border-[#262626] pt-6">
+      <div className="mt-6 border-t border-[#0f3460] pt-6">
         <div className="flex items-baseline gap-1">
-          <span className="text-[32px] font-bold tracking-tight text-white">
+          <span className="text-[32px] font-bold tracking-tight text-[#eeeeee]">
             {sym}
             {fmt(tier.monthly[c])}
           </span>
-          <span className="text-[14px] text-[#a3a3a3]">/month</span>
+          <span className="text-[14px] text-[#a8b2d1]">/month</span>
         </div>
-        <p className="mt-1 text-[12px] text-[#a3a3a3]">
+        <p className="mt-1 text-[13px] text-[#6b7a99]">
           Year 1 total: {sym}
           {fmt(tier.year1[c])} &middot; Year 2+: {sym}
           {fmt(tier.year2[c])}/yr
         </p>
       </div>
 
-      <div className="mt-5 space-y-1.5 rounded-xl bg-[#111111] p-4 text-[12px] text-[#a3a3a3]">
+      <div className="mt-5 space-y-1.5 rounded-lg bg-[#0f3460] p-4 text-[13px] text-[#a8b2d1]">
         <div className="flex justify-between">
           <span>AI Automation Audit</span>
-          <span className="font-medium text-white">
+          <span className="font-medium text-[#eeeeee]">
             {sym}
             {fmt(tier.audit[c])}
           </span>
         </div>
         <div className="flex justify-between">
           <span>Deployment &amp; Setup</span>
-          <span className="font-medium text-white">
+          <span className="font-medium text-[#eeeeee]">
             {sym}
             {fmt(tier.setup[c])}
           </span>
@@ -423,20 +423,20 @@ function TierCard({
       <ul className="mt-6 flex-1 space-y-2.5">
         {tier.highlights.map((h) => (
           <li key={h} className="flex items-start gap-2 text-[13px]">
-            <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#b91c1c]" />
-            <span className="text-[#a3a3a3]">{h}</span>
+            <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#ff4757]" />
+            <span className="text-[#a8b2d1]">{h}</span>
           </li>
         ))}
       </ul>
 
-      <div className="mt-6 rounded-xl bg-[rgba(185,28,28,0.1)] p-4">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-[#b91c1c]">
+      <div className="mt-6 rounded-lg bg-[rgba(255,71,87,0.1)] p-4 border border-[rgba(255,71,87,0.2)]">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-[#ff4757]">
           Estimated ROI ({tier.roi.rooms}-room property)
         </p>
-        <p className="mt-1 text-[22px] font-bold text-white">
+        <p className="mt-1 text-[22px] font-bold text-[#eeeeee]">
           {tier.roi.pct}% return
         </p>
-        <p className="text-[12px] text-[#a3a3a3]">
+        <p className="text-[13px] text-[#a8b2d1]">
           Payback in {tier.roi.payback} &middot; ${fmt(tier.roi.total)}/yr value
         </p>
       </div>
@@ -454,21 +454,21 @@ function TierCard({
 function FAQItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border-b border-[#262626]">
+    <div className="border-b border-[#0f3460] last:border-0">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full cursor-pointer items-center justify-between py-5 text-left"
+        className="flex w-full cursor-pointer items-center justify-between py-5 text-left transition-colors duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:text-[#ff4757]"
       >
-        <span className="pr-4 text-[15px] font-semibold text-white">
+        <span className="pr-4 text-[15px] font-semibold text-[#eeeeee]">
           {q}
         </span>
         <ChevronDown
-          className={`h-4 w-4 shrink-0 text-[#a3a3a3] transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          className={`h-4 w-4 shrink-0 text-[#a8b2d1] transition-transform duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${open ? "rotate-180 text-[#ff4757]" : ""}`}
         />
       </button>
       {open && (
-        <p className="pb-5 text-[14px] leading-relaxed text-[#a3a3a3]">{a}</p>
+        <p className="pb-5 text-[14px] leading-relaxed text-[#a8b2d1]">{a}</p>
       )}
     </div>
   );
@@ -486,12 +486,12 @@ export function PricingPage() {
       <Navbar />
 
       {/* ── Hero ────────────────────────────────────── */}
-      <section className="bg-gradient-to-b from-[#111111] to-[#0a0a0a] py-24 sm:py-28">
+      <section className="bg-gradient-to-b from-[#1a1a2e] to-[#16213e] pt-24 pb-20 sm:pt-32 sm:pb-24">
         <div className="mx-auto max-w-3xl px-6 text-center lg:px-8">
-          <h1 className="fade-up text-[clamp(1.75rem,4vw,2.75rem)] font-bold leading-tight tracking-[-0.02em] text-white">
+          <h1 className="fade-up text-[clamp(1.75rem,4vw,2.75rem)] font-bold leading-tight tracking-[-0.02em] text-[#eeeeee]">
             Transparent Pricing. No Hidden Fees. Cancel Anytime.
           </h1>
-          <p className="fade-up delay-1 mt-4 text-[15px] leading-relaxed text-[#a3a3a3]">
+          <p className="fade-up delay-1 mt-4 text-[17px] leading-relaxed text-[#a8b2d1]">
             Choose the plan that fits your property. All plans include our full
             AI workforce (Sarah, Marcus, Olivia, Alex), complete PMS/POS
             integration, and ongoing management.
@@ -501,13 +501,13 @@ export function PricingPage() {
       </section>
 
       {/* ── Pricing Tiers ───────────────────────────── */}
-      <section className="bg-[#0a0a0a] py-20 sm:py-24">
+      <section className="bg-[#1a1a2e] py-20 sm:py-24">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-[clamp(1.5rem,3vw,2.25rem)] font-bold leading-tight tracking-[-0.02em] text-white">
+            <h2 className="text-[clamp(1.5rem,3vw,2.25rem)] font-bold leading-tight tracking-[-0.02em] text-[#eeeeee]">
               Pricing Built for Hotels of Every Size
             </h2>
-            <p className="mt-3 text-[15px] text-[#a3a3a3]">
+            <p className="mt-3 text-[16px] text-[#a8b2d1]">
               From boutique properties to luxury resorts, we have a plan that
               scales with your business.
             </p>
@@ -525,12 +525,12 @@ export function PricingPage() {
       </section>
 
       {/* ── Add-ons ─────────────────────────────────── */}
-      <section className="bg-[#111111] py-20 sm:py-24">
+      <section className="bg-[#16213e] py-20 sm:py-24">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <h2 className="text-center text-[clamp(1.5rem,3vw,2rem)] font-bold tracking-[-0.02em] text-white">
+          <h2 className="text-center text-[clamp(1.5rem,3vw,2rem)] font-bold tracking-[-0.02em] text-[#eeeeee]">
             Add-On Services
           </h2>
-          <p className="mt-2 text-center text-[14px] text-[#a3a3a3]">
+          <p className="mt-2 text-center text-[15px] text-[#a8b2d1]">
             Optional extras to extend your AI workforce.
           </p>
 
@@ -538,15 +538,15 @@ export function PricingPage() {
             {addons.map((a) => (
               <div
                 key={a.title}
-                className="rounded-2xl border border-[#262626] bg-[#0a0a0a] p-6"
+                className="card-retro rounded-xl border border-[#0f3460] bg-[#1a1a2e] p-6 shadow-[0_4px_16px_rgba(15,52,96,0.3)] transition-all duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(15,52,96,0.4)]"
               >
-                <h3 className="text-[15px] font-bold text-white">
+                <h3 className="text-[16px] font-bold text-[#eeeeee]">
                   {a.title}
                 </h3>
-                <p className="mt-1 text-[13px] font-semibold text-[#b91c1c]">
+                <p className="mt-1 text-[14px] font-semibold text-[#ff4757]">
                   {a.price}
                 </p>
-                <p className="mt-2 text-[13px] leading-relaxed text-[#a3a3a3]">
+                <p className="mt-2 text-[14px] leading-relaxed text-[#a8b2d1]">
                   {a.desc}
                 </p>
               </div>
@@ -556,29 +556,29 @@ export function PricingPage() {
       </section>
 
       {/* ── Comparison Table ────────────────────────── */}
-      <section className="bg-[#0a0a0a] py-20 sm:py-24">
+      <section className="bg-[#1a1a2e] py-20 sm:py-24">
         <div className="mx-auto max-w-5xl px-6 lg:px-8">
-          <h2 className="text-center text-[clamp(1.5rem,3vw,2rem)] font-bold tracking-[-0.02em] text-white">
+          <h2 className="text-center text-[clamp(1.5rem,3vw,2rem)] font-bold tracking-[-0.02em] text-[#eeeeee]">
             Plan Comparison
           </h2>
-          <p className="mt-2 text-center text-[14px] text-[#a3a3a3]">
+          <p className="mt-2 text-center text-[15px] text-[#a8b2d1]">
             See exactly what's included in every tier.
           </p>
 
-          <div className="mt-10 overflow-x-auto">
+          <div className="mt-10 overflow-x-auto rounded-xl border border-[#0f3460] bg-[#16213e] p-6 shadow-[0_4px_16px_rgba(15,52,96,0.3)]">
             <table className="w-full min-w-[600px] text-left text-[13px]">
               <thead>
-                <tr className="border-b border-[#262626]">
-                  <th className="pb-3 pr-4 text-left text-[12px] font-semibold uppercase tracking-wide text-[#a3a3a3]">
+                <tr className="border-b border-[#0f3460]">
+                  <th className="pb-3 pr-4 text-left text-[12px] font-semibold uppercase tracking-wide text-[#6b7a99]">
                     Feature
                   </th>
-                  <th className="pb-3 px-4 text-center font-semibold text-white">
+                  <th className="pb-3 px-4 text-center font-semibold text-[#eeeeee]">
                     Starter
                   </th>
-                  <th className="pb-3 px-4 text-center font-semibold text-[#b91c1c]">
+                  <th className="pb-3 px-4 text-center font-semibold text-[#ff4757]">
                     Professional
                   </th>
-                  <th className="pb-3 pl-4 text-center font-semibold text-white">
+                  <th className="pb-3 pl-4 text-center font-semibold text-[#eeeeee]">
                     Enterprise
                   </th>
                 </tr>
@@ -587,18 +587,18 @@ export function PricingPage() {
                 {comparisonRows.map((row) => (
                   <tr
                     key={row.label}
-                    className="border-b border-[#1f1f1f] last:border-0"
+                    className="border-b border-[#0f3460]/50 last:border-0"
                   >
-                    <td className="py-3 pr-4 font-medium text-[#a3a3a3]">
+                    <td className="py-3 pr-4 font-medium text-[#a8b2d1]">
                       {row.label}
                     </td>
-                    <td className="py-3 px-4 text-center text-[#a3a3a3]">
+                    <td className="py-3 px-4 text-center text-[#a8b2d1]">
                       <CellValue value={row.starter} />
                     </td>
-                    <td className="py-3 px-4 text-center text-[#a3a3a3]">
+                    <td className="py-3 px-4 text-center text-[#a8b2d1]">
                       <CellValue value={row.professional} />
                     </td>
-                    <td className="py-3 pl-4 text-center text-[#a3a3a3]">
+                    <td className="py-3 pl-4 text-center text-[#a8b2d1]">
                       <CellValue value={row.enterprise} />
                     </td>
                   </tr>
@@ -610,12 +610,12 @@ export function PricingPage() {
       </section>
 
       {/* ── FAQ ─────────────────────────────────────── */}
-      <section className="bg-[#111111] py-20 sm:py-24">
+      <section className="bg-[#16213e] py-20 sm:py-24">
         <div className="mx-auto max-w-3xl px-6 lg:px-8">
-          <h2 className="text-center text-[clamp(1.5rem,3vw,2rem)] font-bold tracking-[-0.02em] text-white">
+          <h2 className="text-center text-[clamp(1.5rem,3vw,2rem)] font-bold tracking-[-0.02em] text-[#eeeeee]">
             Frequently Asked Questions
           </h2>
-          <div className="mt-10">
+          <div className="mt-10 rounded-xl border border-[#0f3460] bg-[#1a1a2e] p-6 shadow-[0_4px_16px_rgba(15,52,96,0.3)]">
             {faqs.map((f) => (
               <FAQItem key={f.q} q={f.q} a={f.a} />
             ))}
@@ -624,22 +624,22 @@ export function PricingPage() {
       </section>
 
       {/* ── Trust Section ───────────────────────────── */}
-      <section className="bg-[#0a0a0a] py-20 sm:py-24">
+      <section className="bg-[#1a1a2e] py-20 sm:py-24">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <h2 className="text-center text-[clamp(1.5rem,3vw,2rem)] font-bold tracking-[-0.02em] text-white">
+          <h2 className="text-center text-[clamp(1.5rem,3vw,2rem)] font-bold tracking-[-0.02em] text-[#eeeeee]">
             Why Hotels Choose Persept
           </h2>
           <div className="mx-auto mt-10 grid max-w-4xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {trustPoints.map((tp) => (
-              <div key={tp.title} className="flex gap-3.5">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[rgba(185,28,28,0.1)]">
-                  <tp.icon className="h-5 w-5 text-[#b91c1c]" />
+              <div key={tp.title} className="flex gap-3.5 rounded-lg border border-[#0f3460] bg-[#16213e] p-4 shadow-[0_2px_8px_rgba(15,52,96,0.2)] transition-all duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(15,52,96,0.4)]">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[rgba(255,71,87,0.1)] border border-[rgba(255,71,87,0.2)]">
+                  <tp.icon className="h-5 w-5 text-[#ff4757]" />
                 </div>
                 <div>
-                  <h3 className="text-[14px] font-bold text-white">
+                  <h3 className="text-[15px] font-bold text-[#eeeeee]">
                     {tp.title}
                   </h3>
-                  <p className="mt-0.5 text-[13px] leading-relaxed text-[#a3a3a3]">
+                  <p className="mt-0.5 text-[13px] leading-relaxed text-[#a8b2d1]">
                     {tp.desc}
                   </p>
                 </div>
@@ -650,12 +650,12 @@ export function PricingPage() {
       </section>
 
       {/* ── CTA ─────────────────────────────────────── */}
-      <section className="bg-[#b91c1c] py-20 sm:py-24">
+      <section className="bg-[#ff4757] py-20 sm:py-24">
         <div className="mx-auto max-w-2xl px-6 text-center lg:px-8">
           <h2 className="text-[clamp(1.5rem,3.5vw,2.25rem)] font-bold leading-tight text-white">
             Ready to Automate Your Hotel Operations?
           </h2>
-          <p className="mt-3 text-[15px] leading-relaxed text-white/80">
+          <p className="mt-3 text-[16px] leading-relaxed text-white/90">
             Book a free 30-minute consultation to discuss your property's needs
             and get a custom quote.
           </p>
@@ -663,7 +663,7 @@ export function PricingPage() {
             <CTAButton
               variant="secondary"
               size="lg"
-              className="border-white/20 bg-[#0a0a0a] text-[#b91c1c] hover:bg-[#0a0a0a]/90"
+              className="border-white/20 bg-[#1a1a2e] text-white shadow-[0_8px_32px_rgba(26,26,46,0.3)] transition-all duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(26,26,46,0.4)] hover:bg-[#16213e]"
             >
               Book Free Consultation
             </CTAButton>
@@ -672,12 +672,12 @@ export function PricingPage() {
       </section>
 
       {/* ── Not sure section ────────────────────────── */}
-      <section className="bg-[#111111] py-16">
+      <section className="bg-[#16213e] py-16">
         <div className="mx-auto max-w-2xl px-6 text-center lg:px-8">
-          <h2 className="text-[20px] font-bold text-white">
+          <h2 className="text-[20px] font-bold text-[#eeeeee]">
             Not Sure Which Plan is Right for You?
           </h2>
-          <p className="mt-2 text-[14px] text-[#a3a3a3]">
+          <p className="mt-2 text-[15px] text-[#a8b2d1]">
             Book a free consultation and we'll help you choose the best tier for
             your property size, budget, and goals.
           </p>
@@ -688,15 +688,15 @@ export function PricingPage() {
       </section>
 
       {/* ── Footer notes ────────────────────────────── */}
-      <div className="border-t border-[#262626] bg-[#111111] px-6 py-8">
-        <div className="mx-auto max-w-3xl text-center text-[12px] leading-relaxed text-[#a3a3a3]">
+      <div className="border-t border-[#0f3460] bg-[#1a1a2e] px-6 py-8">
+        <div className="mx-auto max-w-3xl text-center text-[13px] leading-relaxed text-[#a8b2d1]">
           <p>
-            <strong className="text-[#a3a3a3]">Payment Terms:</strong> 50%
+            <strong className="text-[#eeeeee]">Payment Terms:</strong> 50%
             deposit on deployment, 50% on go-live. Monthly fees billed on the
             1st of each month.
           </p>
           <p className="mt-2">
-            <strong className="text-[#a3a3a3]">Currency:</strong> Prices shown
+            <strong className="text-[#eeeeee]">Currency:</strong> Prices shown
             in USD and AED. Invoices issued in USD (AED shown for reference).
             Conversion rate: 3.67 AED/USD.
           </p>
@@ -704,7 +704,7 @@ export function PricingPage() {
             Questions?{" "}
             <a
               href="mailto:khizr@persept.ai"
-              className="text-[#b91c1c] hover:underline"
+              className="text-[#ff4757] transition-colors duration-[150ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:text-[#ee5a6f] hover:underline"
             >
               khizr@persept.ai
             </a>
