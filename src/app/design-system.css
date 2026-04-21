@@ -12,6 +12,27 @@
   --color-primary-light: #ff6b7a;
   --color-primary-rgb: 255, 71, 87;
   
+  /* Design System Tokens (aliases for components) */
+  --ds-coral: var(--color-primary);
+  --ds-orange: var(--color-accent);
+  --ds-bg-base: var(--color-bg);
+  --ds-bg-surface: var(--color-surface);
+  --ds-bg-card: var(--color-card);
+  --ds-bg-elevated: var(--color-elevated);
+  --ds-text-primary: var(--color-text-primary);
+  --ds-text-secondary: var(--color-text-secondary);
+  --ds-text-muted: var(--color-text-muted);
+  --ds-text-tertiary: var(--color-text-muted);
+  --ds-text-inverse: var(--color-bg);
+  --ds-border-default: var(--color-border);
+  --ds-border-strong: rgba(168, 178, 209, 0.24);
+  --ds-error: #ff4757;
+  --ds-shadow-glow-coral: 0 0 20px rgba(255, 71, 87, 0.3);
+  --ds-ease-default: cubic-bezier(0.16, 1, 0.3, 1);
+  --ds-duration-fast: 150ms;
+  --ds-duration-normal: 250ms;
+  --ds-radius-full: 9999px;
+  
   /* Accent - Warm Orange */
   --color-accent: #ffa502;
   --color-accent-dark: #ff9500;
@@ -169,4 +190,52 @@
 
 .btn-retro:active {
   transform: translateY(0);
+}
+
+/* Retro Card */
+.card-retro {
+  position: relative;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  transition: all var(--transition-base);
+  overflow: hidden;
+}
+
+.card-retro::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255, 71, 87, 0.3), transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.card-retro:hover {
+  transform: translateY(-4px);
+  border-color: var(--color-border-hover);
+  box-shadow: var(--shadow-glow);
+}
+
+.card-retro:hover::before {
+  opacity: 1;
+}
+
+/* Section Spacing */
+.section {
+  padding-top: var(--space-12);
+  padding-bottom: var(--space-12);
+}
+
+@media (min-width: 768px) {
+  .section {
+    padding-top: var(--space-16);
+    padding-bottom: var(--space-16);
+  }
 }

@@ -398,39 +398,35 @@ function SectionHeader({
 function ProblemCard({ problem }: { problem: (typeof problems)[number] }) {
   const [open, setOpen] = useState(false);
   return (
-    <motion.div 
-      className="rounded-2xl border border-[#262626] bg-[#0a0a0a] p-6 md:p-8 transition-all duration-300 hover:border-[#b91c1c]/30 hover:shadow-[0_0_30px_rgba(185,28,28,0.1)]"
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.2 }}
-    >
+    <div className="card-retro">
       <div className="flex items-start gap-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[rgba(185,28,28,0.1)]">
-          <problem.icon className="h-5 w-5 text-[#b91c1c]" />
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[rgba(255,71,87,0.1)]">
+          <problem.icon className="h-5 w-5 text-[var(--color-primary)]" />
         </div>
         <div className="flex-1">
-          <h3 className="text-[17px] font-bold text-white">
+          <h3 className="text-[17px] font-bold text-[var(--color-text-primary)]">
             {problem.title}
           </h3>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-[22px] font-bold text-[#b91c1c]">
+            <span className="text-[22px] font-bold text-[var(--color-primary)]">
               {problem.stat}
             </span>
-            <span className="text-[13px] text-[#a3a3a3]">
+            <span className="text-[13px] text-[var(--color-text-muted)]">
               {problem.statLabel}
             </span>
           </div>
         </div>
       </div>
 
-      <p className="mt-4 text-[14px] leading-relaxed text-[#a3a3a3]">
+      <p className="mt-4 text-[14px] leading-relaxed text-[var(--color-text-secondary)]">
         {problem.description}
       </p>
 
       <ul className="mt-4 space-y-2">
         {problem.damages.map((d) => (
           <li key={d} className="flex items-start gap-2 text-[13px]">
-            <X className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#ef4444]" />
-            <span className="text-[#a3a3a3]">{d}</span>
+            <X className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--color-primary)]" />
+            <span className="text-[var(--color-text-secondary)]">{d}</span>
           </li>
         ))}
       </ul>
@@ -438,11 +434,11 @@ function ProblemCard({ problem }: { problem: (typeof problems)[number] }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="mt-4 flex cursor-pointer items-center gap-1.5 text-[13px] font-medium text-[#b91c1c] hover:text-[#dc2626] transition-colors"
+        className="mt-4 flex cursor-pointer items-center gap-1.5 text-[13px] font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-light)] transition-colors"
       >
         What you've tried
         <ChevronDown
-          className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`h-3.5 w-3.5 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
         />
       </button>
       <motion.div
@@ -451,72 +447,68 @@ function ProblemCard({ problem }: { problem: (typeof problems)[number] }) {
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
         className="overflow-hidden"
       >
-        <ul className="mt-3 space-y-1.5 border-t border-[#1f1f1f] pt-3">
+        <ul className="mt-3 space-y-1.5 border-t border-[var(--color-border)] pt-3">
           {problem.tried.map((t) => (
-            <li key={t} className="text-[13px] text-[#a3a3a3]">
+            <li key={t} className="text-[13px] text-[var(--color-text-secondary)]">
               • {t}
             </li>
           ))}
         </ul>
       </motion.div>
-    </motion.div>
+    </div>
   );
 }
 
 function OldSolutionCard({ sol }: { sol: (typeof oldSolutions)[number] }) {
   return (
-    <motion.div 
-      className="rounded-2xl border border-[#262626] bg-[#0a0a0a] p-6 md:p-8 transition-all duration-300 hover:border-[#525252]"
-      whileHover={{ scale: 1.02 }}
-      transition={{ duration: 0.2 }}
-    >
+    <div className="card-retro">
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#111111]">
-          <sol.icon className="h-5 w-5 text-[#a3a3a3]" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-surface)]">
+          <sol.icon className="h-5 w-5 text-[var(--color-text-muted)]" />
         </div>
         <div>
-          <h3 className="text-[16px] font-bold text-white">{sol.title}</h3>
-          <p className="text-[12px] text-[#a3a3a3]">{sol.subtitle}</p>
+          <h3 className="text-[16px] font-bold text-[var(--color-text-primary)]">{sol.title}</h3>
+          <p className="text-[12px] text-[var(--color-text-muted)]">{sol.subtitle}</p>
         </div>
       </div>
 
-      <p className="mt-4 rounded-lg bg-[#111111] p-3 text-[13px] italic text-[#a3a3a3]">
+      <p className="mt-4 rounded-lg bg-[var(--color-bg)] p-3 text-[13px] italic text-[var(--color-text-secondary)]">
         "{sol.promise}"
       </p>
 
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <div>
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#047857]">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#10b981]">
             What they can do
           </p>
           <ul className="space-y-1.5">
             {sol.canDo.map((c) => (
               <li key={c} className="flex items-start gap-2 text-[13px]">
-                <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#047857]" />
-                <span className="text-[#a3a3a3]">{c}</span>
+                <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#10b981]" />
+                <span className="text-[var(--color-text-secondary)]">{c}</span>
               </li>
             ))}
           </ul>
         </div>
         <div>
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#ef4444]">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-primary)]">
             What they can't do
           </p>
           <ul className="space-y-1.5">
             {sol.cantDo.map((c) => (
               <li key={c} className="flex items-start gap-2 text-[13px]">
-                <X className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#ef4444]" />
-                <span className="text-[#a3a3a3]">{c}</span>
+                <X className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--color-primary)]" />
+                <span className="text-[var(--color-text-secondary)]">{c}</span>
               </li>
             ))}
           </ul>
         </div>
       </div>
 
-      <p className="mt-5 rounded-lg border border-[#991b1b/30] bg-[rgba(185,28,28,0.1)] p-3 text-[13px] font-medium text-[#991b1b]">
+      <p className="mt-5 rounded-lg border border-[rgba(255,71,87,0.3)] bg-[rgba(255,71,87,0.1)] p-3 text-[13px] font-medium text-[var(--color-primary-dark)]">
         {sol.verdict}
       </p>
-    </motion.div>
+    </div>
   );
 }
 
@@ -547,10 +539,10 @@ function AgentProfile({
             <agent.icon className="h-5 w-5" style={{ color: agent.color }} />
           </div>
           <div>
-            <h3 className="text-[18px] font-bold text-white">
+            <h3 className="text-[18px] font-bold text-[var(--color-text-primary)]">
               {agent.name}
             </h3>
-            <p className="text-[13px] font-medium text-[#a3a3a3]">
+            <p className="text-[13px] font-medium text-[var(--color-text-muted)]">
               {agent.role}
             </p>
           </div>
@@ -563,12 +555,12 @@ function AgentProfile({
                 className="mt-0.5 h-4 w-4 shrink-0"
                 style={{ color: agent.color }}
               />
-              <span className="text-[#a3a3a3]">{c}</span>
+              <span className="text-[var(--color-text-secondary)]">{c}</span>
             </li>
           ))}
         </ul>
 
-        <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#111111] px-4 py-2 text-[13px] font-semibold text-white">
+        <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--color-surface)] px-4 py-2 text-[13px] font-semibold text-[var(--color-text-primary)] border border-[var(--color-border)]">
           {agent.impact}
         </div>
       </div>
@@ -583,7 +575,7 @@ function AgentProfile({
         >
           {showExample ? "Hide" : "See"} example: {agent.exampleLabel}
           <ChevronDown
-            className={`h-3.5 w-3.5 transition-transform ${showExample ? "rotate-180" : ""}`}
+            className={`h-3.5 w-3.5 transition-transform duration-300 ${showExample ? "rotate-180" : ""}`}
           />
         </button>
 
@@ -597,13 +589,13 @@ function AgentProfile({
           className="overflow-hidden"
         >
         {showExample && (
-          <div className="rounded-2xl border border-[#262626] bg-[#111111] p-5">
+          <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
             {agent.exampleGuest && (
               <div className="mb-3">
-                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#a3a3a3]">
+                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
                   Guest
                 </p>
-                <div className="rounded-xl rounded-tl-sm bg-[#0a0a0a] p-3 text-[13px] leading-relaxed text-[#a3a3a3]">
+                <div className="rounded-xl rounded-tl-sm bg-[var(--color-bg)] p-3 text-[13px] leading-relaxed text-[var(--color-text-secondary)]">
                   {agent.exampleGuest}
                 </div>
               </div>
@@ -652,33 +644,39 @@ export function SolutionPage() {
       <Navbar />
 
       {/* ── Hero ───────────────────────────────────── */}
-      <section className="relative bg-gradient-to-b from-[#111111] to-[#0a0a0a] py-16 sm:py-20 md:py-24 lg:py-32 overflow-hidden">
+      <section className="section relative overflow-hidden bg-gradient-to-b from-[var(--color-surface)] to-[var(--color-bg)]">
         {/* Network canvas - connecting dots and lines */}
         <div className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true">
           <NetworkCanvas />
         </div>
         <div className="relative z-10 mx-auto max-w-3xl px-4 sm:px-6 text-center lg:px-8">
-          <h1 className="fade-up text-[clamp(1.75rem,4.5vw,3rem)] font-bold leading-tight tracking-[-0.02em] text-white">
-            Stop Fighting the Chaos. <br/>
-            <span className="text-[#b91c1c]">Let AI Do the Boring Stuff.</span> 🎯
-          </h1>
-          <p className="fade-up delay-1 mt-5 text-[16px] leading-relaxed text-[#a3a3a3]">
-            Your team is drowning in copy-paste replies while guests wait hours. Staff quit because they spend their days doing robot work. There's a better way — and it doesn't involve hiring more humans.
-          </p>
-          <div className="fade-up delay-2 mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center w-full max-w-md mx-auto sm:max-w-none">
-            <CTAButton size="lg" className="w-full sm:w-auto min-h-[44px]">
-              Book Free Consultation
-              <ArrowRight className="h-4 w-4" />
-            </CTAButton>
-            <CTAButton variant="secondary" size="lg" href="/pricing" className="w-full sm:w-auto min-h-[44px]">
-              See Pricing
-            </CTAButton>
-          </div>
+          <FadeUp>
+            <h1 className="text-[clamp(1.75rem,4.5vw,3rem)] font-bold leading-tight tracking-[-0.02em] text-white">
+              Stop Fighting the Chaos. <br/>
+              <span className="text-gradient-primary">Let AI Do the Boring Stuff.</span> 🎯
+            </h1>
+          </FadeUp>
+          <FadeUp delay={0.1}>
+            <p className="mt-5 text-[16px] leading-relaxed text-[var(--color-text-secondary)]">
+              Your team is drowning in copy-paste replies while guests wait hours. Staff quit because they spend their days doing robot work. There's a better way — and it doesn't involve hiring more humans.
+            </p>
+          </FadeUp>
+          <FadeUp delay={0.2}>
+            <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center w-full max-w-md mx-auto sm:max-w-none">
+              <CTAButton size="lg" className="w-full sm:w-auto min-h-[44px]">
+                Book Free Consultation
+                <ArrowRight className="h-4 w-4" />
+              </CTAButton>
+              <CTAButton variant="secondary" size="lg" href="/pricing" className="w-full sm:w-auto min-h-[44px]">
+                See Pricing
+              </CTAButton>
+            </div>
+          </FadeUp>
         </div>
       </section>
 
       {/* ── Section 1: The Problems ────────────────── */}
-      <section className="bg-[#0a0a0a] py-16 sm:py-20 md:py-24">
+      <section className="section bg-[var(--color-bg)]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionHeader
             label="The reality"
@@ -696,7 +694,7 @@ export function SolutionPage() {
       </section>
 
       {/* ── Section 2: Old Solutions ───────────────── */}
-      <section className="bg-[#111111] py-16 sm:py-20 md:py-24">
+      <section className="section bg-[var(--color-surface)]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionHeader
             label="Why they fail"
@@ -714,7 +712,7 @@ export function SolutionPage() {
       </section>
 
       {/* ── Section 3: Our Solution — The Agents ──── */}
-      <section className="bg-[#0a0a0a] py-16 sm:py-20 md:py-24">
+      <section className="section bg-[var(--color-bg)]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionHeader
             label="Our solution"
@@ -743,16 +741,16 @@ export function SolutionPage() {
             ].map((item, idx) => (
               <FadeUp key={item.label} delay={idx * 0.1}>
                 <motion.div
-                  className={`rounded-xl border p-4 text-center transition-all duration-300 ${item.muted ? "border-[#262626] bg-[#111111]" : "border-[#b91c1c] bg-[rgba(185,28,28,0.1)]"}`}
+                  className={`rounded-xl border p-4 text-center transition-all duration-300 ${item.muted ? "border-[var(--color-border)] bg-[var(--color-surface)]" : "border-[var(--color-primary)] bg-[rgba(255,71,87,0.1)]"}`}
                   whileHover={{ scale: item.muted ? 1 : 1.05 }}
                   transition={{ duration: 0.2 }}
                 >
                 <p
-                  className={`text-[14px] font-bold ${item.muted ? "text-[#a3a3a3]" : "text-[#b91c1c]"}`}
+                  className={`text-[14px] font-bold ${item.muted ? "text-[var(--color-text-muted)]" : "text-[var(--color-primary)]"}`}
                 >
                   {item.label}
                 </p>
-                <p className="mt-1 text-[12px] text-[#a3a3a3]">{item.desc}</p>
+                <p className="mt-1 text-[12px] text-[var(--color-text-muted)]">{item.desc}</p>
                 </motion.div>
               </FadeUp>
             ))}
@@ -772,19 +770,21 @@ export function SolutionPage() {
       </section>
 
       {/* ── Scenario: How It All Works Together ───── */}
-      <section className="bg-[#0a0a0a] py-16 sm:py-20 md:py-24 border-y border-[#262626]">
+      <section className="section bg-[var(--color-bg)] border-y border-[var(--color-border)]">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#b91c1c]">
-              The full picture
-            </p>
-            <h2 className="mt-2 text-[clamp(1.5rem,3vw,2rem)] font-bold text-white">
-              A Weekend at a 150-Room Hotel (Without the Panic Attacks) 😌
-            </h2>
-            <p className="mt-2 text-[14px] text-white/60">
-              Watch Sarah, Marcus, Olivia, and Alex tag-team a busy weekend while your GM actually gets to sleep.
-            </p>
-          </div>
+          <FadeUp>
+            <div className="text-center">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-primary)]">
+                The full picture
+              </p>
+              <h2 className="mt-2 text-[clamp(1.5rem,3vw,2rem)] font-bold text-[var(--color-text-primary)]">
+                A Weekend at a 150-Room Hotel (Without the Panic Attacks) 😌
+              </h2>
+              <p className="mt-2 text-[14px] text-[var(--color-text-secondary)]">
+                Watch Sarah, Marcus, Olivia, and Alex tag-team a busy weekend while your GM actually gets to sleep.
+              </p>
+            </div>
+          </FadeUp>
 
           <StaggerContainer className="mt-10 space-y-4">
             {[
@@ -797,25 +797,25 @@ export function SolutionPage() {
               {
                 time: "Friday 10 AM",
                 agent: "Olivia",
-                color: "#047857",
+                color: "#10b981",
                 text: "Analyzes occupancy, recommends adding 2 housekeepers for Saturday checkout rush.",
               },
               {
                 time: "Friday 2 PM",
                 agent: "Sarah",
-                color: "#b91c1c",
+                color: "var(--color-primary)",
                 text: "Handles 45 guest messages across WhatsApp, email, and Booking.com. Upsells 3 early check-ins.",
               },
               {
                 time: "Friday 6 PM",
                 agent: "Marcus",
-                color: "#7c3aed",
+                color: "#8b5cf6",
                 text: "Spots a negative Google review, drafts a response, and flags GM for approval.",
               },
               {
                 time: "Saturday 9 AM",
                 agent: "Sarah",
-                color: "#b91c1c",
+                color: "var(--color-primary)",
                 text: "Sends automated check-out reminders — 80% of guests check out on time.",
               },
               {
@@ -827,7 +827,7 @@ export function SolutionPage() {
             ].map((event, idx) => (
               <FadeUp key={event.time} delay={idx * 0.1}>
                 <motion.div
-                  className="flex items-start gap-4 rounded-xl bg-[#0a0a0a]/5 p-4 hover:bg-[#111111] transition-colors duration-300"
+                  className="flex items-start gap-4 rounded-xl bg-[var(--color-card)]/30 p-4 hover:bg-[var(--color-card)]/50 transition-colors duration-300"
                   whileHover={{ x: 4 }}
                   transition={{ duration: 0.2 }}
                 >
@@ -836,10 +836,10 @@ export function SolutionPage() {
                     style={{ backgroundColor: event.color }}
                   />
                   <div>
-                    <p className="text-[12px] font-medium text-white/40">
+                    <p className="text-[12px] font-medium text-[var(--color-text-muted)]">
                       {event.time}
                     </p>
-                    <p className="text-[14px] text-white">
+                    <p className="text-[14px] text-[var(--color-text-primary)]">
                       <span
                         className="font-semibold"
                         style={{ color: event.color }}
@@ -855,17 +855,17 @@ export function SolutionPage() {
           </StaggerContainer>
 
           <FadeUp delay={0.6}>
-            <div className="mt-8 rounded-xl bg-[#0a0a0a]/10 p-5">
-            <p className="text-[13px] font-semibold text-white">
+            <div className="mt-8 rounded-xl bg-[var(--color-card)]/30 p-5 border border-[var(--color-border)]">
+            <p className="text-[13px] font-semibold text-[var(--color-text-primary)]">
               Weekend result:
             </p>
-            <div className="mt-2 grid gap-3 text-[13px] text-white/70 sm:grid-cols-3">
+            <div className="mt-2 grid gap-3 text-[13px] text-[var(--color-text-secondary)] sm:grid-cols-3">
               <span>45+ inquiries handled</span>
               <span>3 upsells closed (AED 600)</span>
               <span>Review response: 2 hrs vs. 3 days</span>
               <span>Optimized staffing, no scrambling</span>
               <span>Revenue insights delivered proactively</span>
-              <span className="font-semibold text-white">
+              <span className="font-semibold text-[var(--color-primary)]">
                 25–30 hours saved
               </span>
             </div>
@@ -875,49 +875,48 @@ export function SolutionPage() {
       </section>
 
       {/* ── Section 4: Why Different ───────────────── */}
-      <section className="bg-[#0a0a0a] py-16 sm:py-20 md:py-24">
+      <section className="section bg-[var(--color-bg)]">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <SectionHeader
             label="The difference"
             title="Why We're Not Like Every Other 'AI Solution' 🙄"
             subtitle="We're not trying to sell you a chatbot widget or a Zapier clone with buzzwords."
           />
-          <div className="mt-12 grid gap-6 md:grid-cols-2">
-            {differences.map((d) => (
-              <div
-                key={d.title}
-                className="rounded-2xl border border-[#262626] p-6"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(185,28,28,0.1)]">
-                    <d.icon className="h-5 w-5 text-[#b91c1c]" />
+          <StaggerContainer className="mt-12 grid gap-6 md:grid-cols-2">
+            {differences.map((d, idx) => (
+              <FadeUp key={d.title} delay={idx * 0.1}>
+                <div className="card-retro">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[rgba(255,71,87,0.1)]">
+                      <d.icon className="h-5 w-5 text-[var(--color-primary)]" />
+                    </div>
+                    <h3 className="text-[15px] font-bold text-[var(--color-text-primary)]">
+                      {d.title}
+                    </h3>
                   </div>
-                  <h3 className="text-[15px] font-bold text-white">
-                    {d.title}
-                  </h3>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-lg bg-[var(--color-bg)] p-3 border border-[rgba(239,68,68,0.2)]">
+                      <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#ef4444]">
+                        Typical tools
+                      </p>
+                      <p className="text-[13px] text-[var(--color-text-secondary)]">{d.old}</p>
+                    </div>
+                    <div className="rounded-lg bg-[rgba(16,185,129,0.1)] p-3 border border-[rgba(16,185,129,0.2)]">
+                      <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#10b981]">
+                        Persept
+                      </p>
+                      <p className="text-[13px] text-[var(--color-text-secondary)]">{d.ours}</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-lg bg-[#111111] p-3">
-                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#ef4444]">
-                      Typical tools
-                    </p>
-                    <p className="text-[13px] text-[#a3a3a3]">{d.old}</p>
-                  </div>
-                  <div className="rounded-lg bg-[rgba(4,120,87,0.1)] p-3">
-                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#047857]">
-                      Persept
-                    </p>
-                    <p className="text-[13px] text-[#a3a3a3]">{d.ours}</p>
-                  </div>
-                </div>
-              </div>
+              </FadeUp>
             ))}
-          </div>
+          </StaggerContainer>
         </div>
       </section>
 
       {/* ── Section 5: Before / After ─────────────── */}
-      <section className="bg-[#111111] py-16 sm:py-20 md:py-24">
+      <section className="section bg-[var(--color-surface)]">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <SectionHeader
             label="The transformation"
@@ -927,169 +926,190 @@ export function SolutionPage() {
 
           <div className="mt-12 grid gap-6 md:grid-cols-2">
             {/* Before */}
-            <div className="rounded-2xl border border-[#991b1b/30] bg-[#0a0a0a] p-6 md:p-8">
-              <p className="text-[13px] font-bold uppercase tracking-wide text-[#ef4444]">
-                Before Persept
-              </p>
-              <ul className="mt-4 space-y-3 text-[13px] text-[#a3a3a3]">
-                <li>7 AM — Spend 2 hours answering 20+ guest emails</li>
-                <li>
-                  9 AM — Answer phone calls (same questions, over and over)
-                </li>
-                <li>11 AM — Manually check occupancy, build schedule</li>
-                <li>1 PM — Respond to Booking.com and Agoda messages</li>
-                <li>3 PM — Draft review responses (1–2 hours)</li>
-                <li>5 PM — Create revenue report in Excel (1 hour)</li>
-                <li className="font-medium text-[#ef4444]">
-                  6 PM — No time left for guest experience improvements
-                </li>
-              </ul>
-            </div>
+            <FadeUp delay={0.1}>
+              <div className="card-retro border-[rgba(239,68,68,0.3)]">
+                <p className="text-[13px] font-bold uppercase tracking-wide text-[#ef4444]">
+                  Before Persept
+                </p>
+                <ul className="mt-4 space-y-3 text-[13px] text-[var(--color-text-secondary)]">
+                  <li>7 AM — Spend 2 hours answering 20+ guest emails</li>
+                  <li>
+                    9 AM — Answer phone calls (same questions, over and over)
+                  </li>
+                  <li>11 AM — Manually check occupancy, build schedule</li>
+                  <li>1 PM — Respond to Booking.com and Agoda messages</li>
+                  <li>3 PM — Draft review responses (1–2 hours)</li>
+                  <li>5 PM — Create revenue report in Excel (1 hour)</li>
+                  <li className="font-medium text-[#ef4444]">
+                    6 PM — No time left for guest experience improvements
+                  </li>
+                </ul>
+              </div>
+            </FadeUp>
 
             {/* After */}
-            <div className="rounded-2xl border border-[#047857/30] bg-[#0a0a0a] p-6 md:p-8">
-              <p className="text-[13px] font-bold uppercase tracking-wide text-[#047857]">
-                After Persept
-              </p>
-              <ul className="mt-4 space-y-3 text-[13px] text-[#a3a3a3]">
-                <li>7 AM — Check Sarah's escalations (5 min)</li>
-                <li>8 AM — Review Alex's revenue report (5 min)</li>
-                <li>8:30 AM — Approve Olivia's schedule (10 min)</li>
-                <li>9 AM — Approve Marcus's review drafts (15 min)</li>
-                <li className="font-semibold text-[#047857]">
-                  9:30 AM – 6 PM — Focus on VIP experience, partnerships,
-                  property improvements, team development
-                </li>
-              </ul>
-            </div>
+            <FadeUp delay={0.2}>
+              <div className="card-retro border-[rgba(16,185,129,0.3)]">
+                <p className="text-[13px] font-bold uppercase tracking-wide text-[#10b981]">
+                  After Persept
+                </p>
+                <ul className="mt-4 space-y-3 text-[13px] text-[var(--color-text-secondary)]">
+                  <li>7 AM — Check Sarah's escalations (5 min)</li>
+                  <li>8 AM — Review Alex's revenue report (5 min)</li>
+                  <li>8:30 AM — Approve Olivia's schedule (10 min)</li>
+                  <li>9 AM — Approve Marcus's review drafts (15 min)</li>
+                  <li className="font-semibold text-[#10b981]">
+                    9:30 AM – 6 PM — Focus on VIP experience, partnerships,
+                    property improvements, team development
+                  </li>
+                </ul>
+              </div>
+            </FadeUp>
           </div>
 
           {/* Stats */}
-          <div className="mx-auto mt-10 grid max-w-4xl gap-4 sm:grid-cols-3">
+          <StaggerContainer className="mx-auto mt-10 grid max-w-4xl gap-4 sm:grid-cols-3">
             {[
               { value: "35–50 hrs", label: "saved per week" },
               { value: "10–15%", label: "labor cost reduction" },
               { value: "130–300%", label: "ROI in Year 1" },
-            ].map((s) => (
-              <div
-                key={s.label}
-                className="rounded-xl border border-[#262626] bg-[#0a0a0a] p-5 text-center"
-              >
-                <p className="text-[28px] font-bold tracking-tight text-[#b91c1c]">
-                  {s.value}
-                </p>
-                <p className="mt-1 text-[13px] text-[#a3a3a3]">{s.label}</p>
-              </div>
+            ].map((s, idx) => (
+              <FadeUp key={s.label} delay={0.3 + idx * 0.1}>
+                <div className="card-retro text-center">
+                  <p className="text-[28px] font-bold tracking-tight text-[var(--color-primary)]">
+                    {s.value}
+                  </p>
+                  <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">{s.label}</p>
+                </div>
+              </FadeUp>
             ))}
-          </div>
+          </StaggerContainer>
         </div>
       </section>
 
       {/* ── Section 6: Implementation Timeline ────── */}
-      <section className="bg-[#0a0a0a] py-16 sm:py-20 md:py-24">
+      <section className="section bg-[var(--color-bg)]">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <SectionHeader
             label="Implementation"
             title="From Audit to Go-Live in 30 Days"
           />
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <StaggerContainer className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {timeline.map((step, idx) => (
-              <div key={step.title} className="relative">
-                <div className="mb-3 flex items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#b91c1c] text-[12px] font-bold text-white">
-                    {idx + 1}
-                  </span>
-                  <span className="text-[12px] font-medium text-[#a3a3a3]">
-                    {step.day}
-                  </span>
+              <FadeUp key={step.title} delay={idx * 0.1}>
+                <div className="relative">
+                  <div className="mb-3 flex items-center gap-2">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-primary)] text-[12px] font-bold text-white">
+                      {idx + 1}
+                    </span>
+                    <span className="text-[12px] font-medium text-[var(--color-text-muted)]">
+                      {step.day}
+                    </span>
+                  </div>
+                  <h3 className="text-[15px] font-bold text-[var(--color-text-primary)]">
+                    {step.title}
+                  </h3>
+                  <ul className="mt-3 space-y-1.5">
+                    {step.items.map((item) => (
+                      <li
+                        key={item}
+                        className="flex items-start gap-2 text-[13px]"
+                      >
+                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--color-primary)]" />
+                        <span className="text-[var(--color-text-secondary)]">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <h3 className="text-[15px] font-bold text-white">
-                  {step.title}
-                </h3>
-                <ul className="mt-3 space-y-1.5">
-                  {step.items.map((item) => (
-                    <li
-                      key={item}
-                      className="flex items-start gap-2 text-[13px]"
-                    >
-                      <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#b91c1c]" />
-                      <span className="text-[#a3a3a3]">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              </FadeUp>
             ))}
-          </div>
+          </StaggerContainer>
         </div>
       </section>
 
       {/* ── CTA ────────────────────────────────────── */}
-      <section className="bg-[#b91c1c] py-16 sm:py-20 md:py-24">
+      <section className="section bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-dark)]">
         <div className="mx-auto max-w-2xl px-4 sm:px-6 text-center lg:px-8">
-          <h2 className="text-[clamp(1.5rem,3.5vw,2.25rem)] font-bold leading-tight text-white">
-            Ready to Stop the Madness? 🚀
-          </h2>
-          <p className="mt-3 text-[15px] leading-relaxed text-white/80">
-            Book a free 30-minute call. We'll show you exactly where you're bleeding time (and money) — and how Sarah, Marcus, Olivia, and Alex can plug the leak.
-          </p>
-          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center w-full max-w-md mx-auto sm:max-w-none">
-            <CTAButton
-              variant="secondary"
-              size="lg"
-              className="border-white/20 bg-[#0a0a0a] text-[#b91c1c] hover:bg-[#0a0a0a]/90 w-full sm:w-auto min-h-[44px]"
-            >
-              Book Free Consultation
-            </CTAButton>
-            <CTAButton
-              variant="secondary"
-              size="lg"
-              href="/pricing"
-              className="border-white/30 bg-transparent text-white hover:bg-[#0a0a0a]/10 w-full sm:w-auto min-h-[44px]"
-            >
-              See Pricing
-            </CTAButton>
-          </div>
+          <FadeUp>
+            <h2 className="text-[clamp(1.5rem,3.5vw,2.25rem)] font-bold leading-tight text-white">
+              Ready to Stop the Madness? 🚀
+            </h2>
+          </FadeUp>
+          <FadeUp delay={0.1}>
+            <p className="mt-3 text-[15px] leading-relaxed text-white/90">
+              Book a free 30-minute call. We'll show you exactly where you're bleeding time (and money) — and how Sarah, Marcus, Olivia, and Alex can plug the leak.
+            </p>
+          </FadeUp>
+          <FadeUp delay={0.2}>
+            <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center w-full max-w-md mx-auto sm:max-w-none">
+              <CTAButton
+                variant="secondary"
+                size="lg"
+                className="border-white/20 bg-white text-[var(--color-primary)] hover:bg-white/90 w-full sm:w-auto min-h-[44px]"
+              >
+                Book Free Consultation
+              </CTAButton>
+              <CTAButton
+                variant="secondary"
+                size="lg"
+                href="/pricing"
+                className="border-white/30 bg-white/10 text-white hover:bg-white/20 w-full sm:w-auto min-h-[44px]"
+              >
+                See Pricing
+              </CTAButton>
+            </div>
+          </FadeUp>
         </div>
       </section>
 
       {/* ── Trust ──────────────────────────────────── */}
-      <section className="bg-[#0a0a0a] py-16 sm:py-20 md:py-24">
+      <section className="section bg-[var(--color-bg)]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-center text-[clamp(1.5rem,3vw,2rem)] font-bold tracking-[-0.02em] text-white">
-            Why Hotels Trust Persept
-          </h2>
-          <div className="mx-auto mt-10 grid max-w-4xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {trustPoints.map((tp) => (
-              <div key={tp.title} className="flex gap-3.5">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[rgba(185,28,28,0.1)]">
-                  <tp.icon className="h-5 w-5 text-[#b91c1c]" />
+          <FadeUp>
+            <h2 className="text-center text-[clamp(1.5rem,3vw,2rem)] font-bold tracking-[-0.02em] text-[var(--color-text-primary)]">
+              Why Hotels Trust Persept
+            </h2>
+          </FadeUp>
+          <StaggerContainer className="mx-auto mt-10 grid max-w-4xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {trustPoints.map((tp, idx) => (
+              <FadeUp key={tp.title} delay={idx * 0.1}>
+                <div className="flex gap-3.5">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[rgba(255,71,87,0.1)]">
+                    <tp.icon className="h-5 w-5 text-[var(--color-primary)]" />
+                  </div>
+                  <div>
+                    <h3 className="text-[14px] font-bold text-[var(--color-text-primary)]">
+                      {tp.title}
+                    </h3>
+                    <p className="mt-0.5 text-[13px] leading-relaxed text-[var(--color-text-secondary)]">
+                      {tp.desc}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-[14px] font-bold text-white">
-                    {tp.title}
-                  </h3>
-                  <p className="mt-0.5 text-[13px] leading-relaxed text-[#a3a3a3]">
-                    {tp.desc}
-                  </p>
-                </div>
-              </div>
+              </FadeUp>
             ))}
-          </div>
+          </StaggerContainer>
         </div>
       </section>
 
       {/* ── Final CTA ──────────────────────────────── */}
-      <section className="bg-[#111111] py-12 sm:py-16">
+      <section className="section bg-[var(--color-surface)]">
         <div className="mx-auto max-w-2xl px-4 sm:px-6 text-center lg:px-8">
-          <h2 className="text-[20px] font-bold text-white">
-            Your Team Deserves Better Than Copy-Pasting All Day. 💪
-          </h2>
-          <p className="mt-2 text-[14px] text-[#a3a3a3]">
-            Let Sarah handle the messages. Marcus tackle the reviews. Olivia fix the schedule. Alex crunch the numbers. Your team? They'll finally get to do the hospitality work they actually signed up for.
-          </p>
-          <CTAButton className="mt-5 w-full max-w-xs sm:w-auto min-h-[44px]" size="lg">
-            Book Free Consultation
-          </CTAButton>
+          <FadeUp>
+            <h2 className="text-[20px] font-bold text-[var(--color-text-primary)]">
+              Your Team Deserves Better Than Copy-Pasting All Day. 💪
+            </h2>
+          </FadeUp>
+          <FadeUp delay={0.1}>
+            <p className="mt-2 text-[14px] text-[var(--color-text-secondary)]">
+              Let Sarah handle the messages. Marcus tackle the reviews. Olivia fix the schedule. Alex crunch the numbers. Your team? They'll finally get to do the hospitality work they actually signed up for.
+            </p>
+          </FadeUp>
+          <FadeUp delay={0.2}>
+            <CTAButton className="mt-5 w-full max-w-xs sm:w-auto min-h-[44px]" size="lg">
+              Book Free Consultation
+            </CTAButton>
+          </FadeUp>
         </div>
       </section>
 
