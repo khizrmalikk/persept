@@ -2,10 +2,10 @@ import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
 import Link from 'next/link';
 import { ArrowRight, Plane, DollarSign, Users, Smartphone, Calculator, Globe } from 'lucide-react';
-
-export default function DAP() {
 import { NetworkCanvas } from "@/components/ui/network-canvas";
 import { FadeUp, SlideIn } from "@/components/ui/scroll-animations";
+
+export default function DAP() {
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
       <Navbar />
