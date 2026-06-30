@@ -1,310 +1,509 @@
+"use client";
+
+import Link from "next/link";
+import { useRef } from "react";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  type MotionValue,
+} from "framer-motion";
+import { ArrowRight, ArrowDown } from "lucide-react";
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
-import Link from 'next/link';
-import { ArrowRight, Bot, Briefcase, Plane, Sparkles, Zap, Target, Settings, Rocket, TrendingUp } from 'lucide-react';
-import { NetworkCanvas } from "@/components/ui/network-canvas";
-import { FadeUp, SlideIn, GlowPulse, AnimatedCounter } from "@/components/ui/scroll-animations";
-import { InteractiveDemo } from "@/components/ui/interactive-demo";
+import { LabObject } from "@/components/ui/lab-object";
+import { FadeUp } from "@/components/ui/scroll-animations";
 
-export default function Home() {
+/* ── Data ──────────────────────────────────────────────────────────────── */
+
+const PROJECTS = [
+  {
+    id: "GYST",
+    index: "001",
+    name: "GYST",
+    tagline: "Job search & applications, on autopilot.",
+    desc: "Search and apply for roles while GYST auto-generates a tailored CV and cover letter for every single job.",
+    status: "Flagship",
+    href: "/projects/gyst",
+    tags: ["AI", "Careers", "Automation"],
+  },
+  {
+    id: "HOTEL",
+    index: "002",
+    name: "Hotel AI Workforce",
+    tagline: "An AI team for hospitality operations.",
+    desc: "Agents that handle guest comms, reviews, scheduling and reporting — built and proven with real hotels.",
+    status: "Live",
+    href: "/projects/hotel",
+    tags: ["AI Agents", "Hospitality"],
+  },
+  {
+    id: "DAP",
+    index: "003",
+    name: "DAP",
+    tagline: "Data, applied.",
+    desc: "An applied-data product turning messy operational signals into decisions teams can act on.",
+    status: "Active",
+    href: "/projects/dap",
+    tags: ["Data", "Tooling"],
+  },
+  {
+    id: "NEXT",
+    index: "004",
+    name: "In the lab",
+    tagline: "The next problem worth solving.",
+    desc: "We're always prototyping. New experiments move from whiteboard to working software here.",
+    status: "Coming soon",
+    href: "/projects",
+    tags: ["Prototype"],
+  },
+];
+
+const PROCESS = [
+  {
+    n: "01",
+    t: "Find the friction",
+    d: "We start with a real, painful problem — not a feature looking for a use.",
+  },
+  {
+    n: "02",
+    t: "Prototype fast",
+    d: "A working prototype in days. We learn by building, not by speccing.",
+  },
+  {
+    n: "03",
+    t: "Ship & sharpen",
+    d: "Put it in real hands, measure, and refine until it earns its place.",
+  },
+  {
+    n: "04",
+    t: "Scale what works",
+    d: "Proven prototypes graduate into products with their own home.",
+  },
+];
+
+const TICKER = [
+  "AI Agents",
+  "Applied ML",
+  "Automation",
+  "Product Design",
+  "Rapid Prototyping",
+  "Full-stack",
+  "3D / WebGL",
+  "Data Tooling",
+];
+
+/* ── Word-by-word scroll reveal ────────────────────────────────────────── */
+
+function RevealWord({
+  children,
+  progress,
+  range,
+}: {
+  children: string;
+  progress: MotionValue<number>;
+  range: [number, number];
+}) {
+  const opacity = useTransform(progress, range, [0.12, 1]);
   return (
-    <div className="min-h-screen bg-grain" style={{ backgroundColor: 'var(--color-bg)' }}>
-      <Navbar />
-      
-      {/* Hero Section */}
-      <section className="relative overflow-hidden pt-24 py-16 sm:py-20 md:py-28 lg:py-32">
-        {/* Network canvas background */}
-        <div className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true">
-          <NetworkCanvas />
-        </div>
+    <motion.span style={{ opacity }} className="inline-block">
+      {children}&nbsp;
+    </motion.span>
+  );
+}
 
-        {/* Gradient overlay */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[var(--color-bg)]/60 via-transparent to-[var(--color-bg)]/80" />
+function Manifesto() {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start 0.85", "start 0.25"],
+  });
 
-        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-3xl text-center">
-            <FadeUp>
-              <p className="text-[12px] font-medium uppercase tracking-[0.15em]" style={{ color: 'var(--color-primary)' }}>
-                AI Workforce Solutions
-              </p>
-            </FadeUp>
+  const text =
+    "Persept is a software innovation lab. We take real problems — the tedious, the broken, the expensive — and turn them into products worth shipping.";
+  const tokens = text.split(" ").map((word, i, arr) => ({
+    word,
+    id: i,
+    range: [i / arr.length, (i + 1) / arr.length] as [number, number],
+  }));
 
-            <FadeUp delay={0.1}>
-              <h1 className="mt-5 text-[clamp(2.25rem,5.5vw,4.25rem)] font-bold leading-[1.08] tracking-[-0.035em]" style={{ color: 'var(--color-text-primary)' }}>
-                Problems Fixed with Agents.
-                <br />
-                <span className="text-gradient-primary">Workforces Built with AI.</span>
-              </h1>
-            </FadeUp>
+  return (
+    <section
+      ref={ref}
+      className="section"
+      style={{ borderTop: "1px solid var(--line)" }}
+    >
+      <div className="shell">
+        <p className="mono-label mb-8">
+          <span className="section-index">002</span>
+          &nbsp;&nbsp;/&nbsp;&nbsp;Manifesto
+        </p>
+        <p
+          className="display max-w-5xl"
+          style={{
+            fontSize: "clamp(1.75rem, 4.2vw, 3.5rem)",
+            lineHeight: 1.18,
+            fontWeight: 500,
+          }}
+        >
+          {tokens.map((t) => (
+            <RevealWord key={t.id} progress={scrollYProgress} range={t.range}>
+              {t.word}
+            </RevealWord>
+          ))}
+        </p>
+      </div>
+    </section>
+  );
+}
 
-            <FadeUp delay={0.2}>
-              <p className="mx-auto mt-6 max-w-2xl text-[clamp(1rem,1.5vw,1.15rem)] leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-                We don't just automate tasks—we build AI workforces that solve real business problems, save time, and drive revenue.
-              </p>
-            </FadeUp>
+/* ── Hero ──────────────────────────────────────────────────────────────── */
 
-            <FadeUp delay={0.3}>
-              <div className="mt-8 sm:mt-10">
-                <Link
-                  href="#solutions"
-                  className="btn-retro inline-flex items-center gap-2 text-[15px]"
-                >
-                  Explore Solutions
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-            </FadeUp>
+function Hero() {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start start", "end start"],
+  });
 
-            <FadeUp delay={0.4}>
-              <div className="mt-10 sm:mt-14 flex flex-col items-center gap-3 sm:gap-4 md:flex-row md:justify-center md:gap-8">
-                {[
-                  { icon: Sparkles, value: 3, suffix: "", label: "AI Solutions" },
-                  { icon: Zap, value: 24, suffix: "/7", label: "Automation" },
-                  { icon: Target, value: 100, suffix: "%", label: "ROI Focus" },
-                ].map((stat) => (
-                  <GlowPulse key={stat.label}>
-                    <div 
-                      className="flex items-center gap-3 rounded-full px-5 py-2.5 transition-all duration-[var(--transition-base)] hover:scale-105"
-                      style={{ 
-                        border: '1px solid var(--color-border)',
-                        backgroundColor: 'var(--color-surface)'
-                      }}
-                    >
-                      <stat.icon className="h-4 w-4" style={{ color: 'var(--color-primary)' }} />
-                      <span className="text-[15px] font-bold" style={{ color: 'var(--color-text-primary)' }}>
-                        <AnimatedCounter
-                          value={stat.value}
-                          suffix={stat.suffix}
-                        />
-                      </span>
-                      <span className="text-[13px]" style={{ color: 'var(--color-text-muted)' }}>{stat.label}</span>
-                    </div>
-                  </GlowPulse>
-                ))}
-              </div>
-            </FadeUp>
-          </div>
-        </div>
-      </section>
+  const objectY = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
+  const objectScale = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
+  const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "60%"]);
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
 
-      {/* Interactive Visual Demo */}
-      <section className="relative -mt-8 sm:-mt-12">
-        <InteractiveDemo />
-      </section>
+  return (
+    <section
+      ref={ref}
+      className="relative grain lab-grid min-h-[100svh] overflow-hidden"
+    >
+      {/* 3D centerpiece */}
+      <motion.div
+        style={{ y: objectY, scale: objectScale }}
+        className="pointer-events-none absolute inset-0 flex items-center justify-center"
+      >
+        <LabObject className="h-[min(78vh,720px)] w-[min(92vw,720px)]" />
+      </motion.div>
 
-      {/* Solutions Showcase */}
-      <section id="solutions" className="relative py-16 sm:py-20 md:py-24 bg-dots">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center mb-12 sm:mb-16">
-            <FadeUp>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: 'var(--color-primary)' }}>
-                Our Solutions
-              </p>
-            </FadeUp>
-            <FadeUp delay={0.1}>
-              <h2 className="mt-2 text-[clamp(1.5rem,3.5vw,2.25rem)] font-bold leading-tight tracking-[-0.02em]" style={{ color: 'var(--color-text-primary)' }}>
-                AI Workforces for Real Problems
-              </h2>
-            </FadeUp>
-            <FadeUp delay={0.2}>
-              <p className="mt-3 text-[15px] leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-                Each solution is a custom-built workforce designed to tackle specific business challenges
-              </p>
-            </FadeUp>
-          </div>
+      {/* paper vignette so text stays legible over the object */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse at center, rgba(244,242,236,0) 38%, rgba(244,242,236,0.78) 78%)",
+        }}
+      />
 
-          <div className="grid gap-6 md:gap-8 lg:grid-cols-3">
-            {/* GYST Card */}
-            <SlideIn delay={0}>
-              <div className="card-retro glow-hover group h-full flex flex-col">
-                <div 
-                  className="flex h-11 w-11 items-center justify-center rounded-xl mb-5"
-                  style={{ backgroundColor: 'rgba(255, 71, 87, 0.1)' }}
-                >
-                  <Briefcase className="h-5 w-5" style={{ color: 'var(--color-primary)' }} />
-                </div>
-                
-                <h3 className="text-[20px] font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>GYST</h3>
-                <p className="text-[13px] mb-4" style={{ color: 'var(--color-text-muted)' }}>Job Application Platform</p>
-                
-                <p className="text-[15px] leading-relaxed mb-6 flex-grow" style={{ color: 'var(--color-text-secondary)' }}>
-                  Find jobs that match your criteria, create custom CVs tailored to each role, auto-apply, and track all your applications in one place.
-                </p>
-
-                <div className="space-y-2 mb-6">
-                  {['Smart job matching', 'AI-powered CV customization', 'Automated applications', 'Application tracking'].map((feature) => (
-                    <div key={feature} className="flex items-center gap-2 text-[13px]" style={{ color: 'var(--color-text-secondary)' }}>
-                      <div className="h-1 w-1 rounded-full" style={{ backgroundColor: 'var(--color-primary)' }} />
-                      {feature}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex gap-3 mt-auto">
-                  <Link
-                    href="https://www.startgyst.com"
-                    target="_blank"
-                    className="inline-flex items-center gap-1.5 text-[14px] font-medium transition-colors"
-                    style={{ color: 'var(--color-primary)' }}
-                  >
-                    Visit Site
-                    <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
-                  </Link>
-                  <Link
-                    href="/solutions/gyst"
-                    className="inline-flex items-center gap-1.5 text-[14px] font-medium transition-colors"
-                    style={{ color: 'var(--color-text-muted)' }}
-                  >
-                    Learn More
-                  </Link>
-                </div>
-              </div>
-            </SlideIn>
-
-            {/* DAP Card */}
-            <SlideIn delay={0.1}>
-              <div className="card-retro glow-hover group h-full flex flex-col">
-                <div 
-                  className="flex h-11 w-11 items-center justify-center rounded-xl mb-5"
-                  style={{ backgroundColor: 'rgba(255, 71, 87, 0.1)' }}
-                >
-                  <Plane className="h-5 w-5" style={{ color: 'var(--color-primary)' }} />
-                </div>
-                
-                <h3 className="text-[20px] font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>Double Apple Pay</h3>
-                <p className="text-[13px] mb-4" style={{ color: 'var(--color-text-muted)' }}>Travel Expense Tracker</p>
-                
-                <p className="text-[15px] leading-relaxed mb-6 flex-grow" style={{ color: 'var(--color-text-secondary)' }}>
-                  Split expenses with friends and groups while traveling. Track who paid what, support multiple currencies, and settle up with smart calculations.
-                </p>
-
-                <div className="space-y-2 mb-6">
-                  {['Multi-currency support', 'Smart expense splitting', 'Real-time balance tracking', 'Optimized settlements'].map((feature) => (
-                    <div key={feature} className="flex items-center gap-2 text-[13px]" style={{ color: 'var(--color-text-secondary)' }}>
-                      <div className="h-1 w-1 rounded-full" style={{ backgroundColor: 'var(--color-primary)' }} />
-                      {feature}
-                    </div>
-                  ))}
-                </div>
-
-                <Link
-                  href="/solutions/dap"
-                  className="inline-flex items-center gap-1.5 text-[14px] font-medium transition-colors mt-auto"
-                  style={{ color: 'var(--color-primary)' }}
-                >
-                  Learn More
-                  <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
-                </Link>
-              </div>
-            </SlideIn>
-
-            {/* Hotel AI Workforce Card */}
-            <SlideIn delay={0.2}>
-              <div className="card-retro glow-hover group h-full flex flex-col">
-                <div 
-                  className="flex h-11 w-11 items-center justify-center rounded-xl mb-5"
-                  style={{ backgroundColor: 'rgba(255, 71, 87, 0.1)' }}
-                >
-                  <Bot className="h-5 w-5" style={{ color: 'var(--color-primary)' }} />
-                </div>
-                
-                <h3 className="text-[20px] font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>Hotel AI Workforce</h3>
-                <p className="text-[13px] mb-4" style={{ color: 'var(--color-text-muted)' }}>Hospitality Automation</p>
-                
-                <p className="text-[15px] leading-relaxed mb-6 flex-grow" style={{ color: 'var(--color-text-secondary)' }}>
-                  AI agents that handle guest communication, manage reviews, and automate hotel operations 24/7. Meet Sarah and Marcus.
-                </p>
-
-                <div className="space-y-2 mb-6">
-                  {['Automated guest communication', 'Review management', '24/7 availability', 'PMS integration'].map((feature) => (
-                    <div key={feature} className="flex items-center gap-2 text-[13px]" style={{ color: 'var(--color-text-secondary)' }}>
-                      <div className="h-1 w-1 rounded-full" style={{ backgroundColor: 'var(--color-primary)' }} />
-                      {feature}
-                    </div>
-                  ))}
-                </div>
-
-                <Link
-                  href="/hotel"
-                  className="inline-flex items-center gap-1.5 text-[14px] font-medium transition-colors mt-auto"
-                  style={{ color: 'var(--color-primary)' }}
-                >
-                  Learn More
-                  <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
-                </Link>
-              </div>
-            </SlideIn>
-          </div>
-        </div>
-      </section>
-
-      {/* Why Persept */}
-      <section className="relative py-16 sm:py-20 md:py-24" style={{ backgroundColor: 'var(--color-surface)' }}>
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center mb-12">
-            <FadeUp>
-              <h2 className="text-[clamp(1.5rem,3.5vw,2.25rem)] font-bold leading-tight tracking-[-0.02em]" style={{ color: 'var(--color-text-primary)' }}>
-                Why Persept?
-              </h2>
-            </FadeUp>
-            <FadeUp delay={0.1}>
-              <p className="mt-3 text-[15px] leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-                We build AI workforces that solve real problems
-              </p>
-            </FadeUp>
-          </div>
-
-          <div className="grid gap-6 md:gap-8 lg:grid-cols-3">
-            {[
-              { icon: Bot, title: 'Agent-Driven', desc: 'Intelligent AI agents that learn, adapt, and improve over time' },
-              { icon: Settings, title: 'Custom Built', desc: 'Tailored solutions designed for your specific business needs' },
-              { icon: TrendingUp, title: 'Real Results', desc: 'Measurable impact on efficiency, revenue, and customer satisfaction' },
-            ].map((point, i) => (
-              <SlideIn key={point.title} delay={i * 0.1}>
-                <div className="card-retro glow-hover p-6 text-center">
-                  <div 
-                    className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl mb-4"
-                    style={{ backgroundColor: 'rgba(255, 71, 87, 0.1)' }}
-                  >
-                    <point.icon className="h-7 w-7" style={{ color: 'var(--color-primary)' }} />
-                  </div>
-                  <h3 className="text-[17px] font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>{point.title}</h3>
-                  <p className="text-[14px] leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>{point.desc}</p>
-                </div>
-              </SlideIn>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="relative py-16 sm:py-20 md:py-24">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
+      {/* Content */}
+      <motion.div
+        style={{ y: contentY, opacity: contentOpacity }}
+        className="relative z-[1] flex min-h-[100svh] flex-col justify-center"
+      >
+        <div className="shell">
           <FadeUp>
-            <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-bold leading-tight tracking-[-0.02em]" style={{ color: 'var(--color-text-primary)' }}>
-              Ready to Build Your AI Workforce?
-            </h2>
-          </FadeUp>
-          <FadeUp delay={0.1}>
-            <p className="mt-4 text-[15px] leading-relaxed max-w-2xl mx-auto" style={{ color: 'var(--color-text-secondary)' }}>
-              Let's discuss how Persept can transform your business with intelligent automation
+            <p className="mono-label mb-6">
+              <span className="section-index">001</span>
+              &nbsp;&nbsp;/&nbsp;&nbsp;Software Innovation Lab
             </p>
           </FadeUp>
-          <FadeUp delay={0.2}>
-            <div className="mt-8">
-              <Link
-                href="/contact"
-                className="btn-retro inline-flex items-center gap-2 text-[15px]"
-              >
-                Get Started
-                <Rocket className="h-4 w-4" />
+
+          <FadeUp delay={0.08}>
+            <h1
+              className="display max-w-4xl"
+              style={{
+                fontSize: "clamp(2.75rem, 8.5vw, 7rem)",
+                fontWeight: 600,
+              }}
+            >
+              We turn problems
+              <br />
+              into <span className="accent">software</span>
+              <span className="cursor-blink accent" style={{ fontWeight: 400 }}>
+                _
+              </span>
+            </h1>
+          </FadeUp>
+
+          <FadeUp delay={0.18}>
+            <p
+              className="mt-7 max-w-xl text-[clamp(1rem,1.5vw,1.2rem)] leading-relaxed"
+              style={{ color: "var(--ink-soft)" }}
+            >
+              A lab where a small team builds products that solve real, stubborn
+              problems. GYST is the first. More are taking shape.
+            </p>
+          </FadeUp>
+
+          <FadeUp delay={0.28}>
+            <div className="mt-10 flex flex-wrap items-center gap-4">
+              <Link href="/projects" className="btn">
+                See the work
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+              <Link href="/contact" className="btn-ghost">
+                Start a project
               </Link>
             </div>
           </FadeUp>
         </div>
-      </section>
 
-      <Footer />
+        {/* scroll cue */}
+        <div className="shell absolute inset-x-0 bottom-8">
+          <div
+            className="flex items-center gap-3"
+            style={{ color: "var(--ink-faint)" }}
+          >
+            <motion.div
+              animate={{ y: [0, 6, 0] }}
+              transition={{
+                duration: 1.8,
+                repeat: Number.POSITIVE_INFINITY,
+                ease: "easeInOut",
+              }}
+            >
+              <ArrowDown className="h-4 w-4" />
+            </motion.div>
+            <span className="mono-label">Scroll to explore</span>
+          </div>
+        </div>
+      </motion.div>
+    </section>
+  );
+}
+
+/* ── Ticker ────────────────────────────────────────────────────────────── */
+
+function Ticker() {
+  const items = [...TICKER, ...TICKER].map((label, i) => ({ label, id: i }));
+  return (
+    <div
+      className="overflow-hidden py-5"
+      style={{
+        borderBlock: "1px solid var(--line)",
+        backgroundColor: "var(--paper-2)",
+      }}
+    >
+      <div className="marquee-track">
+        {items.map((item) => (
+          <span key={item.id} className="mx-8 inline-flex items-center gap-8">
+            <span className="mono-label" style={{ color: "var(--ink-soft)" }}>
+              {item.label}
+            </span>
+            <span style={{ color: "var(--accent)" }}>✳</span>
+          </span>
+        ))}
+      </div>
     </div>
+  );
+}
+
+/* ── Projects ──────────────────────────────────────────────────────────── */
+
+function Projects() {
+  return (
+    <section className="section" style={{ borderTop: "1px solid var(--line)" }}>
+      <div className="shell">
+        <div className="mb-12 flex flex-wrap items-end justify-between gap-6">
+          <div>
+            <p className="mono-label mb-4">
+              <span className="section-index">003</span>
+              &nbsp;&nbsp;/&nbsp;&nbsp;Selected work
+            </p>
+            <h2
+              className="display"
+              style={{ fontSize: "clamp(2rem,4.5vw,3.25rem)" }}
+            >
+              What's in the lab
+            </h2>
+          </div>
+          <Link
+            href="/projects"
+            className="link-underline mono-label"
+            style={{ color: "var(--ink)" }}
+          >
+            View all projects →
+          </Link>
+        </div>
+
+        <div
+          className="grid gap-px md:grid-cols-2"
+          style={{ backgroundColor: "var(--line)" }}
+        >
+          {PROJECTS.map((p, i) => (
+            <FadeUp key={p.id} delay={(i % 2) * 0.08}>
+              <Link
+                href={p.href}
+                className="lab-card group flex h-full flex-col p-7 sm:p-9"
+                style={{ borderRadius: 0 }}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="section-index">{p.index}</span>
+                  <span
+                    className="mono-label rounded-full px-3 py-1"
+                    style={{
+                      border: "1px solid var(--line-strong)",
+                      color:
+                        p.status === "Coming soon"
+                          ? "var(--ink-faint)"
+                          : "var(--accent-ink)",
+                    }}
+                  >
+                    {p.status}
+                  </span>
+                </div>
+
+                <h3
+                  className="display mt-8"
+                  style={{ fontSize: "clamp(1.6rem,3vw,2.25rem)" }}
+                >
+                  {p.name}
+                </h3>
+                <p
+                  className="mt-2 text-[15px]"
+                  style={{ color: "var(--ink-soft)" }}
+                >
+                  {p.tagline}
+                </p>
+                <p
+                  className="mt-5 max-w-md text-[14px] leading-relaxed"
+                  style={{ color: "var(--ink-soft)" }}
+                >
+                  {p.desc}
+                </p>
+
+                <div className="mt-auto flex items-center justify-between pt-8">
+                  <div className="flex flex-wrap gap-2">
+                    {p.tags.map((t) => (
+                      <span
+                        key={t}
+                        className="mono-label px-2.5 py-1"
+                        style={{
+                          border: "1px solid var(--line)",
+                          fontSize: "0.5625rem",
+                        }}
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                  <ArrowRight
+                    className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
+                    style={{ color: "var(--ink)" }}
+                  />
+                </div>
+              </Link>
+            </FadeUp>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── Process ───────────────────────────────────────────────────────────── */
+
+function Process() {
+  return (
+    <section
+      className="section"
+      style={{
+        borderTop: "1px solid var(--line)",
+        backgroundColor: "var(--paper-2)",
+      }}
+    >
+      <div className="shell">
+        <p className="mono-label mb-4">
+          <span className="section-index">004</span>&nbsp;&nbsp;/&nbsp;&nbsp;How
+          we build
+        </p>
+        <h2
+          className="display mb-14 max-w-2xl"
+          style={{ fontSize: "clamp(2rem,4.5vw,3.25rem)" }}
+        >
+          A method, not a pitch deck
+        </h2>
+
+        <div
+          className="grid gap-px sm:grid-cols-2 lg:grid-cols-4"
+          style={{ backgroundColor: "var(--line)" }}
+        >
+          {PROCESS.map((step, i) => (
+            <FadeUp key={step.n} delay={i * 0.08}>
+              <div
+                className="flex h-full flex-col p-7"
+                style={{ backgroundColor: "var(--paper-2)" }}
+              >
+                <span className="section-index">{step.n}</span>
+                <h3
+                  className="display mt-6"
+                  style={{ fontSize: "1.35rem", fontWeight: 600 }}
+                >
+                  {step.t}
+                </h3>
+                <p
+                  className="mt-3 text-[14px] leading-relaxed"
+                  style={{ color: "var(--ink-soft)" }}
+                >
+                  {step.d}
+                </p>
+              </div>
+            </FadeUp>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── CTA ───────────────────────────────────────────────────────────────── */
+
+function CTA() {
+  return (
+    <section
+      className="section grain"
+      style={{ borderTop: "1px solid var(--line)" }}
+    >
+      <div className="shell">
+        <div
+          className="ticked p-10 sm:p-16"
+          style={{ border: "1px solid var(--line-strong)" }}
+        >
+          <p className="mono-label mb-6">Have a problem worth solving?</p>
+          <h2
+            className="display max-w-4xl"
+            style={{ fontSize: "clamp(2.25rem,6vw,4.5rem)" }}
+          >
+            Let's build the
+            <br />
+            thing that fixes it.
+          </h2>
+          <div className="mt-10 flex flex-wrap gap-4">
+            <Link href="/contact" className="btn">
+              Start a project
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+            <Link href="/projects" className="btn-ghost">
+              Explore the work
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── Page ──────────────────────────────────────────────────────────────── */
+
+export default function Home() {
+  return (
+    <main style={{ backgroundColor: "var(--paper)" }}>
+      <Navbar />
+      <Hero />
+      <Ticker />
+      <Manifesto />
+      <Projects />
+      <Process />
+      <CTA />
+      <Footer />
+    </main>
   );
 }

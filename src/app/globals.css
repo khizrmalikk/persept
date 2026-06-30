@@ -2,75 +2,42 @@
 @import "tw-animate-css";
 @import "./design-system.css";
 
-@custom-variant dark (&:is(.dark *));
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--paper);
+  --color-foreground: var(--ink);
   --font-sans: var(--font-neue-haas);
   --font-mono: var(--font-geist-mono);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
+
+  --color-primary: var(--accent);
+  --color-primary-foreground: #ffffff;
   --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-destructive: var(--destructive);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
+  --color-accent-foreground: #ffffff;
+
+  --color-secondary: var(--paper-2);
+  --color-secondary-foreground: var(--ink);
+  --color-muted: var(--paper-2);
+  --color-muted-foreground: var(--ink-soft);
+
+  --color-card: var(--paper);
+  --color-card-foreground: var(--ink);
+  --color-popover: var(--paper);
+  --color-popover-foreground: var(--ink);
+
+  --color-border: var(--line);
+  --color-input: var(--line);
+  --color-ring: var(--accent);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-md);
 }
 
-:root {
-  --radius: 0.75rem;
+/* ── Base ──────────────────────────────────────────────────────────────── */
 
-  /* ── Backgrounds: warm navy (replaces pure black) ── */
-  --background:           var(--ds-bg-base);       /* #1a1a2e */
-  --foreground:           var(--ds-text-primary);   /* #eeeeee */
-
-  --card:                 var(--ds-bg-card);        /* #0f3460 */
-  --card-foreground:      var(--ds-text-primary);
-  --popover:              var(--ds-bg-elevated);    /* #1b3a6b */
-  --popover-foreground:   var(--ds-text-primary);
-
-  /* ── Primary: coral red (replaces harsh #b91c1c) ── */
-  --primary:              var(--ds-coral);          /* #ff4757 */
-  --primary-foreground:   #ffffff;
-
-  /* ── Secondary: surface navy ── */
-  --secondary:            var(--ds-bg-surface);     /* #16213e */
-  --secondary-foreground: var(--ds-text-primary);
-
-  /* ── Muted: subtle surface ── */
-  --muted:                var(--ds-bg-surface);
-  --muted-foreground:     var(--ds-text-secondary); /* #a8b2d1 */
-
-  /* ── Accent: warm orange ── */
-  --accent:               var(--ds-orange);         /* #ffa502 */
-  --accent-foreground:    var(--ds-text-inverse);   /* #1a1a2e */
-
-  /* ── Destructive ── */
-  --destructive:          var(--ds-error);          /* #ff4757 */
-
-  /* ── Borders & inputs ── */
-  --border:               var(--ds-border-default);
-  --input:                var(--ds-border-default);
-  --ring:                 var(--ds-coral);
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
-
-
-/* ── Base Styles ───────────────────────────────────────────────────────── */
 
 body {
   font-family:
@@ -78,187 +45,80 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--ds-bg-base);
-  color: var(--ds-text-primary);
+  background-color: var(--paper);
+  color: var(--ink);
+  font-feature-settings: "ss01", "cv01";
 }
 
 ::selection {
-  background: rgba(255, 71, 87, 0.30);
-  color: #ffffff;
+  background: rgba(var(--accent-rgb), 0.22);
+  color: var(--ink);
 }
 
+/* ── Scrollbar (thin, ink) ─────────────────────────────────────────────── */
 
-/* ── Glow Effects (coral-based) ────────────────────────────────────────── */
-
-.red-glow,
-.coral-glow {
-  box-shadow: var(--ds-shadow-glow-coral);
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-track {
+  background: var(--paper-2);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-soft);
 }
 
-.red-glow-hover:hover,
-.coral-glow-hover:hover {
-  box-shadow: var(--ds-shadow-glow-coral);
-}
-
-.red-glow-text,
-.coral-glow-text {
-  text-shadow: 0 0 40px rgba(255, 71, 87, 0.3);
-}
-
-
-/* ── Animations ────────────────────────────────────────────────────────── */
-
-.fade-up {
-  opacity: 0;
-  transform: translateY(20px);
-  animation: fadeUp 0.8s var(--ds-ease-default) forwards;
-}
-.fade-up.delay-1 { animation-delay: 0.1s; }
-.fade-up.delay-2 { animation-delay: 0.2s; }
-.fade-up.delay-3 { animation-delay: 0.3s; }
-.fade-up.delay-4 { animation-delay: 0.4s; }
+/* ── Scroll-reveal helpers (CSS-only fallbacks) ────────────────────────── */
 
 @keyframes fadeUp {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(24px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
-
-.fade-in {
-  opacity: 0;
-  animation: fadeIn 0.6s var(--ds-ease-default) forwards;
+.fade-up {
+  animation: fadeUp 0.8s var(--ease) both;
 }
 
-@keyframes fadeIn {
-  to { opacity: 1; }
-}
+/* ── Logo orbit — the accent node circles the hexagon ──────────────────── */
 
-.slide-in-left {
-  opacity: 0;
-  transform: translateX(-24px);
-  animation: slideInLeft 0.6s var(--ds-ease-default) forwards;
-}
-
-@keyframes slideInLeft {
+@keyframes logoOrbit {
   to {
-    opacity: 1;
-    transform: translateX(0);
+    transform: rotate(360deg);
   }
 }
-
-.scale-in {
-  opacity: 0;
-  transform: scale(0.95);
-  animation: scaleIn 0.5s var(--ds-ease-default) forwards;
+.logo-orbit {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: logoOrbit 7s linear infinite;
 }
-
-@keyframes scaleIn {
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+/* gentle speed-up when the lockup is hovered */
+.group:hover .logo-orbit {
+  animation-duration: 3.2s;
 }
-
-
-/* ── Smooth base transitions ───────────────────────────────────────────── */
-
-* {
-  transition-property: background-color, border-color, box-shadow;
-  transition-duration: var(--ds-duration-fast);
-  transition-timing-function: ease;
-}
-
-a, button {
-  transition-property: all;
-  transition-duration: var(--ds-duration-normal);
-  transition-timing-function: ease;
-}
-
-
-/* ── Pulse subtle (CTA glow) ───────────────────────────────────────────── */
-
-@keyframes pulseSubtle {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
-  50%      { box-shadow: 0 0 24px 4px rgba(255, 71, 87, 0.3); }
-}
-
-.animate-pulse-subtle {
-  animation: pulseSubtle 2s ease-in-out infinite;
-}
-
-@keyframes pulseWarm {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 165, 2, 0); }
-  50%      { box-shadow: 0 0 24px 4px rgba(255, 165, 2, 0.25); }
-}
-
-.animate-pulse-warm {
-  animation: pulseWarm 2.5s ease-in-out infinite;
-}
-
 
 /* ── Reduced motion ────────────────────────────────────────────────────── */
-
-@media (prefers-reduced-motion: reduce) {
-  .fade-up,
-  .fade-in,
-  .slide-in-left,
-  .scale-in {
-    opacity: 1;
-    transform: none;
-    animation: none;
-  }
-  * {
-    transition-duration: 0s !important;
-    animation-duration: 0s !important;
-  }
-}
-
-
-/* ── Smooth scroll ─────────────────────────────────────────────────────── */
-
-html {
-  scroll-behavior: smooth;
-}
 
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }
-
-
-/* ── Scrollbar (retro-warm) ────────────────────────────────────────────── */
-
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--ds-bg-base);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--ds-border-strong);
-  border-radius: var(--ds-radius-full);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--ds-text-tertiary);
-}
-
 
 /* ── Tailwind base layer ───────────────────────────────────────────────── */
 

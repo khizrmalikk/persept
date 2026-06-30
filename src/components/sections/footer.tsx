@@ -1,38 +1,80 @@
-import { Mail, MapPin } from "lucide-react";
+import Link from "next/link";
+import { Logo } from "@/components/ui/logo";
+
+const COLUMNS = [
+  {
+    title: "Work",
+    links: [
+      { href: "/projects", label: "All projects" },
+      { href: "/projects/gyst", label: "GYST" },
+      { href: "/projects/hotel", label: "Hotel AI" },
+      { href: "/projects/dap", label: "DAP" },
+    ],
+  },
+  {
+    title: "Lab",
+    links: [
+      { href: "/about", label: "About the lab" },
+      { href: "/about#process", label: "How we build" },
+      { href: "/contact", label: "Start a project" },
+    ],
+  },
+];
 
 export function Footer() {
   return (
-    <footer className="border-t border-white/5">
-      <div className="mx-auto max-w-7xl px-6 py-10 lg:px-8">
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+    <footer
+      style={{
+        borderTop: "1px solid var(--line)",
+        backgroundColor: "var(--paper-2)",
+      }}
+    >
+      <div className="shell py-16">
+        <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr]">
+          {/* Brand */}
           <div>
-            <p className="text-[14px] font-bold tracking-tight text-white">
-              Persept AI Workforce Solutions
+            <Logo lab size={26} />
+            <p
+              className="mt-4 max-w-xs text-[14px] leading-relaxed"
+              style={{ color: "var(--ink-soft)" }}
+            >
+              A software innovation lab. We turn real-world problems into
+              products worth shipping.
             </p>
-            <p className="mt-0.5 text-[12px] text-white/40">
-              Purpose-built AI agents for hospitality operations.
-            </p>
+            <p className="mono-label mt-6">Dubai · Building since 2024</p>
           </div>
 
-          <div className="flex flex-col gap-1.5 text-[12px] text-white/40">
-            <a
-              href="mailto:khizr@persept.ai"
-              className="inline-flex items-center gap-2 transition-colors hover:text-white/70"
-            >
-              <Mail className="h-3.5 w-3.5" />
-              khizr@persept.ai
-            </a>
-            <span className="inline-flex items-center gap-2">
-              <MapPin className="h-3.5 w-3.5" />
-              Dubai, UAE
-            </span>
-          </div>
+          {/* Link columns */}
+          {COLUMNS.map((col) => (
+            <div key={col.title}>
+              <p className="mono-label">{col.title}</p>
+              <ul className="mt-4 flex flex-col gap-2.5">
+                {col.links.map((l) => (
+                  <li key={l.href}>
+                    <Link
+                      href={l.href}
+                      className="link-underline text-[14px]"
+                      style={{ color: "var(--ink-soft)" }}
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
-        <div className="mt-8 border-t border-white/5 pt-6 text-center text-[11px] text-white/20">
-          &copy; 2026 Persept AI Workforce Solutions. All rights reserved.
+        <div
+          className="mt-14 flex flex-col items-start justify-between gap-3 pt-6 sm:flex-row sm:items-center"
+          style={{ borderTop: "1px solid var(--line)" }}
+        >
+          <p className="mono-label">© {new Date().getFullYear()} Persept Lab</p>
+          <p className="mono-label">Problems in · Products out</p>
         </div>
       </div>
     </footer>
   );
 }
+
+export default Footer;

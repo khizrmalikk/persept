@@ -1,7 +1,13 @@
 "use client";
 
-import { motion, useInView, useSpring, useMotionValue, type Variants } from "framer-motion";
-import { useRef, useEffect, type ReactNode } from "react";
+import {
+  motion,
+  useInView,
+  useSpring,
+  useMotionValue,
+  type Variants,
+} from "framer-motion";
+import { useRef, useEffect, type CSSProperties, type ReactNode } from "react";
 
 /* ── Fade up on scroll ───────────────────────── */
 
@@ -80,15 +86,21 @@ const staggerContainer: Variants = {
 
 const staggerChild: Variants = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+  },
 };
 
 export function StaggerContainer({
   children,
   className,
+  style,
 }: {
   children: ReactNode;
   className?: string;
+  style?: CSSProperties;
 }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-30px" });
@@ -100,6 +112,7 @@ export function StaggerContainer({
       animate={inView ? "visible" : "hidden"}
       variants={staggerContainer}
       className={className}
+      style={style}
     >
       {children}
     </motion.div>
@@ -109,12 +122,14 @@ export function StaggerContainer({
 export function StaggerItem({
   children,
   className,
+  style,
 }: {
   children: ReactNode;
   className?: string;
+  style?: CSSProperties;
 }) {
   return (
-    <motion.div variants={staggerChild} className={className}>
+    <motion.div variants={staggerChild} className={className} style={style}>
       {children}
     </motion.div>
   );
@@ -138,7 +153,10 @@ export function AnimatedCounter({
   const ref = useRef(null);
   const inView = useInView(ref, { once: true });
   const motionValue = useMotionValue(0);
-  const springValue = useSpring(motionValue, { duration: duration * 1000, bounce: 0 });
+  const springValue = useSpring(motionValue, {
+    duration: duration * 1000,
+    bounce: 0,
+  });
   const displayRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
@@ -158,7 +176,9 @@ export function AnimatedCounter({
 
   return (
     <span ref={ref} className={className}>
-      <span ref={displayRef}>{prefix}0{suffix}</span>
+      <span ref={displayRef}>
+        {prefix}0{suffix}
+      </span>
     </span>
   );
 }

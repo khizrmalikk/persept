@@ -1,241 +1,331 @@
 /**
- * Persept Design System - Retro Modern
- * A warm, accessible design system with nostalgic aesthetic
+ * Persept Design System — "Minimal Mono Lab"
+ * Off-white paper, warm ink, a single coral accent, hairline grids,
+ * monospace technical labels. The aesthetic of a precise research lab.
  */
 
 :root {
-  /* === COLORS === */
-  
-  /* Primary - Warm Coral Red */
-  --color-primary: #ff4757;
-  --color-primary-dark: #ee5a6f;
-  --color-primary-light: #ff6b7a;
-  --color-primary-rgb: 255, 71, 87;
-  
-  /* Design System Tokens (aliases for components) */
-  --ds-coral: var(--color-primary);
-  --ds-orange: var(--color-accent);
-  --ds-bg-base: var(--color-bg);
-  --ds-bg-surface: var(--color-surface);
-  --ds-bg-card: var(--color-card);
-  --ds-bg-elevated: var(--color-elevated);
-  --ds-text-primary: var(--color-text-primary);
-  --ds-text-secondary: var(--color-text-secondary);
-  --ds-text-muted: var(--color-text-muted);
-  --ds-text-tertiary: var(--color-text-muted);
-  --ds-text-inverse: var(--color-bg);
-  --ds-border-default: var(--color-border);
-  --ds-border-strong: rgba(168, 178, 209, 0.24);
-  --ds-error: #ff4757;
-  --ds-shadow-glow-coral: 0 0 20px rgba(255, 71, 87, 0.3);
-  --ds-ease-default: cubic-bezier(0.16, 1, 0.3, 1);
-  --ds-duration-fast: 150ms;
-  --ds-duration-normal: 250ms;
-  --ds-radius-full: 9999px;
-  
-  /* Accent - Warm Orange */
-  --color-accent: #ffa502;
-  --color-accent-dark: #ff9500;
-  --color-accent-light: #ffb732;
-  
-  /* Backgrounds - Warm Navy (not pure black) */
-  --color-bg: #1a1a2e;
-  --color-surface: #16213e;
-  --color-card: #0f3460;
-  --color-elevated: #1e3a5f;
-  
-  /* Text */
-  --color-text-primary: #eeeeee;
-  --color-text-secondary: #a8b2d1;
-  --color-text-muted: #6b7a99;
-  --color-text-accent: #64ffda;
-  
-  /* Borders */
-  --color-border: rgba(168, 178, 209, 0.12);
-  --color-border-hover: rgba(255, 71, 87, 0.3);
-  
-  /* Overlays */
-  --color-overlay: rgba(26, 26, 46, 0.95);
-  --color-overlay-light: rgba(26, 26, 46, 0.7);
-  
-  /* === SPACING (8px grid) === */
-  --space-1: 0.5rem;   /* 8px */
-  --space-2: 1rem;     /* 16px */
-  --space-3: 1.5rem;   /* 24px */
-  --space-4: 2rem;     /* 32px */
-  --space-6: 3rem;     /* 48px */
-  --space-8: 4rem;     /* 64px */
-  --space-12: 6rem;    /* 96px */
-  --space-16: 8rem;    /* 128px */
-  
-  /* === TYPOGRAPHY === */
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  
-  /* Font Sizes (modular scale 1.25) */
-  --text-xs: 0.75rem;    /* 12px */
-  --text-sm: 0.875rem;   /* 14px */
-  --text-base: 1rem;     /* 16px */
-  --text-lg: 1.125rem;   /* 18px */
-  --text-xl: 1.25rem;    /* 20px */
-  --text-2xl: 1.5rem;    /* 24px */
-  --text-3xl: 1.875rem;  /* 30px */
-  --text-4xl: 2.25rem;   /* 36px */
-  --text-5xl: 3rem;      /* 48px */
-  --text-6xl: 3.75rem;   /* 60px */
-  
-  /* Line Heights */
-  --leading-tight: 1.2;
-  --leading-snug: 1.375;
+  /* === PAPER / INK ====================================================== */
+  --paper: #f4f2ec; /* warm off-white base */
+  --paper-2: #eceadf; /* alt section surface */
+  --paper-3: #e3e0d3; /* deeper surface / wells */
+
+  --ink: #16150f; /* near-black, warm */
+  --ink-soft: #56544a; /* secondary text */
+  --ink-faint: #8f8d80; /* muted labels */
+
+  --line: rgba(22, 21, 15, 0.14); /* hairline */
+  --line-strong: rgba(22, 21, 15, 0.3); /* emphasised hairline */
+  --line-faint: rgba(22, 21, 15, 0.07); /* grid lines */
+
+  /* === ACCENT (single — military green) ================================= */
+  --accent: #5a6e2f;
+  --accent-rgb: 90, 110, 47;
+  --accent-ink: #455323; /* darker olive for small text legibility on paper */
+
+  /* === SEMANTIC ALIASES (consumed by globals @theme) ==================== */
+  --color-bg: var(--paper);
+  --color-surface: var(--paper-2);
+  --color-card: var(--paper);
+  --color-elevated: var(--paper-3);
+  --color-text-primary: var(--ink);
+  --color-text-secondary: var(--ink-soft);
+  --color-text-muted: var(--ink-faint);
+  --color-primary: var(--accent);
+  --color-border: var(--line);
+
+  /* === SPACING (8px grid) =============================================== */
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2rem;
+  --space-6: 3rem;
+  --space-8: 4rem;
+  --space-12: 6rem;
+  --space-16: 8rem;
+
+  /* === TYPOGRAPHY ======================================================= */
+  --font-display:
+    var(--font-neue-haas), -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  --font-mono:
+    var(--font-geist-mono), "SFMono-Regular", ui-monospace, monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+  --text-6xl: 3.75rem;
+
+  --leading-tight: 1.05;
+  --leading-snug: 1.2;
   --leading-normal: 1.5;
-  --leading-relaxed: 1.625;
-  
-  /* === BORDER RADIUS === */
-  --radius-sm: 0.5rem;   /* 8px */
-  --radius-md: 0.75rem;  /* 12px */
-  --radius-lg: 1rem;     /* 16px */
-  --radius-xl: 1.5rem;   /* 24px */
+  --leading-relaxed: 1.65;
+
+  /* === RADIUS (lab = mostly square) ===================================== */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
   --radius-full: 9999px;
-  
-  /* === SHADOWS === */
-  --shadow-sm: 0 2px 8px rgba(15, 52, 96, 0.2);
-  --shadow-md: 0 4px 16px rgba(15, 52, 96, 0.3);
-  --shadow-lg: 0 8px 32px rgba(15, 52, 96, 0.4);
-  --shadow-glow: 0 0 20px rgba(255, 71, 87, 0.3);
-  
-  /* === ANIMATIONS === */
-  --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-base: 250ms cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-slow: 400ms cubic-bezier(0.16, 1, 0.3, 1);
-  
-  /* === Z-INDEX === */
-  --z-base: 0;
-  --z-dropdown: 1000;
+
+  /* === MOTION =========================================================== */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-mono: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 180ms;
+  --dur: 320ms;
+  --dur-slow: 600ms;
+
+  /* === Z-INDEX ========================================================== */
+  --z-bg: 0;
+  --z-base: 1;
   --z-sticky: 1100;
   --z-fixed: 1200;
-  --z-modal-backdrop: 1300;
   --z-modal: 1400;
-  --z-popover: 1500;
-  --z-tooltip: 1600;
 }
 
-/* === UTILITY CLASSES === */
+/* ====================================================================== */
+/*  Layout helpers                                                        */
+/* ====================================================================== */
 
-/* Background Patterns */
-.bg-grain {
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+.shell {
+  width: 100%;
+  max-width: 84rem; /* 1344px */
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 4vw, 3rem);
 }
 
-.bg-dots {
-  background-image: radial-gradient(circle, rgba(255, 71, 87, 0.1) 1px, transparent 1px);
-  background-size: 24px 24px;
+.section {
+  padding-block: clamp(4rem, 9vw, 8rem);
 }
 
-/* Text Gradient */
-.text-gradient-primary {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+/* Hairline rule used as a section divider */
+.rule {
+  border: 0;
+  border-top: 1px solid var(--line);
 }
 
-/* Glassmorphism */
-.glass {
-  background: rgba(22, 33, 62, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(168, 178, 209, 0.1);
+/* ====================================================================== */
+/*  Backgrounds — the "lab" texture                                       */
+/* ====================================================================== */
+
+/* Fine engineering grid */
+.lab-grid {
+  background-image:
+    linear-gradient(to right, var(--line-faint) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--line-faint) 1px, transparent 1px);
+  background-size: 64px 64px;
 }
 
-/* Hover Glow Effect */
-.glow-hover {
-  transition: box-shadow var(--transition-base);
+/* Vertical column guides — evokes a drafting sheet */
+.lab-columns {
+  background-image: linear-gradient(
+    to right,
+    var(--line-faint) 1px,
+    transparent 1px
+  );
+  background-size: calc(100% / 12) 100%;
 }
 
-.glow-hover:hover {
-  box-shadow: 0 0 20px rgba(255, 71, 87, 0.4),
-              0 0 40px rgba(255, 71, 87, 0.2);
-}
-
-/* Retro Button */
-.btn-retro {
+/* Subtle paper grain */
+.grain {
   position: relative;
-  padding: var(--space-2) var(--space-4);
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  cursor: pointer;
-  overflow: hidden;
-  transition: transform var(--transition-fast);
 }
-
-.btn-retro::before {
-  content: '';
+.grain::after {
+  content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
-  opacity: 0;
-  transition: opacity var(--transition-base);
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
 }
 
-.btn-retro:hover {
+/* ====================================================================== */
+/*  Type primitives                                                       */
+/* ====================================================================== */
+
+/* Monospace technical label / eyebrow */
+.mono-label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  font-weight: 500;
+}
+
+/* Section index, e.g. 001 / 002 */
+.section-index {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  color: var(--accent-ink);
+}
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: var(--leading-tight);
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.accent {
+  color: var(--accent-ink);
+}
+
+/* ====================================================================== */
+/*  Components                                                            */
+/* ====================================================================== */
+
+/* Primary button — solid ink */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.85rem 1.35rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  cursor: pointer;
+  transition:
+    transform var(--dur-fast) var(--ease),
+    background var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+.btn:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
   transform: translateY(-2px);
 }
-
-.btn-retro:hover::before {
-  opacity: 1;
-}
-
-.btn-retro:active {
+.btn:active {
   transform: translateY(0);
 }
 
-/* Retro Card */
-.card-retro {
+/* Secondary / ghost button — outline */
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.85rem 1.35rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease),
+    transform var(--dur-fast) var(--ease);
+}
+.btn-ghost:hover {
+  border-color: var(--ink);
+  transform: translateY(-2px);
+}
+
+/* Bordered "spec sheet" card */
+.lab-card {
   position: relative;
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
-  transition: all var(--transition-base);
-  overflow: hidden;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  transition:
+    border-color var(--dur) var(--ease),
+    transform var(--dur) var(--ease),
+    background var(--dur) var(--ease);
+}
+.lab-card:hover {
+  border-color: var(--ink);
+  transform: translateY(-3px);
 }
 
-.card-retro::before {
-  content: '';
+/* Animated underline link */
+.link-underline {
+  position: relative;
+  color: var(--ink);
+  text-decoration: none;
+}
+.link-underline::after {
+  content: "";
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(255, 71, 87, 0.3), transparent);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity var(--transition-base);
+  left: 0;
+  bottom: -2px;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur) var(--ease);
+}
+.link-underline:hover::after {
+  transform: scaleX(1);
 }
 
-.card-retro:hover {
-  transform: translateY(-4px);
-  border-color: var(--color-border-hover);
-  box-shadow: var(--shadow-glow);
+/* Corner tick marks — registration / crop marks for the lab feel */
+.ticked {
+  position: relative;
+}
+.ticked::before,
+.ticked::after {
+  content: "";
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-color: var(--line-strong);
+  border-style: solid;
+}
+.ticked::before {
+  top: -1px;
+  left: -1px;
+  border-width: 1px 0 0 1px;
+}
+.ticked::after {
+  bottom: -1px;
+  right: -1px;
+  border-width: 0 1px 1px 0;
 }
 
-.card-retro:hover::before {
-  opacity: 1;
-}
-
-/* Section Spacing */
-.section {
-  padding-top: var(--space-12);
-  padding-bottom: var(--space-12);
-}
-
-@media (min-width: 768px) {
-  .section {
-    padding-top: var(--space-16);
-    padding-bottom: var(--space-16);
+/* Marquee track (used for the project / capability ticker) */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
   }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee-track {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: marquee 28s linear infinite;
+}
+
+/* Blinking lab cursor */
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+.cursor-blink {
+  animation: blink 1.1s step-end infinite;
 }
