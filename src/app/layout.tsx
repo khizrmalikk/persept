@@ -42,31 +42,30 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Persept AI Workforce Solutions — AI Agents for Dubai Hospitality",
+  title: "Persept — Software Innovation Lab",
   description:
-    "Save 15-20 hours per week with AI agents that handle guest communications, review management, scheduling, and reporting for Dubai hotels and restaurants.",
+    "Persept is a software innovation lab. We turn real-world problems into products worth shipping — from GYST (job applications on autopilot) to AI workforces and applied-data tooling.",
   metadataBase: new URL("https://persept.ai"),
   icons: {
-    icon: "/logo_persept_red.png",
-    shortcut: "/logo_persept_red.png",
-    apple: "/logo_persept_red.png",
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
   },
   other: {
-    'theme-color': '#0a0a0a',
-    'color-scheme': 'dark',
+    "theme-color": "#f4f2ec",
+    "color-scheme": "light",
   },
   openGraph: {
-    title: "Persept AI Workforce Solutions — AI Agents for Dubai Hospitality",
+    title: "Persept — Software Innovation Lab",
     description:
-      "Save 15-20 hours per week with AI agents that handle guest communications, review management, scheduling, and reporting.",
+      "We turn real-world problems into products worth shipping. A software innovation lab building GYST, AI workforces, and applied-data tooling.",
     url: "https://persept.ai",
-    siteName: "Persept AI Workforce Solutions",
+    siteName: "Persept Lab",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Persept AI Workforce Solutions — AI Agents for Dubai Hospitality",
-    description:
-      "Save 15-20 hours per week with AI agents for guest communications, review management, scheduling, and reporting.",
+    title: "Persept — Software Innovation Lab",
+    description: "We turn real-world problems into products worth shipping.",
   },
 };
 
