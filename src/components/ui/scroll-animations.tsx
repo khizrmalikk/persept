@@ -3,11 +3,11 @@
 import {
   motion,
   useInView,
-  useSpring,
   useMotionValue,
+  useSpring,
   type Variants,
 } from "framer-motion";
-import { useRef, useEffect, type CSSProperties, type ReactNode } from "react";
+import { type CSSProperties, type ReactNode, useEffect, useRef } from "react";
 
 /* ── Fade up on scroll ───────────────────────── */
 

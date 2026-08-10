@@ -1,9 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
-import { Navbar } from "@/components/sections/navbar";
+import Link from "next/link";
 import { Footer } from "@/components/sections/footer";
+import { Navbar } from "@/components/sections/navbar";
+import { Kicker } from "@/components/ui/editorial";
 import { FadeUp } from "@/components/ui/scroll-animations";
 
 /* ── Data ──────────────────────────────────────────────────────────────── */
@@ -23,48 +24,26 @@ type Project = {
 
 const PROJECTS: Project[] = [
   {
-    id: "GYST",
-    index: "001",
-    name: "GYST",
-    tagline: "Job search & applications, on autopilot.",
-    desc: "Search and apply for roles while GYST auto-generates a tailored CV and cover letter for every single job.",
-    status: "Flagship",
-    href: "/projects/gyst",
-    tags: ["AI", "Careers", "Automation"],
-    live: true,
-  },
-  {
     id: "HOTEL",
-    index: "002",
+    index: "01",
     name: "Hotel AI Workforce",
-    tagline: "An AI team for hospitality operations.",
-    desc: "Agents that handle guest comms, reviews, scheduling and reporting — built and proven with real hotels.",
-    status: "Live",
+    tagline: "The AI operations team for property hospitality.",
+    desc: "Guest messaging, housekeeping dispatch and owner reporting — run 24/7 inside WhatsApp. Persept's flagship service, priced against a salary.",
+    status: "Flagship service",
     href: "/projects/hotel",
-    tags: ["AI Agents", "Hospitality"],
+    tags: ["AI Agents", "Hospitality", "Service"],
     live: true,
   },
   {
-    id: "DAP",
-    index: "003",
-    name: "DAP",
-    tagline: "Data, applied.",
-    desc: "An applied-data product turning messy operational signals into decisions teams can act on.",
-    status: "Active",
-    href: "/projects/dap",
-    tags: ["Data", "Tooling"],
+    id: "GYST",
+    index: "02",
+    name: "GYST",
+    tagline: "The whole job search, one guided path.",
+    desc: "Search every board, tailor a screening-ready CV to each role, and reach real people who can refer you. A standalone Persept product.",
+    status: "Live product",
+    href: "/projects/gyst",
+    tags: ["AI", "Careers", "Product"],
     live: true,
-  },
-  {
-    id: "NEXT",
-    index: "004",
-    name: "In the lab",
-    tagline: "The next problem worth solving.",
-    desc: "We're always prototyping. New experiments move from whiteboard to working software here.",
-    status: "Coming soon",
-    href: "/projects",
-    tags: ["Prototype"],
-    comingSoon: true,
   },
 ];
 
@@ -73,11 +52,8 @@ const PROJECTS: Project[] = [
 function StatusBadge({ status, live }: { status: string; live?: boolean }) {
   return (
     <span
-      className="mono-label inline-flex items-center gap-2 rounded-full px-3 py-1"
-      style={{
-        border: "1px solid var(--line-strong)",
-        color: live ? "var(--accent-ink)" : "var(--ink-faint)",
-      }}
+      className="chip"
+      style={{ color: live ? "var(--accent-ink)" : "var(--ink-faint)" }}
     >
       {live && (
         <span className="relative flex h-1.5 w-1.5">
@@ -100,18 +76,17 @@ function StatusBadge({ status, live }: { status: string; live?: boolean }) {
 
 function ProjectCard({ p }: { p: Project }) {
   const inner = (
-    <div
-      className="lab-card group flex h-full flex-col p-7 sm:p-9"
-      style={{ borderRadius: 0 }}
-    >
+    <div className="card group flex h-full flex-col p-8 sm:p-10">
       <div className="flex items-center justify-between">
-        <span className="section-index">{p.index}</span>
+        <span className="figure-mark" style={{ fontSize: "2.5rem" }}>
+          {p.index}
+        </span>
         <StatusBadge status={p.status} live={p.live} />
       </div>
 
       <h2
         className="display mt-8"
-        style={{ fontSize: "clamp(1.6rem,3vw,2.25rem)" }}
+        style={{ fontSize: "clamp(1.7rem,3vw,2.4rem)" }}
       >
         {p.name}
       </h2>
@@ -128,11 +103,7 @@ function ProjectCard({ p }: { p: Project }) {
       <div className="mt-auto flex items-center justify-between pt-8">
         <div className="flex flex-wrap gap-2">
           {p.tags.map((t) => (
-            <span
-              key={t}
-              className="mono-label px-2.5 py-1"
-              style={{ border: "1px solid var(--line)", fontSize: "0.5625rem" }}
-            >
+            <span key={t} className="chip">
               {t}
             </span>
           ))}
@@ -148,7 +119,7 @@ function ProjectCard({ p }: { p: Project }) {
   );
 
   if (p.comingSoon) {
-    return <div style={{ backgroundColor: "var(--paper)" }}>{inner}</div>;
+    return <div>{inner}</div>;
   }
 
   return (
@@ -162,13 +133,10 @@ function ProjectCard({ p }: { p: Project }) {
 
 function Hero() {
   return (
-    <section className="relative grain lab-grid overflow-hidden pt-28 pb-16 sm:pt-32 sm:pb-24">
-      <div className="shell">
+    <section className="relative grain aperture-quiet overflow-hidden pt-28 pb-16 sm:pt-32 sm:pb-24">
+      <div className="shell relative z-[1]">
         <FadeUp>
-          <p className="mono-label mb-6">
-            <span className="section-index">000</span>
-            &nbsp;&nbsp;/&nbsp;&nbsp;Projects&nbsp;&nbsp;/&nbsp;&nbsp;Index
-          </p>
+          <Kicker className="mb-6">Persept · what we build</Kicker>
         </FadeUp>
 
         <FadeUp delay={0.08}>
@@ -176,12 +144,9 @@ function Hero() {
             className="display max-w-4xl"
             style={{ fontSize: "clamp(2.5rem, 7vw, 5.5rem)", fontWeight: 600 }}
           >
-            The work,
+            One service.
             <br />
-            on the bench
-            <span className="cursor-blink accent" style={{ fontWeight: 400 }}>
-              _
-            </span>
+            One <span className="accent">product.</span>
           </h1>
         </FadeUp>
 
@@ -190,9 +155,9 @@ function Hero() {
             className="mt-7 max-w-xl text-[clamp(1rem,1.5vw,1.2rem)] leading-relaxed"
             style={{ color: "var(--ink-soft)" }}
           >
-            We're a small lab building several products at once. Some have
-            shipped, some are in active development, and there's always one more
-            taking shape. Here's everything currently on the table.
+            Persept leads with one thing done properly — an AI workforce for
+            property hospitality — and ships GYST, its own product, alongside
+            it. No sprawl. Two things, both real.
           </p>
         </FadeUp>
 
@@ -200,14 +165,14 @@ function Hero() {
           <div className="mt-10 flex flex-wrap items-center gap-6">
             <Link href="/contact" className="btn">
               Start a project
-              <ArrowRight className="h-3.5 w-3.5" />
+              <ArrowRight className="h-4 w-4" />
             </Link>
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-5">
               <span className="mono-label">
-                <span className="accent">03</span> shipped &amp; active
+                <span className="accent">01</span> flagship service
               </span>
               <span className="mono-label">
-                <span className="accent">01</span> in the lab
+                <span className="accent">01</span> live product
               </span>
             </div>
           </div>
@@ -221,30 +186,24 @@ function Hero() {
 
 function Index() {
   return (
-    <section className="section" style={{ borderTop: "1px solid var(--line)" }}>
+    <section className="section">
       <div className="shell">
         <div className="mb-12 flex flex-wrap items-end justify-between gap-6">
           <div>
-            <p className="mono-label mb-4">
-              <span className="section-index">001</span>
-              &nbsp;&nbsp;/&nbsp;&nbsp;The index
-            </p>
+            <Kicker className="mb-4">The line-up</Kicker>
             <h2
               className="display"
               style={{ fontSize: "clamp(2rem,4.5vw,3.25rem)" }}
             >
-              Four entries
+              A service and a product
             </h2>
           </div>
           <p className="mono-label max-w-xs text-right">
-            Problems in · Products out
+            Built in Dubai · run in production
           </p>
         </div>
 
-        <div
-          className="grid gap-px md:grid-cols-2"
-          style={{ backgroundColor: "var(--line)" }}
-        >
+        <div className="grid gap-5 md:grid-cols-2">
           {PROJECTS.map((p, i) => (
             <FadeUp key={p.id} delay={(i % 2) * 0.08}>
               <ProjectCard p={p} />
@@ -262,17 +221,11 @@ function CTA() {
   return (
     <section
       className="section grain"
-      style={{
-        borderTop: "1px solid var(--line)",
-        backgroundColor: "var(--paper-2)",
-      }}
+      style={{ backgroundColor: "var(--paper-2)" }}
     >
       <div className="shell">
-        <div
-          className="ticked p-10 sm:p-16"
-          style={{ border: "1px solid var(--line-strong)" }}
-        >
-          <p className="mono-label mb-6">Not on the list yet?</p>
+        <div className="ticked p-10 sm:p-16">
+          <Kicker className="mb-6">Not on the list yet?</Kicker>
           <h2
             className="display max-w-4xl"
             style={{ fontSize: "clamp(2.25rem,6vw,4.5rem)" }}

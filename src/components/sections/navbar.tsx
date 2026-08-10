@@ -1,14 +1,15 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Logo } from "@/components/ui/logo";
 
 const LINKS = [
-  { href: "/projects", label: "Projects", index: "01" },
-  { href: "/about", label: "Lab", index: "02" },
-  { href: "/contact", label: "Contact", index: "03" },
+  { href: "/projects/hotel", label: "Hotel AI" },
+  { href: "/projects/gyst", label: "GYST" },
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
 ];
 
 export function Navbar() {
@@ -41,16 +42,9 @@ export function Navbar() {
         </Link>
 
         {/* Desktop links */}
-        <div className="hidden items-center gap-9 md:flex">
+        <div className="hidden items-center gap-8 md:flex">
           {LINKS.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className="group flex items-center gap-2"
-            >
-              <span className="mono-label" style={{ fontSize: "0.625rem" }}>
-                {l.index}
-              </span>
+            <Link key={l.href} href={l.href} className="group">
               <span
                 className="link-underline text-[14px]"
                 style={{ color: "var(--ink)" }}
@@ -122,9 +116,6 @@ export function Navbar() {
                   className="flex items-center gap-3 border-b py-3"
                   style={{ borderColor: "var(--line)", color: "var(--ink)" }}
                 >
-                  <span className="mono-label" style={{ fontSize: "0.625rem" }}>
-                    {l.index}
-                  </span>
                   <span className="text-[18px]">{l.label}</span>
                 </Link>
               ))}

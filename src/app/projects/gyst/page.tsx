@@ -1,87 +1,121 @@
 "use client";
 
-import Link from "next/link";
-import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import {
-  ArrowRight,
   ArrowLeft,
+  ArrowRight,
   ArrowUpRight,
-  Search,
+  Check,
   FileText,
+  LayoutGrid,
   Mail,
-  ListChecks,
+  MessageSquare,
+  Search,
+  Users,
 } from "lucide-react";
-import { Navbar } from "@/components/sections/navbar";
+import Link from "next/link";
+import { useRef } from "react";
 import { Footer } from "@/components/sections/footer";
-import { LabObject } from "@/components/ui/lab-object";
+import { Navbar } from "@/components/sections/navbar";
+import { ApertureField } from "@/components/ui/aperture-field";
+import { Kicker } from "@/components/ui/editorial";
 import {
   FadeUp,
   StaggerContainer,
   StaggerItem,
 } from "@/components/ui/scroll-animations";
 
-/* ── Data ──────────────────────────────────────────────────────────────── */
+const GYST_URL = "https://startgyst.com";
+
+/* ── Data (from startgyst.com) ─────────────────────────────────────────── */
 
 const STEPS = [
   {
     n: "01",
-    t: "Search the roles",
-    d: "Browse and filter live openings the way you already do — by title, location, salary and stack. GYST keeps everything in one queue.",
+    t: "Find",
+    d: "One search scans multiple job boards at once and returns real, current roles — UK, Dubai, remote and beyond. No chat, no twelve open tabs.",
   },
   {
     n: "02",
-    t: "AI tailors the application",
-    d: "For each job, GYST reads the posting and rewrites your CV and cover letter to match it — the right keywords, the right emphasis, every time.",
+    t: "Track",
+    d: "Every saved role becomes a card on a Kanban board — Saved, Materials, Outreach, Applied, Interviewing, Offer. Your whole search in one calm place.",
   },
   {
     n: "03",
-    t: "Apply, faster",
-    d: "Review the tailored documents, then send. What used to take an evening per role now takes a couple of minutes.",
+    t: "Tailor",
+    d: "GYST mixes your profile with the job description to write a CV and cover letter that get past the automated screener. Keyword-aware, one page, seconds.",
+  },
+  {
+    n: "04",
+    t: "Apply",
+    d: "The application assistant answers the actual questions in your own voice, drawn from your CV and the role — then you apply on the company's own site.",
+  },
+  {
+    n: "05",
+    t: "Get seen",
+    d: "Find people at the company who can refer you and send a warm intro, so your application arrives with a face instead of vanishing into the void.",
+  },
+  {
+    n: "06",
+    t: "Follow up",
+    d: "Connect Gmail once. As replies land, GYST reads confirmations, rejections and interview invites and advances each card automatically.",
   },
 ];
 
 const FEATURES = [
   {
-    icon: Search,
-    t: "Smart job search",
-    d: "One searchable queue across roles you actually want. Filter, shortlist and triage without twelve open tabs.",
+    icon: FileText,
+    t: "CV & cover letters",
+    d: "Screening-ready documents tailored to each role. Most companies screen with software before a human sees you — GYST clears the screener.",
   },
   {
-    icon: FileText,
-    t: "Auto-tailored CVs",
-    d: "A fresh CV generated per job — reordered, reweighted and rephrased to mirror the posting, from a single source profile.",
+    icon: MessageSquare,
+    t: "Application assistant",
+    d: "Answers the real application questions in your own voice, pulled from your profile and the job description.",
+  },
+  {
+    icon: LayoutGrid,
+    t: "Kanban board",
+    d: "Your entire search as a visual board. Drag a card yourself, or let GYST move it for you as things progress.",
+  },
+  {
+    icon: Users,
+    t: "Referral finder",
+    d: "Surfaces people inside the company who can refer you, with a warm outreach draft ready to send.",
   },
   {
     icon: Mail,
-    t: "Per-job cover letters",
-    d: "A specific cover letter for every application that references the company and role, not a find-and-replace template.",
+    t: "Automatic Gmail tracking",
+    d: "Reads only email headers to match job-related messages and keeps your board current — never the contents of your emails.",
   },
   {
-    icon: ListChecks,
-    t: "Application tracking",
-    d: "Every role, document and status in one board — applied, in review, interview, offer — so nothing slips.",
+    icon: Search,
+    t: "Multi-board search",
+    d: "One search across every board returns real roles. No chatbot, no endless tabs — just the jobs, saved to your board.",
   },
+];
+
+const PLAN = [
+  "Multi-board AI job search",
+  "Kanban application board",
+  "Unlimited screening-ready CVs & cover letters",
+  "AI application assistant",
+  "Referral finder & outreach drafts",
+  "Automatic Gmail tracking",
 ];
 
 const SPECS = [
   ["Category", "AI · Careers"],
-  ["Status", "Flagship · active dev"],
+  ["Model", "£9.99/mo · 7-day trial"],
   ["Surface", "Web app"],
-  ["Built in", "Dubai"],
+  ["For", "Students & early-career"],
 ];
 
-/* ── Live status badge ─────────────────────────────────────────────────── */
+/* ── Live badge ────────────────────────────────────────────────────────── */
 
 function LiveBadge({ label }: { label: string }) {
   return (
-    <span
-      className="mono-label inline-flex items-center gap-2 rounded-full px-3 py-1"
-      style={{
-        border: "1px solid var(--line-strong)",
-        color: "var(--accent-ink)",
-      }}
-    >
+    <span className="chip" style={{ color: "var(--accent-ink)" }}>
       <span className="relative flex h-1.5 w-1.5">
         <span
           className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
@@ -97,6 +131,43 @@ function LiveBadge({ label }: { label: string }) {
   );
 }
 
+/* ── Section heading helper ────────────────────────────────────────────── */
+
+function SectionHead({
+  n,
+  kicker,
+  title,
+  lead,
+}: {
+  n: string;
+  kicker: string;
+  title: string;
+  lead?: string;
+}) {
+  return (
+    <div className="mb-14 flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-10">
+      <span className="figure-mark shrink-0">{n}</span>
+      <div className="max-w-3xl">
+        <Kicker className="mb-4">{kicker}</Kicker>
+        <h2
+          className="display"
+          style={{ fontSize: "clamp(2rem,4.8vw,3.5rem)" }}
+        >
+          {title}
+        </h2>
+        {lead && (
+          <p
+            className="mt-4 max-w-2xl text-[15px] leading-relaxed"
+            style={{ color: "var(--ink-soft)" }}
+          >
+            {lead}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ── Hero ──────────────────────────────────────────────────────────────── */
 
 function Hero() {
@@ -105,26 +176,25 @@ function Hero() {
     target: ref,
     offset: ["start start", "end start"],
   });
-  const objectY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
-  const objectOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+  const fieldY = useTransform(scrollYProgress, [0, 1], ["0%", "26%"]);
+  const fieldOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
   return (
     <section
       ref={ref}
-      className="relative grain lab-grid overflow-hidden pt-28 pb-20 sm:pt-32 sm:pb-28"
+      className="relative grain overflow-hidden pt-28 pb-20 sm:pt-32 sm:pb-28"
     >
-      {/* 3D accent, pushed right and faded into the paper */}
       <motion.div
-        style={{ y: objectY, opacity: objectOpacity }}
-        className="pointer-events-none absolute right-[-12%] top-[6%] hidden lg:block"
+        style={{ y: fieldY, opacity: fieldOpacity }}
+        className="pointer-events-none absolute top-[-6%] right-[-14%] hidden h-[46rem] w-[46rem] lg:block"
       >
-        <LabObject className="h-[40rem] w-[40rem]" />
+        <ApertureField className="h-full w-full" />
       </motion.div>
       <div
         className="pointer-events-none absolute inset-0 hidden lg:block"
         style={{
           background:
-            "linear-gradient(to right, var(--paper) 30%, rgba(244,242,236,0.2) 65%, rgba(244,242,236,0) 100%)",
+            "linear-gradient(to right, var(--paper) 32%, rgba(246,243,236,0.2) 66%, rgba(246,243,236,0) 100%)",
         }}
       />
 
@@ -133,21 +203,17 @@ function Hero() {
           <div className="flex flex-wrap items-center gap-4">
             <Link
               href="/projects"
-              className="link-underline mono-label inline-flex items-center gap-2"
+              className="link-underline text-[14px]"
+              style={{ color: "var(--ink-soft)" }}
             >
-              <ArrowLeft className="h-3 w-3" />
-              All projects
+              <span className="inline-flex items-center gap-2">
+                <ArrowLeft className="h-3 w-3" />
+                All work
+              </span>
             </Link>
-            <span
-              className="mono-label"
-              style={{ color: "var(--line-strong)" }}
-            >
-              /
-            </span>
-            <span className="mono-label">
-              <span className="section-index">001</span>&nbsp;&nbsp;GYST
-            </span>
-            <LiveBadge label="Flagship" />
+            <span style={{ color: "var(--line-strong)" }}>·</span>
+            <span className="mono-label">Our product</span>
+            <LiveBadge label="Live" />
           </div>
         </FadeUp>
 
@@ -157,9 +223,6 @@ function Hero() {
             style={{ fontSize: "clamp(3rem, 9vw, 7rem)", fontWeight: 600 }}
           >
             GYST
-            <span className="cursor-blink accent" style={{ fontWeight: 400 }}>
-              _
-            </span>
           </h1>
         </FadeUp>
 
@@ -172,49 +235,52 @@ function Hero() {
               letterSpacing: "-0.02em",
             }}
           >
-            Job search and applications,{" "}
-            <span className="accent">on autopilot.</span>
+            The whole job search,{" "}
+            <span
+              className="rounded-lg px-2"
+              style={{ background: "var(--accent)", color: "#14140f" }}
+            >
+              one guided path.
+            </span>
           </p>
         </FadeUp>
 
         <FadeUp delay={0.24}>
           <p
-            className="mt-6 max-w-xl text-[clamp(1rem,1.5vw,1.15rem)] leading-relaxed"
+            className="mt-6 max-w-xl text-[clamp(1.05rem,1.5vw,1.2rem)] leading-relaxed"
             style={{ color: "var(--ink-soft)" }}
           >
-            Search and apply for roles while GYST auto-generates a tailored CV
-            and cover letter for every single job — so the busywork disappears
-            and you actually apply to more of the roles you want.
+            Search roles, get a CV and cover letter tailored to each, answer the
+            application questions in your own voice, and reach real people who
+            can refer you. One guided path, not ten open tabs.
           </p>
         </FadeUp>
 
         <FadeUp delay={0.32}>
-          <div className="mt-10 flex flex-wrap items-center gap-4">
-            <Link href="/contact" className="btn">
-              Start a project
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-            <Link href="/projects" className="btn-ghost">
-              Back to projects
-            </Link>
+          <div className="mt-10 flex flex-wrap items-center gap-3">
+            <a href={GYST_URL} target="_blank" rel="noreferrer" className="btn">
+              Start free trial
+              <ArrowUpRight className="h-4 w-4" />
+            </a>
+            <a
+              href={GYST_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="btn-ghost"
+            >
+              Visit startgyst.com
+            </a>
           </div>
+          <p className="mono-label mt-4">7 days free · no card required</p>
         </FadeUp>
 
-        {/* spec strip */}
         <FadeUp delay={0.4}>
-          <dl
-            className="mt-16 grid max-w-3xl grid-cols-2 gap-px sm:grid-cols-4"
-            style={{ backgroundColor: "var(--line)" }}
-          >
+          <dl className="mt-14 grid max-w-3xl grid-cols-2 gap-4 sm:grid-cols-4">
             {SPECS.map(([k, v]) => (
-              <div
-                key={k}
-                className="p-4"
-                style={{ backgroundColor: "var(--paper)" }}
-              >
+              <div key={k} className="card p-5">
                 <dt className="mono-label">{k}</dt>
                 <dd
-                  className="mt-2 text-[13px]"
+                  className="mt-2 text-[14px] leading-snug"
                   style={{ color: "var(--ink)" }}
                 >
                   {v}
@@ -228,24 +294,15 @@ function Hero() {
   );
 }
 
-/* ── Problem ───────────────────────────────────────────────────────────── */
+/* ── Problem / founder ─────────────────────────────────────────────────── */
 
 function Problem() {
   return (
-    <section
-      className="section"
-      style={{
-        borderTop: "1px solid var(--line)",
-        backgroundColor: "var(--paper-2)",
-      }}
-    >
+    <section className="section" style={{ backgroundColor: "var(--paper-2)" }}>
       <div className="shell">
         <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
           <div>
-            <p className="mono-label mb-4">
-              <span className="section-index">001</span>
-              &nbsp;&nbsp;/&nbsp;&nbsp;The problem
-            </p>
+            <Kicker className="mb-4">Why it exists</Kicker>
             <h2
               className="display"
               style={{ fontSize: "clamp(2rem,4.5vw,3.25rem)" }}
@@ -256,21 +313,16 @@ function Problem() {
           <div className="max-w-xl">
             <FadeUp>
               <p
-                className="text-[clamp(1.1rem,1.8vw,1.4rem)] leading-relaxed"
+                className="text-[clamp(1.15rem,1.8vw,1.45rem)] leading-relaxed"
                 style={{ color: "var(--ink)" }}
               >
-                Every posting wants a slightly different version of you. So you
-                rewrite the same CV for the hundredth time, draft yet another
-                cover letter, and lose an entire evening to three applications.
+                “I built GYST because job hunting as a new grad is brutal —
+                endless tabs, generic CVs, and applications that vanish into the
+                void. I wanted one place that does it properly: find the role,
+                tailor the application, and actually reach a human.”
               </p>
-              <p
-                className="mt-6 text-[15px] leading-relaxed"
-                style={{ color: "var(--ink-soft)" }}
-              >
-                It's tedious, repetitive and quietly soul-crushing — and because
-                it's so much work per role, most people apply to far fewer jobs
-                than they should. The friction isn't the search. It's the
-                rewriting that happens after it.
+              <p className="mono-label mt-6">
+                Khizr Malik · Founder of GYST &amp; Persept
               </p>
             </FadeUp>
           </div>
@@ -280,58 +332,72 @@ function Problem() {
   );
 }
 
-/* ── How it works ──────────────────────────────────────────────────────── */
+/* ── The guided path ───────────────────────────────────────────────────── */
 
-function HowItWorks() {
+function Path() {
   return (
-    <section className="section" style={{ borderTop: "1px solid var(--line)" }}>
+    <section className="section">
       <div className="shell">
-        <p className="mono-label mb-4">
-          <span className="section-index">002</span>&nbsp;&nbsp;/&nbsp;&nbsp;How
-          it works
-        </p>
-        <h2
-          className="display mb-14 max-w-2xl"
-          style={{ fontSize: "clamp(2rem,4.5vw,3.25rem)" }}
-        >
-          Search once. Tailored everywhere.
-        </h2>
+        <SectionHead
+          n="—"
+          kicker="The guided path"
+          title="From finding the job to getting it"
+          lead="GYST doesn't hand you a pile of tools. It walks you through applying the right way, one step at a time, so you're never left guessing what to do next."
+        />
 
-        <div
-          className="grid gap-px lg:grid-cols-3"
-          style={{ backgroundColor: "var(--line)" }}
-        >
-          {STEPS.map((step, i) => (
-            <FadeUp key={step.n} delay={i * 0.1}>
-              <div
-                className="flex h-full flex-col p-7 sm:p-9"
-                style={{ backgroundColor: "var(--paper)" }}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="section-index">{step.n}</span>
-                  {i < STEPS.length - 1 && (
-                    <ArrowRight
-                      className="hidden h-4 w-4 lg:block"
-                      style={{ color: "var(--ink-faint)" }}
-                    />
-                  )}
-                </div>
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {STEPS.map((s) => (
+            <FadeUp key={s.n}>
+              <div className="card flex h-full flex-col p-8">
+                <span className="figure-mark" style={{ fontSize: "2.5rem" }}>
+                  {s.n}
+                </span>
                 <h3
-                  className="display mt-8"
-                  style={{ fontSize: "1.45rem", fontWeight: 600 }}
+                  className="display mt-5"
+                  style={{ fontSize: "1.35rem", fontWeight: 600 }}
                 >
-                  {step.t}
+                  {s.t}
                 </h3>
                 <p
                   className="mt-3 text-[14px] leading-relaxed"
                   style={{ color: "var(--ink-soft)" }}
                 >
-                  {step.d}
+                  {s.d}
                 </p>
               </div>
             </FadeUp>
           ))}
         </div>
+
+        <FadeUp>
+          <div className="panel-dark mt-6 flex flex-col items-start gap-4 p-7 sm:flex-row sm:items-center sm:justify-between sm:p-9">
+            <div>
+              <p
+                className="display"
+                style={{
+                  fontSize: "1.35rem",
+                  fontWeight: 600,
+                  color: "#f4f4f5",
+                }}
+              >
+                07 · Land it
+                <span
+                  className="chip ml-3 align-middle"
+                  style={{ color: "#14140f", background: "#fdc91b" }}
+                >
+                  coming soon
+                </span>
+              </p>
+              <p
+                className="mt-2 max-w-lg text-[14px] leading-relaxed"
+                style={{ color: "rgba(244,244,245,0.7)" }}
+              >
+                Interview prep built from the role and your answers, so you walk
+                in ready.
+              </p>
+            </div>
+          </div>
+        </FadeUp>
       </div>
     </section>
   );
@@ -341,61 +407,40 @@ function HowItWorks() {
 
 function Features() {
   return (
-    <section
-      className="section"
-      style={{
-        borderTop: "1px solid var(--line)",
-        backgroundColor: "var(--paper-2)",
-      }}
-    >
+    <section className="section" style={{ backgroundColor: "var(--paper-2)" }}>
       <div className="shell">
         <div className="mb-14 flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <p className="mono-label mb-4">
-              <span className="section-index">003</span>
-              &nbsp;&nbsp;/&nbsp;&nbsp;Key features
-            </p>
+          <div className="max-w-2xl">
+            <Kicker className="mb-4">Features</Kicker>
             <h2
               className="display"
               style={{ fontSize: "clamp(2rem,4.5vw,3.25rem)" }}
             >
-              Built for the whole hunt
+              Everything you need to apply the right way
             </h2>
           </div>
           <p className="mono-label max-w-xs text-right">
-            Four moving parts · one workflow
+            Built to get you a response
           </p>
         </div>
 
-        <StaggerContainer
-          className="grid gap-px sm:grid-cols-2"
-          style={{ backgroundColor: "var(--line)" }}
-        >
+        <StaggerContainer className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map((f) => {
             const Icon = f.icon;
             return (
               <StaggerItem key={f.t}>
-                <div
-                  className="lab-card group flex h-full flex-col p-7 sm:p-9"
-                  style={{ borderRadius: 0, backgroundColor: "var(--paper)" }}
-                >
-                  <span
-                    className="inline-flex h-11 w-11 items-center justify-center"
-                    style={{
-                      border: "1px solid var(--line-strong)",
-                      borderRadius: "var(--radius-sm)",
-                    }}
-                  >
-                    <Icon className="h-5 w-5" style={{ color: "var(--ink)" }} />
+                <div className="card group flex h-full flex-col p-8">
+                  <span className="icon-tile">
+                    <Icon className="h-5 w-5" />
                   </span>
                   <h3
-                    className="display mt-7"
-                    style={{ fontSize: "1.4rem", fontWeight: 600 }}
+                    className="display mt-6"
+                    style={{ fontSize: "1.3rem", fontWeight: 600 }}
                   >
                     {f.t}
                   </h3>
                   <p
-                    className="mt-3 max-w-md text-[14px] leading-relaxed"
+                    className="mt-3 text-[14px] leading-relaxed"
                     style={{ color: "var(--ink-soft)" }}
                   >
                     {f.d}
@@ -410,113 +455,124 @@ function Features() {
   );
 }
 
-/* ── Outcome ───────────────────────────────────────────────────────────── */
+/* ── Pricing ───────────────────────────────────────────────────────────── */
 
-function Outcome() {
+function Pricing() {
   return (
-    <section
-      className="section grain"
-      style={{ borderTop: "1px solid var(--line)" }}
-    >
+    <section className="section">
       <div className="shell">
-        <p className="mono-label mb-4">
-          <span className="section-index">004</span>&nbsp;&nbsp;/&nbsp;&nbsp;Why
-          it matters
-        </p>
-        <FadeUp>
-          <p
-            className="display max-w-5xl"
-            style={{
-              fontSize: "clamp(1.75rem,4.2vw,3.25rem)",
-              lineHeight: 1.18,
-              fontWeight: 500,
-            }}
-          >
-            When applying takes minutes instead of an evening, you apply to{" "}
-            <span className="accent">the roles you'd usually skip</span> — and
-            more shots on goal is how good people land better jobs.
-          </p>
-        </FadeUp>
-
-        <div
-          className="mt-16 grid gap-px sm:grid-cols-3"
-          style={{ backgroundColor: "var(--line)" }}
+        <Kicker className="mb-4">Pricing</Kicker>
+        <h2
+          className="display mb-12 max-w-2xl"
+          style={{ fontSize: "clamp(2rem,4.8vw,3.5rem)" }}
         >
-          {[
-            ["Minutes", "Per application, not an evening"],
-            ["Every job", "Gets its own tailored CV + letter"],
-            ["One board", "Track every role end to end"],
-          ].map(([big, small]) => (
-            <FadeUp key={big}>
-              <div className="p-8" style={{ backgroundColor: "var(--paper)" }}>
-                <p
-                  className="display accent"
-                  style={{
-                    fontSize: "clamp(1.6rem,3vw,2.25rem)",
-                    fontWeight: 600,
-                  }}
+          One plan. Everything included.
+        </h2>
+
+        <div className="panel-dark overflow-hidden p-8 sm:p-12">
+          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
+            <div>
+              <p
+                className="mono-label"
+                style={{ color: "rgba(244,244,245,0.6)" }}
+              >
+                GYST Pro · everything included
+              </p>
+              <p
+                className="display mt-4"
+                style={{
+                  fontSize: "clamp(2.5rem,6vw,3.75rem)",
+                  color: "#f4f4f5",
+                }}
+              >
+                £9.99
+                <span
+                  className="text-[1.1rem]"
+                  style={{ color: "rgba(244,244,245,0.55)" }}
                 >
-                  {big}
-                </p>
-                <p
-                  className="mt-2 text-[14px] leading-relaxed"
-                  style={{ color: "var(--ink-soft)" }}
-                >
-                  {small}
-                </p>
-              </div>
-            </FadeUp>
-          ))}
+                  {" "}
+                  /month
+                </span>
+              </p>
+              <p
+                className="mt-2 text-[14px]"
+                style={{ color: "rgba(244,244,245,0.7)" }}
+              >
+                7-day free trial · no card charged during your trial · cancel
+                anytime.
+              </p>
+              <a
+                href={GYST_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="btn mt-8"
+                style={{
+                  background: "#fdc91b",
+                  borderColor: "#fdc91b",
+                  color: "#14140f",
+                }}
+              >
+                Start free trial
+                <ArrowUpRight className="h-4 w-4" />
+              </a>
+            </div>
+
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {PLAN.map((item) => (
+                <li key={item} className="flex items-start gap-3">
+                  <Check
+                    className="mt-0.5 h-4 w-4 shrink-0"
+                    style={{ color: "#fdc91b" }}
+                  />
+                  <span
+                    className="text-[14px] leading-snug"
+                    style={{ color: "rgba(244,244,245,0.85)" }}
+                  >
+                    {item}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </section>
   );
 }
 
-/* ── Next project + CTA ────────────────────────────────────────────────── */
+/* ── CTA + next ────────────────────────────────────────────────────────── */
 
 function NextAndCTA() {
   return (
-    <section
-      className="section"
-      style={{
-        borderTop: "1px solid var(--line)",
-        backgroundColor: "var(--paper-2)",
-      }}
-    >
+    <section className="section" style={{ backgroundColor: "var(--paper-2)" }}>
       <div className="shell">
-        <div
-          className="ticked p-10 sm:p-16"
-          style={{ border: "1px solid var(--line-strong)" }}
-        >
-          <p className="mono-label mb-6">GYST is in active development</p>
+        <div className="ticked p-10 sm:p-16">
+          <Kicker className="mb-6">7 days free · no card required</Kicker>
           <h2
             className="display max-w-4xl"
             style={{ fontSize: "clamp(2.25rem,6vw,4.25rem)" }}
           >
-            Want something like
+            Ready to get your
             <br />
-            this for your problem?
+            <span className="accent">sh*t together?</span>
           </h2>
-          <div className="mt-10 flex flex-wrap gap-4">
-            <Link href="/contact" className="btn">
-              Start a project
-              <ArrowUpRight className="h-3.5 w-3.5" />
-            </Link>
-            <Link href="/projects" className="btn-ghost">
-              Explore the work
+          <div className="mt-10 flex flex-wrap gap-3">
+            <a href={GYST_URL} target="_blank" rel="noreferrer" className="btn">
+              Start free trial
+              <ArrowUpRight className="h-4 w-4" />
+            </a>
+            <Link href="/projects/hotel" className="btn-ghost">
+              See our flagship service
             </Link>
           </div>
         </div>
 
-        {/* next-up link */}
         <Link
           href="/projects/hotel"
-          className="lab-card group mt-12 flex items-center justify-between p-7 sm:p-9"
-          style={{ borderRadius: "var(--radius-sm)" }}
+          className="card group mt-8 flex items-center justify-between p-7 sm:p-9"
         >
           <div>
-            <p className="mono-label mb-2">Next project · 002</p>
+            <Kicker className="mb-2">Flagship service</Kicker>
             <p
               className="display"
               style={{ fontSize: "clamp(1.4rem,3vw,2rem)" }}
@@ -538,13 +594,13 @@ function NextAndCTA() {
 
 export default function GystPage() {
   return (
-    <main style={{ backgroundColor: "var(--paper)" }}>
+    <main className="theme-gyst" style={{ backgroundColor: "var(--paper)" }}>
       <Navbar />
       <Hero />
       <Problem />
-      <HowItWorks />
+      <Path />
       <Features />
-      <Outcome />
+      <Pricing />
       <NextAndCTA />
       <Footer />
     </main>
