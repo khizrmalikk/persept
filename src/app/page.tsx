@@ -1,96 +1,68 @@
 "use client";
 
-import Link from "next/link";
-import { useRef } from "react";
 import {
+  type MotionValue,
   motion,
   useScroll,
   useTransform,
-  type MotionValue,
 } from "framer-motion";
-import { ArrowRight, ArrowDown } from "lucide-react";
-import { Navbar } from "@/components/sections/navbar";
+import {
+  ArrowDown,
+  ArrowRight,
+  ClipboardList,
+  LineChart,
+  MessageSquare,
+  ShieldCheck,
+} from "lucide-react";
+import Link from "next/link";
+import { useRef } from "react";
 import { Footer } from "@/components/sections/footer";
-import { LabObject } from "@/components/ui/lab-object";
+import { Navbar } from "@/components/sections/navbar";
+import { ApertureField } from "@/components/ui/aperture-field";
+import { ApertureGlyph, Kicker } from "@/components/ui/editorial";
 import { FadeUp } from "@/components/ui/scroll-animations";
 
 /* ── Data ──────────────────────────────────────────────────────────────── */
 
-const PROJECTS = [
+const CAPABILITIES = [
   {
-    id: "GYST",
-    index: "001",
-    name: "GYST",
-    tagline: "Job search & applications, on autopilot.",
-    desc: "Search and apply for roles while GYST auto-generates a tailored CV and cover letter for every single job.",
-    status: "Flagship",
-    href: "/projects/gyst",
-    tags: ["AI", "Careers", "Automation"],
+    icon: MessageSquare,
+    t: "Guest & customer comms",
+    d: "Every message answered in minutes, in your voice, around the clock — across WhatsApp and the channels people already use.",
   },
   {
-    id: "HOTEL",
-    index: "002",
-    name: "Hotel AI Workforce",
-    tagline: "An AI team for hospitality operations.",
-    desc: "Agents that handle guest comms, reviews, scheduling and reporting — built and proven with real hotels.",
-    status: "Live",
-    href: "/projects/hotel",
-    tags: ["AI Agents", "Hospitality"],
+    icon: ClipboardList,
+    t: "Operations dispatch",
+    d: "Scheduling, vendor chasing, follow-ups. The agent moves work forward and escalates only what needs a human.",
   },
   {
-    id: "DAP",
-    index: "003",
-    name: "DAP",
-    tagline: "Data, applied.",
-    desc: "An applied-data product turning messy operational signals into decisions teams can act on.",
-    status: "Active",
-    href: "/projects/dap",
-    tags: ["Data", "Tooling"],
+    icon: LineChart,
+    t: "Reporting & owner updates",
+    d: "The day's data turned into a clear briefing, plus the monthly statements owners actually read.",
   },
   {
-    id: "NEXT",
-    index: "004",
-    name: "In the lab",
-    tagline: "The next problem worth solving.",
-    desc: "We're always prototyping. New experiments move from whiteboard to working software here.",
-    status: "Coming soon",
-    href: "/projects",
-    tags: ["Prototype"],
+    icon: ShieldCheck,
+    t: "Humans in command",
+    d: "Anything touching money, access or disputes routes to your team for one-tap approval. Agents handle volume; people make the calls.",
   },
 ];
 
-const PROCESS = [
+const APPROACH = [
   {
     n: "01",
-    t: "Find the friction",
-    d: "We start with a real, painful problem — not a feature looking for a use.",
+    t: "Live where the work is",
+    d: "No new software for anyone to learn. Agents plug into the inboxes, tools and channels your team already runs on.",
   },
   {
     n: "02",
-    t: "Prototype fast",
-    d: "A working prototype in days. We learn by building, not by speccing.",
+    t: "One deployment per client",
+    d: "Isolated, permissioned and hardened. Your data stays yours; agents only take allowlisted actions.",
   },
   {
     n: "03",
-    t: "Ship & sharpen",
-    d: "Put it in real hands, measure, and refine until it earns its place.",
+    t: "Proven in production",
+    d: "We run our own agent workforce daily. Everything we sell is the operating playbook we already live.",
   },
-  {
-    n: "04",
-    t: "Scale what works",
-    d: "Proven prototypes graduate into products with their own home.",
-  },
-];
-
-const TICKER = [
-  "AI Agents",
-  "Applied ML",
-  "Automation",
-  "Product Design",
-  "Rapid Prototyping",
-  "Full-stack",
-  "3D / WebGL",
-  "Data Tooling",
 ];
 
 /* ── Word-by-word scroll reveal ────────────────────────────────────────── */
@@ -104,7 +76,7 @@ function RevealWord({
   progress: MotionValue<number>;
   range: [number, number];
 }) {
-  const opacity = useTransform(progress, range, [0.12, 1]);
+  const opacity = useTransform(progress, range, [0.14, 1]);
   return (
     <motion.span style={{ opacity }} className="inline-block">
       {children}&nbsp;
@@ -120,7 +92,7 @@ function Manifesto() {
   });
 
   const text =
-    "Persept is a software innovation lab. We take real problems — the tedious, the broken, the expensive — and turn them into products worth shipping.";
+    "Persept builds AI workforces — teams of agents that take on the repetitive operational work a business would otherwise hire for, and run it around the clock.";
   const tokens = text.split(" ").map((word, i, arr) => ({
     word,
     id: i,
@@ -128,20 +100,13 @@ function Manifesto() {
   }));
 
   return (
-    <section
-      ref={ref}
-      className="section"
-      style={{ borderTop: "1px solid var(--line)" }}
-    >
+    <section ref={ref} className="section">
       <div className="shell">
-        <p className="mono-label mb-8">
-          <span className="section-index">002</span>
-          &nbsp;&nbsp;/&nbsp;&nbsp;Manifesto
-        </p>
+        <Kicker className="mb-8">What we do</Kicker>
         <p
           className="display max-w-5xl"
           style={{
-            fontSize: "clamp(1.75rem, 4.2vw, 3.5rem)",
+            fontSize: "clamp(1.75rem, 4.2vw, 3.4rem)",
             lineHeight: 1.18,
             fontWeight: 500,
           }}
@@ -166,30 +131,26 @@ function Hero() {
     offset: ["start start", "end start"],
   });
 
-  const objectY = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
-  const objectScale = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
-  const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "60%"]);
+  const fieldY = useTransform(scrollYProgress, [0, 1], ["0%", "18%"]);
+  const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
   const contentOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
 
   return (
     <section
       ref={ref}
-      className="relative grain lab-grid min-h-[100svh] overflow-hidden"
+      className="relative grain min-h-[100svh] overflow-hidden"
     >
-      {/* 3D centerpiece */}
-      <motion.div
-        style={{ y: objectY, scale: objectScale }}
-        className="pointer-events-none absolute inset-0 flex items-center justify-center"
-      >
-        <LabObject className="h-[min(78vh,720px)] w-[min(92vw,720px)]" />
+      {/* aperture centerpiece */}
+      <motion.div style={{ y: fieldY }} className="absolute inset-0">
+        <ApertureField className="h-full w-full" />
       </motion.div>
 
-      {/* paper vignette so text stays legible over the object */}
+      {/* paper vignette so text stays legible over the field */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse at center, rgba(244,242,236,0) 38%, rgba(244,242,236,0.78) 78%)",
+            "radial-gradient(ellipse 70% 60% at 50% 44%, rgba(247,242,234,0) 30%, rgba(247,242,234,0.72) 72%, rgba(247,242,234,0.95) 100%)",
         }}
       />
 
@@ -200,44 +161,39 @@ function Hero() {
       >
         <div className="shell">
           <FadeUp>
-            <p className="mono-label mb-6">
-              <span className="section-index">001</span>
-              &nbsp;&nbsp;/&nbsp;&nbsp;Software Innovation Lab
-            </p>
+            <Kicker className="mb-7">AI workforce studio · Dubai</Kicker>
           </FadeUp>
 
           <FadeUp delay={0.08}>
             <h1
-              className="display max-w-4xl"
+              className="display max-w-5xl"
               style={{
-                fontSize: "clamp(2.75rem, 8.5vw, 7rem)",
+                fontSize: "clamp(2.75rem, 8vw, 6.75rem)",
                 fontWeight: 600,
               }}
             >
-              We turn problems
+              An <span className="accent">AI workforce</span>
               <br />
-              into <span className="accent">software</span>
-              <span className="cursor-blink accent" style={{ fontWeight: 400 }}>
-                _
-              </span>
+              for <span className="display-light">real operations.</span>
             </h1>
           </FadeUp>
 
           <FadeUp delay={0.18}>
             <p
-              className="mt-7 max-w-xl text-[clamp(1rem,1.5vw,1.2rem)] leading-relaxed"
+              className="mt-7 max-w-xl text-[clamp(1.05rem,1.5vw,1.25rem)] leading-relaxed"
               style={{ color: "var(--ink-soft)" }}
             >
-              A lab where a small team builds products that solve real, stubborn
-              problems. GYST is the first. More are taking shape.
+              We build agent teams that run the day-to-day work a business would
+              otherwise hire for. Our flagship: an AI workforce for property
+              hospitality. Our own product: GYST.
             </p>
           </FadeUp>
 
           <FadeUp delay={0.28}>
-            <div className="mt-10 flex flex-wrap items-center gap-4">
-              <Link href="/projects" className="btn">
-                See the work
-                <ArrowRight className="h-3.5 w-3.5" />
+            <div className="mt-10 flex flex-wrap items-center gap-3">
+              <Link href="/projects/hotel" className="btn">
+                See the workforce
+                <ArrowRight className="h-4 w-4" />
               </Link>
               <Link href="/contact" className="btn-ghost">
                 Start a project
@@ -270,177 +226,211 @@ function Hero() {
   );
 }
 
-/* ── Ticker ────────────────────────────────────────────────────────────── */
+/* ── Flagship: Hotel AI Workforce ──────────────────────────────────────── */
 
-function Ticker() {
-  const items = [...TICKER, ...TICKER].map((label, i) => ({ label, id: i }));
+function Flagship() {
   return (
-    <div
-      className="overflow-hidden py-5"
-      style={{
-        borderBlock: "1px solid var(--line)",
-        backgroundColor: "var(--paper-2)",
-      }}
-    >
-      <div className="marquee-track">
-        {items.map((item) => (
-          <span key={item.id} className="mx-8 inline-flex items-center gap-8">
-            <span className="mono-label" style={{ color: "var(--ink-soft)" }}>
-              {item.label}
-            </span>
-            <span style={{ color: "var(--accent)" }}>✳</span>
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ── Projects ──────────────────────────────────────────────────────────── */
-
-function Projects() {
-  return (
-    <section className="section" style={{ borderTop: "1px solid var(--line)" }}>
+    <section className="section" style={{ backgroundColor: "var(--paper-2)" }}>
       <div className="shell">
-        <div className="mb-12 flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <p className="mono-label mb-4">
-              <span className="section-index">003</span>
-              &nbsp;&nbsp;/&nbsp;&nbsp;Selected work
-            </p>
+        <div className="mb-14 flex flex-wrap items-end justify-between gap-6">
+          <div className="max-w-2xl">
+            <Kicker className="mb-5">Flagship — the service</Kicker>
             <h2
               className="display"
-              style={{ fontSize: "clamp(2rem,4.5vw,3.25rem)" }}
+              style={{ fontSize: "clamp(2.25rem,5vw,3.75rem)" }}
             >
-              What's in the lab
+              Hotel AI Workforce
             </h2>
+            <p
+              className="mt-4 text-[clamp(1.1rem,1.8vw,1.4rem)] leading-snug"
+              style={{ color: "var(--ink)", fontWeight: 500 }}
+            >
+              The AI operations team for property hospitality — guest messaging,
+              housekeeping dispatch and owner reporting, run around the clock
+              inside WhatsApp.
+            </p>
           </div>
           <Link
-            href="/projects"
-            className="link-underline mono-label"
+            href="/projects/hotel"
+            className="link-underline text-[15px]"
             style={{ color: "var(--ink)" }}
           >
-            View all projects →
+            Explore Hotel AI Workforce →
           </Link>
         </div>
 
-        <div
-          className="grid gap-px md:grid-cols-2"
-          style={{ backgroundColor: "var(--line)" }}
-        >
-          {PROJECTS.map((p, i) => (
-            <FadeUp key={p.id} delay={(i % 2) * 0.08}>
-              <Link
-                href={p.href}
-                className="lab-card group flex h-full flex-col p-7 sm:p-9"
-                style={{ borderRadius: 0 }}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="section-index">{p.index}</span>
-                  <span
-                    className="mono-label rounded-full px-3 py-1"
-                    style={{
-                      border: "1px solid var(--line-strong)",
-                      color:
-                        p.status === "Coming soon"
-                          ? "var(--ink-faint)"
-                          : "var(--accent-ink)",
-                    }}
-                  >
-                    {p.status}
+        <div className="grid gap-5 sm:grid-cols-2">
+          {CAPABILITIES.map((c, i) => {
+            const Icon = c.icon;
+            return (
+              <FadeUp key={c.t} delay={(i % 2) * 0.08}>
+                <div className="card group flex h-full flex-col p-8 sm:p-9">
+                  <span className="icon-tile">
+                    <Icon className="h-5 w-5" />
                   </span>
+                  <h3
+                    className="display mt-7"
+                    style={{ fontSize: "1.45rem", fontWeight: 600 }}
+                  >
+                    {c.t}
+                  </h3>
+                  <p
+                    className="mt-3 max-w-md text-[15px] leading-relaxed"
+                    style={{ color: "var(--ink-soft)" }}
+                  >
+                    {c.d}
+                  </p>
                 </div>
-
-                <h3
-                  className="display mt-8"
-                  style={{ fontSize: "clamp(1.6rem,3vw,2.25rem)" }}
-                >
-                  {p.name}
-                </h3>
-                <p
-                  className="mt-2 text-[15px]"
-                  style={{ color: "var(--ink-soft)" }}
-                >
-                  {p.tagline}
-                </p>
-                <p
-                  className="mt-5 max-w-md text-[14px] leading-relaxed"
-                  style={{ color: "var(--ink-soft)" }}
-                >
-                  {p.desc}
-                </p>
-
-                <div className="mt-auto flex items-center justify-between pt-8">
-                  <div className="flex flex-wrap gap-2">
-                    {p.tags.map((t) => (
-                      <span
-                        key={t}
-                        className="mono-label px-2.5 py-1"
-                        style={{
-                          border: "1px solid var(--line)",
-                          fontSize: "0.5625rem",
-                        }}
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                  <ArrowRight
-                    className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
-                    style={{ color: "var(--ink)" }}
-                  />
-                </div>
-              </Link>
-            </FadeUp>
-          ))}
+              </FadeUp>
+            );
+          })}
         </div>
       </div>
     </section>
   );
 }
 
-/* ── Process ───────────────────────────────────────────────────────────── */
+/* ── Product: GYST ─────────────────────────────────────────────────────── */
 
-function Process() {
+function Product() {
   return (
-    <section
-      className="section"
-      style={{
-        borderTop: "1px solid var(--line)",
-        backgroundColor: "var(--paper-2)",
-      }}
-    >
+    <section className="section">
       <div className="shell">
-        <p className="mono-label mb-4">
-          <span className="section-index">004</span>&nbsp;&nbsp;/&nbsp;&nbsp;How
-          we build
-        </p>
+        <div className="panel-dark overflow-hidden p-8 sm:p-14">
+          <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
+            <div>
+              <span
+                className="kicker mb-5"
+                style={{ color: "rgba(236,231,219,0.72)" }}
+              >
+                <span style={{ color: "#fdc91b", display: "inline-flex" }}>
+                  <ApertureGlyph size={14} />
+                </span>
+                Our product — stands on its own
+              </span>
+              <h2
+                className="display"
+                style={{
+                  fontSize: "clamp(2.5rem,5.5vw,4rem)",
+                  color: "#f4f2ea",
+                }}
+              >
+                GYST
+              </h2>
+              <p
+                className="mt-4 max-w-lg text-[clamp(1.1rem,1.8vw,1.4rem)] leading-snug"
+                style={{ color: "#ece7db", fontWeight: 500 }}
+              >
+                The whole job search, one guided path. Search every board,
+                tailor a screening-ready CV to each role, and reach real people
+                who can refer you.
+              </p>
+              <p
+                className="mt-5 max-w-lg text-[15px] leading-relaxed"
+                style={{ color: "rgba(236,231,219,0.72)" }}
+              >
+                Built for students and early-career professionals in the UK and
+                UAE. A separate Persept product with its own home.
+              </p>
+              <div className="mt-9 flex flex-wrap gap-3">
+                <a
+                  href="https://startgyst.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn"
+                  style={{
+                    background: "#fdc91b",
+                    borderColor: "#fdc91b",
+                    color: "#14140f",
+                  }}
+                >
+                  Visit startgyst.com
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+                <Link
+                  href="/projects/gyst"
+                  className="btn-ghost"
+                  style={{
+                    color: "#ece7db",
+                    borderColor: "rgba(236,231,219,0.3)",
+                  }}
+                >
+                  Read the story
+                </Link>
+              </div>
+            </div>
+
+            {/* mini "board" motif */}
+            <div className="hidden grid-cols-3 gap-3 lg:grid">
+              {[
+                { col: "Saved", cards: ["s1"] },
+                { col: "Applied", cards: ["a1", "a2"] },
+                { col: "Interview", cards: ["i1"] },
+              ].map(({ col, cards }) => (
+                <div key={col} className="flex flex-col gap-3">
+                  <p
+                    className="mono-label"
+                    style={{ color: "rgba(236,231,219,0.5)" }}
+                  >
+                    {col}
+                  </p>
+                  {cards.map((cardId) => (
+                    <div
+                      key={cardId}
+                      className="rounded-xl p-3"
+                      style={{
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                      }}
+                    >
+                      <div
+                        className="h-2 w-3/4 rounded-full"
+                        style={{ background: "rgba(253,201,27,0.8)" }}
+                      />
+                      <div
+                        className="mt-2 h-2 w-1/2 rounded-full"
+                        style={{ background: "rgba(236,231,219,0.18)" }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── Approach ──────────────────────────────────────────────────────────── */
+
+function Approach() {
+  return (
+    <section className="section" style={{ backgroundColor: "var(--paper-2)" }}>
+      <div className="shell">
+        <Kicker className="mb-5">How we build</Kicker>
         <h2
           className="display mb-14 max-w-2xl"
           style={{ fontSize: "clamp(2rem,4.5vw,3.25rem)" }}
         >
-          A method, not a pitch deck
+          Sold as a staffed outcome, not a tool
         </h2>
 
-        <div
-          className="grid gap-px sm:grid-cols-2 lg:grid-cols-4"
-          style={{ backgroundColor: "var(--line)" }}
-        >
-          {PROCESS.map((step, i) => (
+        <div className="grid gap-6 sm:grid-cols-3">
+          {APPROACH.map((step, i) => (
             <FadeUp key={step.n} delay={i * 0.08}>
-              <div
-                className="flex h-full flex-col p-7"
-                style={{ backgroundColor: "var(--paper-2)" }}
-              >
-                <span className="section-index">{step.n}</span>
+              <div className="flex h-full flex-col">
+                <span className="figure-mark">{step.n}</span>
+                <hr className="rule-soft my-6" />
                 <h3
-                  className="display mt-6"
-                  style={{ fontSize: "1.35rem", fontWeight: 600 }}
+                  className="display"
+                  style={{ fontSize: "1.4rem", fontWeight: 600 }}
                 >
                   {step.t}
                 </h3>
                 <p
-                  className="mt-3 text-[14px] leading-relaxed"
+                  className="mt-3 text-[15px] leading-relaxed"
                   style={{ color: "var(--ink-soft)" }}
                 >
                   {step.d}
@@ -458,31 +448,27 @@ function Process() {
 
 function CTA() {
   return (
-    <section
-      className="section grain"
-      style={{ borderTop: "1px solid var(--line)" }}
-    >
+    <section className="section grain">
       <div className="shell">
-        <div
-          className="ticked p-10 sm:p-16"
-          style={{ border: "1px solid var(--line-strong)" }}
-        >
-          <p className="mono-label mb-6">Have a problem worth solving?</p>
+        <div className="ticked p-10 sm:p-16">
+          <Kicker className="mb-6">
+            Costs less than one hire · works 24/7
+          </Kicker>
           <h2
             className="display max-w-4xl"
             style={{ fontSize: "clamp(2.25rem,6vw,4.5rem)" }}
           >
-            Let's build the
+            Put an AI workforce
             <br />
-            thing that fixes it.
+            on the <span className="accent">operation.</span>
           </h2>
-          <div className="mt-10 flex flex-wrap gap-4">
+          <div className="mt-10 flex flex-wrap gap-3">
             <Link href="/contact" className="btn">
               Start a project
-              <ArrowRight className="h-3.5 w-3.5" />
+              <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link href="/projects" className="btn-ghost">
-              Explore the work
+            <Link href="/projects/hotel" className="btn-ghost">
+              See how it works
             </Link>
           </div>
         </div>
@@ -498,10 +484,10 @@ export default function Home() {
     <main style={{ backgroundColor: "var(--paper)" }}>
       <Navbar />
       <Hero />
-      <Ticker />
       <Manifesto />
-      <Projects />
-      <Process />
+      <Flagship />
+      <Product />
+      <Approach />
       <CTA />
       <Footer />
     </main>

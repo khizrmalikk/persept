@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { type ChangeEvent, type FormEvent, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -13,8 +11,11 @@ import {
   MapPin,
   Radio,
 } from "lucide-react";
-import { Navbar } from "@/components/sections/navbar";
+import Link from "next/link";
+import { type ChangeEvent, type FormEvent, useState } from "react";
 import { Footer } from "@/components/sections/footer";
+import { Navbar } from "@/components/sections/navbar";
+import { Kicker } from "@/components/ui/editorial";
 import { FadeUp, SlideIn } from "@/components/ui/scroll-animations";
 
 /* ── Static lab metadata ───────────────────────────────────────────────── */
@@ -56,20 +57,19 @@ const BUDGETS = [
 /* ── Reusable field label ──────────────────────────────────────────────── */
 
 function FieldLabel({
-  index,
   children,
   htmlFor,
 }: {
-  index: string;
   children: string;
   htmlFor: string;
 }) {
   return (
-    <label htmlFor={htmlFor} className="mb-2 flex items-center gap-2">
-      <span className="section-index">{index}</span>
-      <span className="mono-label" style={{ color: "var(--ink-soft)" }}>
-        {children}
-      </span>
+    <label
+      htmlFor={htmlFor}
+      className="mb-2 flex items-center gap-2 text-[0.8rem] font-medium"
+      style={{ color: "var(--ink-soft)", letterSpacing: "0.01em" }}
+    >
+      {children}
     </label>
   );
 }
@@ -77,7 +77,7 @@ function FieldLabel({
 /* ── Shared input styling ──────────────────────────────────────────────── */
 
 const fieldClass =
-  "w-full bg-transparent px-3.5 py-3 text-[15px] outline-none transition-colors duration-200 " +
+  "w-full bg-transparent px-4 py-3 text-[15px] outline-none transition-colors duration-200 " +
   "placeholder:text-[var(--ink-faint)] focus:border-[var(--accent)]";
 
 const fieldStyle = {
@@ -152,21 +152,18 @@ export default function ContactPage() {
       <Navbar />
 
       {/* ── Header ──────────────────────────────────────────────────────── */}
-      <section className="relative grain lab-grid overflow-hidden pt-32">
-        {/* paper vignette to soften the grid toward the edges */}
+      <section className="relative grain aperture-quiet overflow-hidden pt-32">
+        {/* paper vignette to soften the field toward the edges */}
         <div
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "radial-gradient(ellipse at 50% 0%, rgba(244,242,236,0) 30%, rgba(244,242,236,0.7) 85%)",
+              "radial-gradient(ellipse at 50% 0%, rgba(247,242,234,0) 30%, rgba(247,242,234,0.7) 85%)",
           }}
         />
         <div className="shell relative z-[1] pb-12 sm:pb-16">
           <FadeUp>
-            <p className="mono-label mb-6">
-              <span className="section-index">001</span>
-              &nbsp;&nbsp;/&nbsp;&nbsp;Start a project
-            </p>
+            <Kicker className="mb-6">Start a project</Kicker>
           </FadeUp>
 
           <FadeUp delay={0.08}>
@@ -177,12 +174,9 @@ export default function ContactPage() {
                 fontWeight: 600,
               }}
             >
-              Let's build the
+              Let's put a workforce
               <br />
-              thing that <span className="accent">fixes it</span>
-              <span className="cursor-blink accent" style={{ fontWeight: 400 }}>
-                _
-              </span>
+              on <span className="accent">the problem</span>
             </h1>
           </FadeUp>
 
@@ -191,34 +185,22 @@ export default function ContactPage() {
               className="mt-7 max-w-xl text-[clamp(1rem,1.5vw,1.2rem)] leading-relaxed"
               style={{ color: "var(--ink-soft)" }}
             >
-              Persept is a Dubai-based software innovation lab. We turn problems
-              into software. Tell us about the friction you're living with —
-              we'll tell you what we'd build.
+              Persept is a Dubai-based AI workforce studio. We build agent teams
+              that run real operations. Tell us about the work that's eating
+              your team's day — we'll tell you what we'd deploy.
             </p>
           </FadeUp>
         </div>
       </section>
 
       {/* ── Two-column body ─────────────────────────────────────────────── */}
-      <section
-        className="section"
-        style={{ borderTop: "1px solid var(--line)" }}
-      >
+      <section className="section">
         <div className="shell">
-          <div
-            className="grid gap-px lg:grid-cols-[0.85fr_1.15fr]"
-            style={{ backgroundColor: "var(--line)" }}
-          >
-            {/* ── Left: spec sheet ─────────────────────────────────────── */}
+          <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
+            {/* ── Left: direct line ────────────────────────────────────── */}
             <SlideIn direction="left" className="h-full">
-              <div
-                className="flex h-full flex-col p-7 sm:p-10"
-                style={{ backgroundColor: "var(--paper)" }}
-              >
-                <p className="mono-label mb-6">
-                  <span className="section-index">002</span>
-                  &nbsp;&nbsp;/&nbsp;&nbsp;Direct line
-                </p>
+              <div className="card flex h-full flex-col p-7 sm:p-10">
+                <Kicker className="mb-6">Direct line</Kicker>
 
                 <p
                   className="max-w-sm text-[15px] leading-relaxed"
@@ -260,11 +242,11 @@ export default function ContactPage() {
                   ))}
                 </dl>
 
-                {/* Status panel with registration ticks */}
+                {/* Status strip */}
                 <div
-                  className="ticked mt-8 flex items-center gap-3 p-4"
+                  className="mt-8 flex items-center gap-3 p-4"
                   style={{
-                    border: "1px solid var(--line-strong)",
+                    background: "var(--paper-3)",
                     borderRadius: "var(--radius-sm)",
                   }}
                 >
@@ -288,7 +270,7 @@ export default function ContactPage() {
                     className="mono-label"
                     style={{ color: "var(--ink-soft)" }}
                   >
-                    The lab is open — currently briefing new work
+                    Open studio — currently briefing new work
                   </span>
                 </div>
 
@@ -349,14 +331,8 @@ export default function ContactPage() {
 
             {/* ── Right: form ─────────────────────────────────────────── */}
             <SlideIn direction="right" className="h-full">
-              <div
-                className="flex h-full flex-col p-7 sm:p-10"
-                style={{ backgroundColor: "var(--paper)" }}
-              >
-                <p className="mono-label mb-6">
-                  <span className="section-index">003</span>
-                  &nbsp;&nbsp;/&nbsp;&nbsp;The brief
-                </p>
+              <div className="card flex h-full flex-col p-7 sm:p-10">
+                <Kicker className="mb-6">The brief</Kicker>
 
                 {submitted ? (
                   /* ── Success state ──────────────────────────────────── */
@@ -366,21 +342,8 @@ export default function ContactPage() {
                     transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                     className="flex flex-1 flex-col items-start justify-center"
                   >
-                    <div
-                      className="ticked w-full p-8 sm:p-10"
-                      style={{
-                        border: "1px solid var(--line-strong)",
-                        borderRadius: "var(--radius-sm)",
-                      }}
-                    >
-                      <div
-                        className="mb-6 inline-flex h-11 w-11 items-center justify-center"
-                        style={{
-                          border: "1px solid var(--accent)",
-                          borderRadius: "var(--radius-sm)",
-                          color: "var(--accent-ink)",
-                        }}
-                      >
+                    <div className="ticked w-full p-8 sm:p-10">
+                      <div className="icon-tile mb-6">
                         <Check className="h-5 w-5" />
                       </div>
                       <h2
@@ -389,13 +352,7 @@ export default function ContactPage() {
                       >
                         Message received.
                         <br />
-                        We'll be in touch
-                        <span
-                          className="cursor-blink accent"
-                          style={{ fontWeight: 400 }}
-                        >
-                          _
-                        </span>
+                        We'll be in <span className="accent">touch</span>
                       </h2>
                       <p
                         className="mt-4 max-w-md text-[15px] leading-relaxed"
@@ -429,9 +386,7 @@ export default function ContactPage() {
                   >
                     <div className="grid gap-6 sm:grid-cols-2">
                       <div className="flex flex-col">
-                        <FieldLabel index="A1" htmlFor="name">
-                          NAME
-                        </FieldLabel>
+                        <FieldLabel htmlFor="name">Name</FieldLabel>
                         <input
                           id="name"
                           name="name"
@@ -447,9 +402,7 @@ export default function ContactPage() {
                       </div>
 
                       <div className="flex flex-col">
-                        <FieldLabel index="A2" htmlFor="email">
-                          EMAIL
-                        </FieldLabel>
+                        <FieldLabel htmlFor="email">Email</FieldLabel>
                         <input
                           id="email"
                           name="email"
@@ -466,8 +419,8 @@ export default function ContactPage() {
                     </div>
 
                     <div className="mt-6 flex flex-col">
-                      <FieldLabel index="A3" htmlFor="company">
-                        COMPANY — OPTIONAL
+                      <FieldLabel htmlFor="company">
+                        Company — optional
                       </FieldLabel>
                       <input
                         id="company"
@@ -484,9 +437,7 @@ export default function ContactPage() {
 
                     <div className="mt-6 grid gap-6 sm:grid-cols-2">
                       <div className="flex flex-col">
-                        <FieldLabel index="A4" htmlFor="type">
-                          PROJECT TYPE
-                        </FieldLabel>
+                        <FieldLabel htmlFor="type">Project type</FieldLabel>
                         <select
                           id="type"
                           name="type"
@@ -504,9 +455,7 @@ export default function ContactPage() {
                       </div>
 
                       <div className="flex flex-col">
-                        <FieldLabel index="A5" htmlFor="budget">
-                          BUDGET
-                        </FieldLabel>
+                        <FieldLabel htmlFor="budget">Budget</FieldLabel>
                         <select
                           id="budget"
                           name="budget"
@@ -525,8 +474,8 @@ export default function ContactPage() {
                     </div>
 
                     <div className="mt-6 flex flex-1 flex-col">
-                      <FieldLabel index="A6" htmlFor="message">
-                        WHAT ARE YOU BUILDING?
+                      <FieldLabel htmlFor="message">
+                        What are you building?
                       </FieldLabel>
                       <textarea
                         id="message"
@@ -565,20 +514,11 @@ export default function ContactPage() {
       {/* ── Secondary CTA: book a call ──────────────────────────────────── */}
       <section
         className="section grain"
-        style={{
-          borderTop: "1px solid var(--line)",
-          backgroundColor: "var(--paper-2)",
-        }}
+        style={{ backgroundColor: "var(--paper-2)" }}
       >
         <div className="shell">
           <FadeUp>
-            <div
-              className="flex flex-col items-start justify-between gap-8 p-8 sm:flex-row sm:items-center sm:p-12"
-              style={{
-                border: "1px solid var(--line-strong)",
-                borderRadius: "var(--radius-sm)",
-              }}
-            >
+            <div className="ticked flex flex-col items-start justify-between gap-8 p-8 sm:flex-row sm:items-center sm:p-12">
               <div>
                 <p className="mono-label mb-4 inline-flex items-center gap-2">
                   <MapPin

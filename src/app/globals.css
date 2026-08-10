@@ -88,23 +88,6 @@ body {
   animation: fadeUp 0.8s var(--ease) both;
 }
 
-/* ── Logo orbit — the accent node circles the hexagon ──────────────────── */
-
-@keyframes logoOrbit {
-  to {
-    transform: rotate(360deg);
-  }
-}
-.logo-orbit {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: logoOrbit 7s linear infinite;
-}
-/* gentle speed-up when the lockup is hovered */
-.group:hover .logo-orbit {
-  animation-duration: 3.2s;
-}
-
 /* ── Reduced motion ────────────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {

@@ -3,18 +3,17 @@ import { Logo } from "@/components/ui/logo";
 
 const COLUMNS = [
   {
-    title: "Work",
+    title: "What we build",
     links: [
-      { href: "/projects", label: "All projects" },
+      { href: "/projects/hotel", label: "Hotel AI Workforce" },
       { href: "/projects/gyst", label: "GYST" },
-      { href: "/projects/hotel", label: "Hotel AI" },
-      { href: "/projects/dap", label: "DAP" },
+      { href: "/projects", label: "All work" },
     ],
   },
   {
-    title: "Lab",
+    title: "Company",
     links: [
-      { href: "/about", label: "About the lab" },
+      { href: "/about", label: "About Persept" },
       { href: "/about#process", label: "How we build" },
       { href: "/contact", label: "Start a project" },
     ],
@@ -38,8 +37,8 @@ export function Footer() {
               className="mt-4 max-w-xs text-[14px] leading-relaxed"
               style={{ color: "var(--ink-soft)" }}
             >
-              A software innovation lab. We turn real-world problems into
-              products worth shipping.
+              An AI workforce studio. We build agent teams that run real
+              operations — and ship our own products alongside them.
             </p>
             <p className="mono-label mt-6">Dubai · Building since 2024</p>
           </div>
@@ -69,8 +68,8 @@ export function Footer() {
           className="mt-14 flex flex-col items-start justify-between gap-3 pt-6 sm:flex-row sm:items-center"
           style={{ borderTop: "1px solid var(--line)" }}
         >
-          <p className="mono-label">© {new Date().getFullYear()} Persept Lab</p>
-          <p className="mono-label">Problems in · Products out</p>
+          <p className="mono-label">© {new Date().getFullYear()} Persept</p>
+          <p className="mono-label">Agent teams · real operations</p>
         </div>
       </div>
     </footer>
