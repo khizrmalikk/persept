@@ -53,6 +53,14 @@ export function Navbar() {
               </span>
             </Link>
           ))}
+          <Link href="/login" className="group">
+            <span
+              className="link-underline text-[14px]"
+              style={{ color: "var(--ink)" }}
+            >
+              Sign in
+            </span>
+          </Link>
           <Link
             href="/contact"
             className="btn"
@@ -119,6 +127,14 @@ export function Navbar() {
                   <span className="text-[18px]">{l.label}</span>
                 </Link>
               ))}
+              <Link
+                href="/login"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 border-b py-3"
+                style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+              >
+                <span className="text-[18px]">Sign in</span>
+              </Link>
               <Link
                 href="/contact"
                 onClick={() => setOpen(false)}
