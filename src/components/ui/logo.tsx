@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Persept logomark — the official brand mark (`public/persept-mark.svg`): a
+ * Persept logomark — the official brand mark (`public/brand/mark/`): a
  * monoline "P" tracing an open circle. Inlined here so the strokes inherit
  * `currentColor` (set to --ink) and stay theme-aware instead of being locked
  * to the SVG's baked-in ink color.

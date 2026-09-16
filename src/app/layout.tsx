@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     apple: "/icon.svg",
   },
   other: {
-    "theme-color": "#f4f2ec",
+    "theme-color": "#f7f2ea",
     "color-scheme": "light",
   },
   openGraph: {
