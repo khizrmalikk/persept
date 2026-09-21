@@ -8,6 +8,7 @@ import {
   type Approval,
   type ConstellationWorker,
   STATUS_LABEL,
+  stripCallNote,
   type Subagent,
   type WfEvent,
   when,
@@ -188,6 +189,7 @@ function toChatMessage(m: WfEvent): ChatMessage {
     text = text.slice("[voice call]".length).trimStart();
     call = true;
   }
+  text = stripCallNote(text);
   return { id: m.id, mine, text, ts: when(m.ts), call };
 }
 

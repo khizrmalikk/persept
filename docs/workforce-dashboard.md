@@ -43,8 +43,13 @@ ELEVENLABS_MODEL=eleven_turbo_v2_5           # A/B: eleven_flash_v2_5 (faster) /
 ELEVENLABS_SETTINGS_CHIEF=                   # optional per-agent JSON merged over defaults, e.g. {"style":0.2}
 
 # Live call channel on the VPS bridge (optional). When set, call mode streams the
-# reply and speaks it sentence-by-sentence; unset → the Supabase reply path is used.
-BRIDGE_CALL_URL=                             # e.g. https://persept-vps.tail6e1d89.ts.net/call
+# reply and speaks it sentence-by-sentence; unset → the slower Supabase reply path.
+# The URL DIFFERS by environment because Vercel cannot reach the Tailscale-only
+# host; the bridge is also exposed via Tailscale Funnel on :8443 for production:
+#   local dev (.env.local):  BRIDGE_CALL_URL=https://persept-vps.tail6e1d89.ts.net/call
+#   Vercel (prod/preview):   BRIDGE_CALL_URL=https://persept-vps.tail6e1d89.ts.net:8443/call
+# BRIDGE_CALL_TOKEN is the SAME bearer token in both environments.
+BRIDGE_CALL_URL=                             # see the two forms above (env-dependent)
 BRIDGE_CALL_TOKEN=                           # bearer token; server-side only, never exposed
 ```
 
