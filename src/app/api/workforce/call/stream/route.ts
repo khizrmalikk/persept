@@ -21,16 +21,70 @@ export async function GET(req: NextRequest) {
   const agent = req.nextUrl.searchParams.get("agent")?.trim() ?? "";
   if (!agent) return new NextResponse(null, { status: 400 });
 
+  let host = "";
+  try {
+    host = new URL(url).host;
+  } catch {
+    /* leave blank */
+  }
+
+  // Reachability probe (?ping=1): connect to the bridge stream with a short
+  // timeout, then abort — lets the client detect an unreachable live channel in
+  // ~3s and fall back immediately, instead of after several failed EventSources.
+  if (req.nextUrl.searchParams.get("ping") === "1") {
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), 2500);
+    try {
+      const probe = await fetch(
+        `${url}/stream?agentId=${encodeURIComponent(agent)}`,
+        {
+          headers: {
+            authorization: `Bearer ${process.env.BRIDGE_CALL_TOKEN ?? ""}`,
+            accept: "text/event-stream",
+          },
+          signal: ac.signal,
+        },
+      );
+      clearTimeout(timer);
+      void probe.body?.cancel().catch(() => {}); // we only needed the handshake
+      if (!probe.ok) {
+        console.error(
+          `[call/stream] bridge unreachable via ${host}: http ${probe.status}`,
+        );
+        return new NextResponse(null, {
+          status: 502,
+          headers: { "x-bridge-host": host },
+        });
+      }
+      return new NextResponse(null, {
+        status: 200,
+        headers: { "x-bridge-host": host },
+      });
+    } catch (e) {
+      clearTimeout(timer);
+      console.error(
+        `[call/stream] bridge unreachable via ${host}: ${(e as Error)?.name ?? "error"}`,
+      );
+      return new NextResponse(null, {
+        status: 502,
+        headers: { "x-bridge-host": host },
+      });
+    }
+  }
+
   let upstream: Response;
   try {
-    upstream = await fetch(`${url}/stream?agentId=${encodeURIComponent(agent)}`, {
-      headers: {
-        authorization: `Bearer ${process.env.BRIDGE_CALL_TOKEN ?? ""}`,
-        accept: "text/event-stream",
+    upstream = await fetch(
+      `${url}/stream?agentId=${encodeURIComponent(agent)}`,
+      {
+        headers: {
+          authorization: `Bearer ${process.env.BRIDGE_CALL_TOKEN ?? ""}`,
+          accept: "text/event-stream",
+        },
+        // aborts the upstream connection when the browser closes the EventSource
+        signal: req.signal,
       },
-      // aborts the upstream connection when the browser closes the EventSource
-      signal: req.signal,
-    });
+    );
   } catch {
     return new NextResponse(null, { status: 502 });
   }

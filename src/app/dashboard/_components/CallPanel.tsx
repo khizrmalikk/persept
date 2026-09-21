@@ -8,6 +8,7 @@ import {
   liveCallAvailable,
   sendVoiceUtterance,
 } from "@/lib/workforce/actions";
+import { stripCallNote } from "@/lib/workforce/types";
 
 // ── Web Speech API types ───────────────────────────────────────────────────
 // The DOM lib ships no types for SpeechRecognition, so we declare the minimal
@@ -142,6 +143,10 @@ export function CallPanel({
   const [, setHearing] = useState<HearingKind>(null);
   // diagnostic: reply transport — live SSE stream, or the Supabase fallback path.
   const [, setTransport] = useState<"live" | "fallback" | null>(null);
+  // a single, user-visible transport line ("transport: live" / "transport:
+  // fallback (live channel unreachable)"). The verbose per-turn diagnostics are
+  // gone; this one line stays so live-vs-fallback is legible on production.
+  const [transportNote, setTransportNote] = useState<string | null>(null);
   // barge-in: when on, a 3+ word commit mid-playback interrupts + sends. default on.
   const [bargeIn, setBargeIn] = useState(true);
   // per-turn timing diagnostics — tracked but no longer rendered (dev-only).
@@ -219,6 +224,10 @@ export function CallPanel({
   const esRef = useRef<EventSource | null>(null);
   const esFailRef = useRef(0); // consecutive EventSource failures (3 → fallback)
   const esReconnectRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // proactive keepalive: reconnect the SSE every 55s so a serverless function
+  // time limit (e.g. 60s on a plan that caps below maxDuration=300) never cuts a
+  // call mid-reply. A clean close+reopen, NOT counted as a failure.
+  const esKeepaliveRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // the reply turn we are currently appending deltas into (live mode). null between
   // turns; set on the first delta, updated in place, cleared on final/error.
@@ -1125,6 +1134,53 @@ export function CallPanel({
     };
   }, [agentId, handleStreamEvent]);
 
+  // Proactively reconnect the SSE every 55s (clean close+reopen, not a failure)
+  // so a serverless function time limit below maxDuration=300 never cuts a reply.
+  const startEsKeepalive = useCallback(() => {
+    if (esKeepaliveRef.current) return;
+    esKeepaliveRef.current = setInterval(() => {
+      if (liveRef.current && activeRef.current) {
+        esFailRef.current = 0; // proactive reconnect — reset the strike count
+        openStream();
+      }
+    }, 55_000);
+  }, [openStream]);
+  const stopEsKeepalive = useCallback(() => {
+    if (esKeepaliveRef.current) {
+      clearInterval(esKeepaliveRef.current);
+      esKeepaliveRef.current = null;
+    }
+  }, []);
+
+  // Probe the live channel (?ping=1) before committing to the SSE. false → the
+  // bridge is unreachable within 3s → fall back to Supabase now (not after three
+  // failed EventSource attempts). Logs the failing bridge host, never the token.
+  const preflightLiveChannel = useCallback(async (): Promise<boolean> => {
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), 3000);
+    try {
+      const res = await fetch(
+        `/api/workforce/call/stream?agent=${encodeURIComponent(agentId)}&ping=1`,
+        { signal: ac.signal, cache: "no-store" },
+      );
+      clearTimeout(timer);
+      if (!res.ok) {
+        const bhost = res.headers.get("x-bridge-host") || "bridge";
+        console.warn(
+          `[call] live channel unreachable via ${bhost} (http ${res.status}) — using fallback`,
+        );
+        return false;
+      }
+      return true;
+    } catch (e) {
+      clearTimeout(timer);
+      console.warn(
+        `[call] live channel preflight failed (${(e as Error)?.name ?? "error"}) — using fallback`,
+      );
+      return false;
+    }
+  }, [agentId]);
+
   // ── Send tick: a ~40ms quiet sine so a send is audible, no asset ─────────────
   const sendTick = useCallback(() => {
     try {
@@ -1587,6 +1643,7 @@ export function CallPanel({
 
   // ── LIVE mode: teardown of the stream + speech queue ─────────────────────────
   const closeStream = useCallback(() => {
+    stopEsKeepalive();
     if (esReconnectRef.current) {
       clearTimeout(esReconnectRef.current);
       esReconnectRef.current = null;
@@ -1599,7 +1656,7 @@ export function CallPanel({
       }
       esRef.current = null;
     }
-  }, []);
+  }, [stopEsKeepalive]);
 
   // Clear the gapless speech queue + any prefetched/next audio (used by interrupt
   // and teardown). Does not touch the audio element — the caller does stopAudio.
@@ -1628,11 +1685,19 @@ export function CallPanel({
   const fallbackToSupabase = useCallback(() => {
     if (!liveRef.current) return;
     liveRef.current = false;
+    stopEsKeepalive();
     closeStream();
     clearSpeechQueue();
     stopAudio();
     speakingRef.current = false;
     setTransport("fallback");
+    // keep the specific "(live channel unreachable)" note set by the preflight;
+    // otherwise (e.g. mid-call drop) show the generic fallback.
+    setTransportNote((n) =>
+      n === "transport: fallback (live channel unreachable)"
+        ? n
+        : "transport: fallback",
+    );
     setVoice("fallback path");
     voiceResolvedRef.current = true; // don't let a later tts overwrite the notice
     if (!activeRef.current) return;
@@ -1651,7 +1716,14 @@ export function CallPanel({
       startRecognitionRef.current();
       void runPoll();
     })();
-  }, [agentId, closeStream, clearSpeechQueue, stopAudio, runPoll]);
+  }, [
+    agentId,
+    closeStream,
+    clearSpeechQueue,
+    stopAudio,
+    runPoll,
+    stopEsKeepalive,
+  ]);
 
   useEffect(() => {
     fallbackToSupabaseRef.current = fallbackToSupabase;
@@ -1768,6 +1840,7 @@ export function CallPanel({
     diagTurnIdRef.current = null;
     setDiagTurns([]);
     setHearing(null);
+    setTransportNote(null);
 
     // Decide the transport: live stream-and-speak, or the Supabase reply path.
     // Default to Supabase if the check throws — never block starting the call.
@@ -1816,10 +1889,23 @@ export function CallPanel({
     })();
 
     if (live) {
-      // LIVE: open the persistent SSE stream; no reply long-poll.
-      openStream();
+      // LIVE: preflight the channel; open the SSE only if the bridge is reachable,
+      // else fall back to Supabase immediately (not after 3 failed EventSources).
+      void (async () => {
+        const reachable = await preflightLiveChannel();
+        if (!activeRef.current) return;
+        if (reachable) {
+          setTransportNote("transport: live");
+          openStream();
+          startEsKeepalive();
+        } else {
+          setTransportNote("transport: fallback (live channel unreachable)");
+          fallbackToSupabaseRef.current();
+        }
+      })();
     } else {
       // SUPABASE: run the reply long-poll.
+      setTransportNote("transport: fallback");
       void runPoll();
     }
     void pollWorkers();
@@ -1831,6 +1917,8 @@ export function CallPanel({
     tryStartScribe,
     clearSpeechQueue,
     openStream,
+    preflightLiveChannel,
+    startEsKeepalive,
   ]);
 
   const teardown = useCallback(() => {
@@ -2215,7 +2303,7 @@ export function CallPanel({
                   t.streaming ? " streaming" : ""
                 }`}
               >
-                <span className="cp-line-t">{t.text}</span>
+                <span className="cp-line-t">{stripCallNote(t.text)}</span>
               </div>
             ))
           )}
@@ -2246,6 +2334,17 @@ export function CallPanel({
         )}
         {workerLine && <p className="cp-workers">{workerLine}</p>}
 
+        {transportNote && (
+          <p
+            className={`cp-transport${
+              transportNote.startsWith("transport: live")
+                ? " live"
+                : " fallback"
+            }`}
+          >
+            {transportNote}
+          </p>
+        )}
         {error && <p className="cp-error">{error}</p>}
       </section>
     </>

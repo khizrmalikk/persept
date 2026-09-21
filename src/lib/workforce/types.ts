@@ -91,3 +91,18 @@ export const STATUS_LABEL: Record<string, string> = {
   error: "error",
   offline: "offline",
 };
+
+// The bridge appends a one-line call instruction (its own line, starting with
+// "(call:") to every voice-call utterance it forwards to the agent. It is
+// plumbing — never show it in a transcript or send it to TTS. Drop any such
+// line (after the [voice call] markers have been stripped). Pure + safe on
+// both client and server (no deps).
+export function stripCallNote(text: string): string {
+  if (!text.includes("(call:")) return text;
+  return text
+    .split("\n")
+    .filter((line) => !line.trimStart().startsWith("(call:"))
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}

@@ -2014,6 +2014,20 @@
   color: var(--err);
   font-size: 12.5px;
 }
+/* single transport line — live vs fallback, unobtrusive mono */
+.wf .cp-transport {
+  margin: 0;
+  font-family: var(--font-geist-mono);
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  color: var(--ink-faint);
+}
+.wf .cp-transport.live {
+  color: var(--ok);
+}
+.wf .cp-transport.fallback {
+  color: var(--warn);
+}
 
 /* diagnostics — tiny muted mono, unobtrusive */
 .wf .cp-diag {

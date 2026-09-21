@@ -6,6 +6,7 @@ import {
   type Approval,
   ago,
   STATUS_LABEL,
+  stripCallNote,
   type Task,
   type WfEvent,
   when,
@@ -76,6 +77,8 @@ export default async function AgentPage({
       text = text.slice("[voice call]".length).trimStart();
       call = true;
     }
+    // drop the bridge's "(call: …)" instruction line(s) — plumbing, not content.
+    text = stripCallNote(text);
     return { id: m.id, mine, text, ts: when(m.ts), call };
   });
 

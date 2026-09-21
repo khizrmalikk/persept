@@ -1,6 +1,8 @@
 // Server-only helpers for call-mode text-to-speech. The ElevenLabs key never
 // reaches the client (only the /api/workforce/tts route reads it).
 
+import { stripCallNote } from "./types";
+
 /** Per-agent ElevenLabs voice id from env, falling back to the default. */
 export function voiceIdFor(agentId: string): string | undefined {
   const key = `ELEVENLABS_VOICE_${agentId.trim().toUpperCase()}`;
@@ -30,7 +32,8 @@ const DEFAULT_SETTINGS: VoiceSettings = {
 
 /** Default voice settings with a per-agent JSON override merged over them. */
 export function voiceSettingsFor(agentId: string): VoiceSettings {
-  const raw = process.env[`ELEVENLABS_SETTINGS_${agentId.trim().toUpperCase()}`];
+  const raw =
+    process.env[`ELEVENLABS_SETTINGS_${agentId.trim().toUpperCase()}`];
   if (!raw) return DEFAULT_SETTINGS;
   try {
     const over = JSON.parse(raw) as Partial<VoiceSettings>;
@@ -43,23 +46,36 @@ export function voiceSettingsFor(agentId: string): VoiceSettings {
 // ── Text preparation (spoken, not read) ──────────────────────────────────────
 
 const HOUR_WORDS = [
-  "twelve", "one", "two", "three", "four", "five",
-  "six", "seven", "eight", "nine", "ten", "eleven",
+  "twelve",
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "nine",
+  "ten",
+  "eleven",
 ];
 
 // "09:00" → "nine", "09:30" → "half nine", "09:15" → "nine fifteen",
 // "09:45" → "quarter to ten", else "<hour> <mm>".
 function expandTimes(s: string): string {
-  return s.replace(/\b([01]?\d|2[0-3]):([0-5]\d)\b/g, (_m, hh: string, mm: string) => {
-    const h = Number.parseInt(hh, 10);
-    const m = Number.parseInt(mm, 10);
-    const hw = HOUR_WORDS[h % 12];
-    if (m === 0) return hw;
-    if (m === 15) return `${hw} fifteen`;
-    if (m === 30) return `half ${hw}`;
-    if (m === 45) return `quarter to ${HOUR_WORDS[(h + 1) % 12]}`;
-    return `${hw} ${mm}`;
-  });
+  return s.replace(
+    /\b([01]?\d|2[0-3]):([0-5]\d)\b/g,
+    (_m, hh: string, mm: string) => {
+      const h = Number.parseInt(hh, 10);
+      const m = Number.parseInt(mm, 10);
+      const hw = HOUR_WORDS[h % 12];
+      if (m === 0) return hw;
+      if (m === 15) return `${hw} fifteen`;
+      if (m === 30) return `half ${hw}`;
+      if (m === 45) return `quarter to ${HOUR_WORDS[(h + 1) % 12]}`;
+      return `${hw} ${mm}`;
+    },
+  );
 }
 
 /**
@@ -71,6 +87,8 @@ export function prepareForSpeech(input: string | null | undefined): string {
   let s = input ?? "";
   // [voice call] / [voice call ended] markers
   s = s.replace(/\[voice call(?: ended)?\]/gi, "");
+  // guard: never speak the bridge's "(call: …)" instruction line
+  s = stripCallNote(s);
   // links [text](url) → text
   s = s.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
   // bare URLs → say nothing
