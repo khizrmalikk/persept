@@ -15,6 +15,7 @@ import Link from "next/link";
 import { type ChangeEvent, type FormEvent, useState } from "react";
 import { Footer } from "@/components/sections/footer";
 import { Navbar } from "@/components/sections/navbar";
+import { ConsoleLabel, LiveTag } from "@/components/ui/console";
 import { Kicker } from "@/components/ui/editorial";
 import { FadeUp, SlideIn } from "@/components/ui/scroll-animations";
 
@@ -78,7 +79,8 @@ function FieldLabel({
 
 const fieldClass =
   "w-full bg-transparent px-4 py-3 text-[15px] outline-none transition-colors duration-200 " +
-  "placeholder:text-[var(--ink-faint)] focus:border-[var(--accent)]";
+  "placeholder:text-[var(--ink-faint)] focus:border-[var(--accent)] " +
+  "focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--paper)]";
 
 const fieldStyle = {
   color: "var(--ink)",
@@ -163,7 +165,15 @@ export default function ContactPage() {
         />
         <div className="shell relative z-[1] pb-12 sm:pb-16">
           <FadeUp>
-            <Kicker className="mb-6">Start a project</Kicker>
+            <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+              <Kicker>Start a project</Kicker>
+              <span
+                aria-hidden="true"
+                className="hidden h-3 w-px sm:block"
+                style={{ background: "var(--line-strong)" }}
+              />
+              <LiveTag label="Open studio · briefing new work" />
+            </div>
           </FadeUp>
 
           <FadeUp delay={0.08}>
@@ -199,8 +209,8 @@ export default function ContactPage() {
           <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
             {/* ── Left: direct line ────────────────────────────────────── */}
             <SlideIn direction="left" className="h-full">
-              <div className="card flex h-full flex-col p-7 sm:p-10">
-                <Kicker className="mb-6">Direct line</Kicker>
+              <div className="card ticked-corners relative flex h-full flex-col p-7 sm:p-10">
+                <ConsoleLabel className="mb-6">Direct line</ConsoleLabel>
 
                 <p
                   className="max-w-sm text-[15px] leading-relaxed"
@@ -250,22 +260,7 @@ export default function ContactPage() {
                     borderRadius: "var(--radius-sm)",
                   }}
                 >
-                  <span className="relative flex h-2 w-2">
-                    <motion.span
-                      className="absolute inline-flex h-full w-full rounded-full"
-                      style={{ backgroundColor: "var(--accent)" }}
-                      animate={{ scale: [1, 2.4, 1], opacity: [0.6, 0, 0.6] }}
-                      transition={{
-                        duration: 2,
-                        repeat: Number.POSITIVE_INFINITY,
-                        ease: "easeInOut",
-                      }}
-                    />
-                    <span
-                      className="relative inline-flex h-2 w-2 rounded-full"
-                      style={{ backgroundColor: "var(--accent)" }}
-                    />
-                  </span>
+                  <span className="live-dot" aria-hidden="true" />
                   <span
                     className="mono-label"
                     style={{ color: "var(--ink-soft)" }}
@@ -331,8 +326,8 @@ export default function ContactPage() {
 
             {/* ── Right: form ─────────────────────────────────────────── */}
             <SlideIn direction="right" className="h-full">
-              <div className="card flex h-full flex-col p-7 sm:p-10">
-                <Kicker className="mb-6">The brief</Kicker>
+              <div className="card ticked-corners relative flex h-full flex-col p-7 sm:p-10">
+                <ConsoleLabel className="mb-6">The brief</ConsoleLabel>
 
                 {submitted ? (
                   /* ── Success state ──────────────────────────────────── */
@@ -342,7 +337,7 @@ export default function ContactPage() {
                     transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                     className="flex flex-1 flex-col items-start justify-center"
                   >
-                    <div className="ticked w-full p-8 sm:p-10">
+                    <div className="ticked ticked-corners relative w-full p-8 sm:p-10">
                       <div className="icon-tile mb-6">
                         <Check className="h-5 w-5" />
                       </div>
@@ -518,7 +513,7 @@ export default function ContactPage() {
       >
         <div className="shell">
           <FadeUp>
-            <div className="ticked flex flex-col items-start justify-between gap-8 p-8 sm:flex-row sm:items-center sm:p-12">
+            <div className="ticked ticked-corners relative flex flex-col items-start justify-between gap-8 p-8 sm:flex-row sm:items-center sm:p-12">
               <div>
                 <p className="mono-label mb-4 inline-flex items-center gap-2">
                   <MapPin

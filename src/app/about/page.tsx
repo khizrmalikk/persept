@@ -3,6 +3,7 @@
 import {
   type MotionValue,
   motion,
+  useReducedMotion,
   useScroll,
   useTransform,
 } from "framer-motion";
@@ -20,6 +21,7 @@ import { useRef } from "react";
 import { Footer } from "@/components/sections/footer";
 import { Navbar } from "@/components/sections/navbar";
 import { ApertureField } from "@/components/ui/aperture-field";
+import { ConsoleLabel, LiveTag } from "@/components/ui/console";
 import { Kicker } from "@/components/ui/editorial";
 import {
   AnimatedCounter,
@@ -110,6 +112,7 @@ function RevealWord({
 
 function Hero() {
   const ref = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
@@ -126,7 +129,10 @@ function Hero() {
     >
       {/* aperture accent — anchored to the right as a side motif */}
       <motion.div
-        style={{ y: objectY, opacity: objectOpacity }}
+        style={{
+          y: reduce ? 0 : objectY,
+          opacity: reduce ? 1 : objectOpacity,
+        }}
         className="pointer-events-none absolute inset-y-0 right-[-12%] hidden items-center justify-center md:flex lg:right-[-4%]"
       >
         <ApertureField className="h-[min(70vh,640px)] w-[min(50vw,640px)]" />
@@ -141,10 +147,21 @@ function Hero() {
         }}
       />
 
-      <motion.div style={{ y: contentY }} className="relative z-[1]">
+      <motion.div
+        style={{ y: reduce ? 0 : contentY }}
+        className="relative z-[1]"
+      >
         <div className="shell">
           <FadeUp>
-            <Kicker className="mb-6">Persept · About</Kicker>
+            <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+              <Kicker>Persept · About</Kicker>
+              <span
+                aria-hidden="true"
+                className="hidden h-3 w-px sm:block"
+                style={{ background: "var(--line-strong)" }}
+              />
+              <LiveTag label="Studio · in build mode" />
+            </div>
           </FadeUp>
 
           <FadeUp delay={0.08}>
@@ -196,7 +213,7 @@ function Hero() {
             style={{ color: "var(--ink-faint)" }}
           >
             <motion.div
-              animate={{ y: [0, 6, 0] }}
+              animate={reduce ? undefined : { y: [0, 6, 0] }}
               transition={{
                 duration: 1.8,
                 repeat: Number.POSITIVE_INFINITY,
@@ -328,7 +345,7 @@ function Method() {
       <div className="shell">
         <div className="mb-14 max-w-2xl">
           <FadeUp>
-            <Kicker className="mb-4">The method</Kicker>
+            <ConsoleLabel className="mb-4">The method</ConsoleLabel>
             <h2
               className="display"
               style={{ fontSize: "clamp(2rem,4.5vw,3.25rem)" }}
@@ -434,13 +451,13 @@ function Figures() {
     <section className="section">
       <div className="shell">
         <FadeUp>
-          <Kicker className="mb-12">Where things stand</Kicker>
+          <ConsoleLabel className="mb-12">Where things stand</ConsoleLabel>
         </FadeUp>
 
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {FIGURES.map((f, i) => (
             <FadeUp key={f.label} delay={i * 0.08}>
-              <div className="card flex h-full flex-col justify-between gap-8 p-8">
+              <div className="card ticked-corners relative flex h-full flex-col justify-between gap-8 p-8">
                 <span
                   className="display accent"
                   style={{
@@ -475,7 +492,7 @@ function CTA() {
       style={{ backgroundColor: "var(--paper-2)" }}
     >
       <div className="shell">
-        <div className="ticked p-10 sm:p-16">
+        <div className="ticked ticked-corners relative p-10 sm:p-16">
           <Kicker className="mb-6">Got work that eats the day?</Kicker>
           <h2
             className="display max-w-4xl"

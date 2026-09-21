@@ -1,0 +1,332 @@
+"use client";
+
+import {
+  type CSSProperties,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+
+// Serializable message shape built server-side and handed to the client transcript.
+export type ChatMessage = {
+  id: number;
+  mine: boolean;
+  text: string;
+  ts: string;
+  // true when this turn came from call mode ([voice call] / [voice call ended]).
+  call?: boolean;
+};
+
+type Props = {
+  agentId: string;
+  agentName: string;
+  agentEmoji: string;
+  // Human-readable status label (e.g. "working", "idle") + a class key for the dot.
+  statusLabel?: string;
+  statusKey?: string;
+  messages: ChatMessage[];
+  // The fixed send contract — a server action imported by the server page and passed down.
+  // Next.js allows a server action to cross the server→client boundary as a prop.
+  sendAction: (formData: FormData) => void | Promise<void>;
+  // The voice-call control (CallPanel). It renders a single fragment: a round
+  // call/end button plus (when a call is active) its own `.cp-panel` transcript
+  // section. ChatPane hosts that fragment in a dedicated `.chat-call-region`
+  // directly beneath the header, so the round button reads as a header action
+  // while the live-call transcript gets its OWN roomy, clearly separated section
+  // instead of being squished under the header. Kept as a slot so the call lives
+  // INSIDE this one cohesive panel instead of a floating bar.
+  callSlot?: ReactNode;
+  // Optional: caps the message scroll height. The agent page wants a tall chat
+  // that fills the rail; the office chat card wants a shorter, contained one.
+  // Defaults to the tall treatment (via the CSS variable) when omitted.
+  scrollMaxHeight?: number;
+};
+
+// Pixel slack: treat "within this many px of the bottom" as "already at the bottom",
+// so the transcript sticks to the newest message but never yanks a reader who scrolled up.
+const STICK_THRESHOLD = 80;
+
+export function ChatPane({
+  agentId,
+  agentName,
+  agentEmoji,
+  statusLabel,
+  statusKey,
+  messages,
+  sendAction,
+  callSlot,
+  scrollMaxHeight,
+}: Props) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const textRef = useRef<HTMLTextAreaElement>(null);
+  // Whether the viewer is currently pinned to the bottom. Starts true so the first
+  // paint lands on the newest message; updated on every scroll.
+  const atBottomRef = useRef(true);
+  const [showJump, setShowJump] = useState(false);
+  // Whether the composer currently has text — drives the send button's enabled/
+  // clay state. Purely presentational; the real value is the textarea's own value.
+  const [hasText, setHasText] = useState(false);
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "auto") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior });
+  }, []);
+
+  // First mount: land on the newest message with no animation.
+  // useLayoutEffect avoids a visible jump before paint.
+  useLayoutEffect(() => {
+    scrollToBottom("auto");
+  }, [scrollToBottom]);
+
+  // Track proximity to the bottom as the user scrolls.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
+      const near = distance <= STICK_THRESHOLD;
+      atBottomRef.current = near;
+      setShowJump(!near);
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // On new/changed messages (the 6s AutoRefresh re-renders the server page and feeds a
+  // fresh array), stick to the bottom ONLY if the viewer was already near it.
+  const lastId = messages.length ? messages[messages.length - 1].id : 0;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: lastId + length are the change signal that a new message arrived across the 6s refresh
+  useEffect(() => {
+    if (atBottomRef.current) scrollToBottom("smooth");
+  }, [lastId, messages.length, scrollToBottom]);
+
+  // Auto-grow the composer up to a cap, then let it scroll internally.
+  const autosize = useCallback(() => {
+    const ta = textRef.current;
+    if (!ta) return;
+    ta.style.height = "auto";
+    ta.style.height = `${Math.min(ta.scrollHeight, 160)}px`;
+  }, []);
+  useEffect(() => {
+    autosize();
+  }, [autosize]);
+
+  const onInput = () => {
+    autosize();
+    setHasText((textRef.current?.value.trim().length ?? 0) > 0);
+  };
+
+  // Enter-to-send progressive enhancement. Enter submits the real form (server action),
+  // Shift+Enter inserts a newline. Because this only enhances a genuine <form action>,
+  // it degrades to a normal submit if JS is off.
+  const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+      e.preventDefault();
+      if ((textRef.current?.value.trim().length ?? 0) === 0) return;
+      formRef.current?.requestSubmit();
+    }
+  };
+
+  // After a send, clear + reset the composer and snap to the newest line.
+  const onSubmit = () => {
+    atBottomRef.current = true;
+    const ta = textRef.current;
+    setHasText(false);
+    requestAnimationFrame(() => {
+      if (ta) {
+        ta.value = "";
+        ta.style.height = "auto";
+      }
+      scrollToBottom("smooth");
+    });
+  };
+
+  const dotKey = statusKey ?? "idle";
+
+  return (
+    <section
+      className="chat-panel"
+      aria-label={`chat with ${agentName}`}
+      style={
+        scrollMaxHeight
+          ? ({
+              "--chat-scroll-max": `${scrollMaxHeight}px`,
+            } as CSSProperties)
+          : undefined
+      }
+    >
+      {/* ── Header: avatar · name · status · call button ─────────────────── */}
+      <header className="chat-head">
+        <span className="chat-avatar" aria-hidden="true">
+          {agentEmoji}
+        </span>
+        <span className="chat-id">
+          <span className="chat-name">{agentName}</span>
+          <span className="chat-status">
+            <span className={`dot ${dotKey}`} aria-hidden="true" />
+            {statusLabel ?? dotKey}
+          </span>
+        </span>
+        {/* The round call / end-call button lives here as a header action. It's
+            the same CallPanel fragment rendered in `.chat-call-region` below —
+            CSS lifts the button up into the header row while the transcript
+            section that follows it flows into its own roomy block. */}
+      </header>
+
+      {/* ── Voice-call region: the CallPanel fragment (round button + its own
+          titled transcript section). Given its OWN block directly under the
+          header so a live call is clearly separated + roomy, never squished. */}
+      {callSlot && <div className="chat-call-region">{callSlot}</div>}
+
+      {/* ── Messages ─────────────────────────────────────────────────────── */}
+      <div className="chat-body">
+        <div
+          ref={scrollRef}
+          className="chat-scroll"
+          role="log"
+          aria-live="polite"
+          aria-label={`conversation with ${agentName}`}
+        >
+          {!messages.length ? (
+            <div className="chat-empty">
+              <span className="ce-avatar" aria-hidden="true">
+                {agentEmoji}
+              </span>
+              <span className="ce-title">say hi to {agentName}</span>
+              <span className="ce-sub">
+                messages you send appear here, with replies a few seconds later.
+              </span>
+            </div>
+          ) : (
+            messages.map((m, i) => {
+              const prev = messages[i - 1];
+              // Tighten spacing when the same sender speaks twice in a row.
+              const grouped = prev && prev.mine === m.mine;
+              return (
+                <div
+                  key={m.id}
+                  className={`bubble-row ${m.mine ? "mine" : "theirs"}${grouped ? " grouped" : ""}`}
+                >
+                  {!m.mine && (
+                    <span className="bubble-avatar" aria-hidden="true">
+                      {grouped ? "" : agentEmoji}
+                    </span>
+                  )}
+                  <div className="bubble-col">
+                    <div className="bubble">
+                      <span className="bubble-text">{m.text}</span>
+                    </div>
+                    <span className="bubble-meta">
+                      {m.call && (
+                        <span className="call-chip">
+                          <svg
+                            width="9"
+                            height="9"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            aria-hidden="true"
+                          >
+                            <path
+                              d="M6.6 10.8a15.1 15.1 0 006.6 6.6l2.2-2.2a1 1 0 011-.24 11.4 11.4 0 003.57.57 1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1c0 1.24.2 2.44.57 3.57a1 1 0 01-.24 1l-2.23 2.23z"
+                              fill="currentColor"
+                            />
+                          </svg>
+                          call
+                        </span>
+                      )}
+                      <time className="bubble-t">{m.ts}</time>
+                    </span>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {showJump && (
+          <button
+            type="button"
+            className="chat-jump"
+            onClick={() => {
+              scrollToBottom("smooth");
+              atBottomRef.current = true;
+              setShowJump(false);
+            }}
+            aria-label="jump to latest message"
+          >
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M12 5v14M5 12l7 7 7-7"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            latest
+          </button>
+        )}
+      </div>
+
+      {/* ── Composer: rounded AI-input with integrated send ──────────────── */}
+      <div className="chat-foot">
+        <form
+          ref={formRef}
+          action={sendAction}
+          onSubmit={onSubmit}
+          className="composer"
+        >
+          <input type="hidden" name="agent" value={agentId} />
+          <label className="sr-only" htmlFor={`composer-${agentId}`}>
+            message {agentName}
+          </label>
+          <textarea
+            id={`composer-${agentId}`}
+            ref={textRef}
+            name="text"
+            rows={1}
+            placeholder={`message ${agentName}…`}
+            onInput={onInput}
+            onKeyDown={onKeyDown}
+          />
+          <button
+            className="composer-send"
+            type="submit"
+            disabled={!hasText}
+            aria-label={`send message to ${agentName}`}
+          >
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M12 19V5M5 12l7-7 7 7"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        </form>
+        <p className="composer-hint">
+          sent through the bridge into {agentName}&apos;s main session.
+        </p>
+      </div>
+    </section>
+  );
+}

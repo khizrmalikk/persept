@@ -1,6 +1,11 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
+import {
+  motion,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
@@ -18,7 +23,8 @@ import { useRef } from "react";
 import { Footer } from "@/components/sections/footer";
 import { Navbar } from "@/components/sections/navbar";
 import { ApertureField } from "@/components/ui/aperture-field";
-import { Kicker } from "@/components/ui/editorial";
+import { ConsoleLabel } from "@/components/ui/console";
+import { Kicker, SectionHead } from "@/components/ui/editorial";
 import {
   FadeUp,
   StaggerContainer,
@@ -111,60 +117,14 @@ const SPECS = [
   ["For", "Students & early-career"],
 ];
 
-/* ── Live badge ────────────────────────────────────────────────────────── */
+/* ── Live badge — dark-amber on paper for legibility under the GYST theme ── */
 
 function LiveBadge({ label }: { label: string }) {
   return (
     <span className="chip" style={{ color: "var(--accent-ink)" }}>
-      <span className="relative flex h-1.5 w-1.5">
-        <span
-          className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
-          style={{ backgroundColor: "var(--accent)" }}
-        />
-        <span
-          className="relative inline-flex h-1.5 w-1.5 rounded-full"
-          style={{ backgroundColor: "var(--accent)" }}
-        />
-      </span>
+      <span className="live-dot" aria-hidden="true" />
       {label}
     </span>
-  );
-}
-
-/* ── Section heading helper ────────────────────────────────────────────── */
-
-function SectionHead({
-  n,
-  kicker,
-  title,
-  lead,
-}: {
-  n: string;
-  kicker: string;
-  title: string;
-  lead?: string;
-}) {
-  return (
-    <div className="mb-14 flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-10">
-      <span className="figure-mark shrink-0">{n}</span>
-      <div className="max-w-3xl">
-        <Kicker className="mb-4">{kicker}</Kicker>
-        <h2
-          className="display"
-          style={{ fontSize: "clamp(2rem,4.8vw,3.5rem)" }}
-        >
-          {title}
-        </h2>
-        {lead && (
-          <p
-            className="mt-4 max-w-2xl text-[15px] leading-relaxed"
-            style={{ color: "var(--ink-soft)" }}
-          >
-            {lead}
-          </p>
-        )}
-      </div>
-    </div>
   );
 }
 
@@ -172,6 +132,7 @@ function SectionHead({
 
 function Hero() {
   const ref = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
@@ -182,10 +143,13 @@ function Hero() {
   return (
     <section
       ref={ref}
-      className="relative grain overflow-hidden pt-28 pb-20 sm:pt-32 sm:pb-28"
+      className="relative grain overflow-hidden pt-28 pb-20 sm:pt-36 sm:pb-28"
     >
       <motion.div
-        style={{ y: fieldY, opacity: fieldOpacity }}
+        style={{
+          y: reduce ? 0 : fieldY,
+          opacity: reduce ? 1 : fieldOpacity,
+        }}
         className="pointer-events-none absolute top-[-6%] right-[-14%] hidden h-[46rem] w-[46rem] lg:block"
       >
         <ApertureField className="h-full w-full" />
@@ -211,7 +175,11 @@ function Hero() {
                 All work
               </span>
             </Link>
-            <span style={{ color: "var(--line-strong)" }}>·</span>
+            <span
+              aria-hidden="true"
+              className="h-3 w-px"
+              style={{ background: "var(--line-strong)" }}
+            />
             <span className="mono-label">Our product</span>
             <LiveBadge label="Live" />
           </div>
@@ -277,7 +245,7 @@ function Hero() {
         <FadeUp delay={0.4}>
           <dl className="mt-14 grid max-w-3xl grid-cols-2 gap-4 sm:grid-cols-4">
             {SPECS.map(([k, v]) => (
-              <div key={k} className="card p-5">
+              <div key={k} className="card ticked-corners relative p-5">
                 <dt className="mono-label">{k}</dt>
                 <dd
                   className="mt-2 text-[14px] leading-snug"
@@ -302,7 +270,7 @@ function Problem() {
       <div className="shell">
         <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
           <div>
-            <Kicker className="mb-4">Why it exists</Kicker>
+            <ConsoleLabel className="mb-4">Why it exists</ConsoleLabel>
             <h2
               className="display"
               style={{ fontSize: "clamp(2rem,4.5vw,3.25rem)" }}
@@ -339,7 +307,6 @@ function Path() {
     <section className="section">
       <div className="shell">
         <SectionHead
-          n="—"
           kicker="The guided path"
           title="From finding the job to getting it"
           lead="GYST doesn't hand you a pile of tools. It walks you through applying the right way, one step at a time, so you're never left guessing what to do next."
@@ -370,7 +337,7 @@ function Path() {
         </div>
 
         <FadeUp>
-          <div className="panel-dark mt-6 flex flex-col items-start gap-4 p-7 sm:flex-row sm:items-center sm:justify-between sm:p-9">
+          <div className="panel-dark ticked-corners relative mt-6 flex flex-col items-start gap-4 p-7 sm:flex-row sm:items-center sm:justify-between sm:p-9">
             <div>
               <p
                 className="display"
@@ -411,7 +378,7 @@ function Features() {
       <div className="shell">
         <div className="mb-14 flex flex-wrap items-end justify-between gap-6">
           <div className="max-w-2xl">
-            <Kicker className="mb-4">Features</Kicker>
+            <ConsoleLabel className="mb-4">Features</ConsoleLabel>
             <h2
               className="display"
               style={{ fontSize: "clamp(2rem,4.5vw,3.25rem)" }}
@@ -461,7 +428,7 @@ function Pricing() {
   return (
     <section className="section">
       <div className="shell">
-        <Kicker className="mb-4">Pricing</Kicker>
+        <ConsoleLabel className="mb-4">Pricing</ConsoleLabel>
         <h2
           className="display mb-12 max-w-2xl"
           style={{ fontSize: "clamp(2rem,4.8vw,3.5rem)" }}
@@ -469,7 +436,7 @@ function Pricing() {
           One plan. Everything included.
         </h2>
 
-        <div className="panel-dark overflow-hidden p-8 sm:p-12">
+        <div className="panel-dark ticked-corners relative overflow-hidden p-8 sm:p-12">
           <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
             <div>
               <p
@@ -546,7 +513,7 @@ function NextAndCTA() {
   return (
     <section className="section" style={{ backgroundColor: "var(--paper-2)" }}>
       <div className="shell">
-        <div className="ticked p-10 sm:p-16">
+        <div className="ticked ticked-corners relative p-10 sm:p-16">
           <Kicker className="mb-6">7 days free · no card required</Kicker>
           <h2
             className="display max-w-4xl"
@@ -572,7 +539,7 @@ function NextAndCTA() {
           className="card group mt-8 flex items-center justify-between p-7 sm:p-9"
         >
           <div>
-            <Kicker className="mb-2">Flagship service</Kicker>
+            <ConsoleLabel className="mb-3">Flagship service</ConsoleLabel>
             <p
               className="display"
               style={{ fontSize: "clamp(1.4rem,3vw,2rem)" }}

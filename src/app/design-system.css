@@ -516,6 +516,178 @@
   );
 }
 
+/* ====================================================================== */
+/*  Operational-console echoes — restrained nods to the product dashboard  */
+/*  (mono "//" labels, panel corner-ticks, live dots, spec grids). Used as */
+/*  accents so the marketing site reads as "operational AI", staying       */
+/*  editorial and spacious rather than turning into an admin panel.        */
+/* ====================================================================== */
+
+/*
+ * console-label — the dashboard's signature section head, ported to marketing.
+ * A small uppercase mono micro-label led by a terracotta "//". Use it as an
+ * over-line above a display headline for an instrument read. Pairs with, and is
+ * quieter than, the aperture `.kicker`.
+ */
+.console-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.console-label::before {
+  content: "//";
+  color: rgba(var(--accent-rgb), 0.85);
+  font-family: var(--font-mono);
+  letter-spacing: 0;
+}
+
+/*
+ * Corner-ticks — four faint clay crop-marks bracketing a panel, echoing the
+ * dashboard's instrument frames. Add `.ticked-corners` to any positioned box.
+ * Purely decorative; kept extremely subtle so it never competes with content.
+ */
+.ticked-corners::before,
+.ticked-corners::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+  border-color: rgba(var(--accent-rgb), 0.4);
+  border-style: solid;
+  z-index: 1;
+}
+.ticked-corners::before {
+  top: 0.85rem;
+  left: 0.85rem;
+  border-width: 1px 0 0 1px;
+}
+.ticked-corners::after {
+  bottom: 0.85rem;
+  right: 0.85rem;
+  border-width: 0 1px 1px 0;
+}
+
+/*
+ * Live dot — a small pulsing status dot matching the dashboard `.dot.live`.
+ * Defaults to the accent; the ping ring is a pseudo-element so no extra markup
+ * is required. Reduced-motion stills the ping via the global media query.
+ */
+.live-dot {
+  position: relative;
+  display: inline-flex;
+  height: 0.5rem;
+  width: 0.5rem;
+  flex: none;
+}
+.live-dot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  animation: live-ping 2s var(--ease) infinite;
+}
+.live-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+}
+@keyframes live-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  70%,
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+/*
+ * Meter — a thin capacity/utilisation bar echoing the dashboard metric bars.
+ * Set the fill width with `--v` (0–100). Warm well track, clay fill.
+ */
+.meter {
+  position: relative;
+  height: 3px;
+  width: 100%;
+  border-radius: var(--radius-full);
+  background: rgba(23, 20, 15, 0.1);
+  overflow: hidden;
+}
+.meter::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: calc(var(--v, 60) * 1%);
+  border-radius: var(--radius-full);
+  background: linear-gradient(
+    90deg,
+    rgba(var(--accent-rgb), 0.55),
+    var(--accent)
+  );
+}
+
+/*
+ * kv — a definition-list spec grid matching the dashboard `.kv`. A hairline
+ * separates each row; the key is a mono micro-label, the value ink.
+ */
+.kv {
+  display: flex;
+  flex-direction: column;
+}
+.kv > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-block: 0.7rem;
+  border-top: 1px solid var(--line);
+}
+.kv > div:first-child {
+  border-top: 0;
+}
+.kv dt {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.kv dd {
+  font-size: 0.9375rem;
+  color: var(--ink);
+  text-align: right;
+}
+
+/* Live equaliser bars (Waveform, animate) — stilled under reduced-motion by
+   the global media query in globals.css. */
+@keyframes wave-bar {
+  0%,
+  100% {
+    transform: scaleY(0.55);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+.wave-bar {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: wave-bar 1.1s var(--ease) infinite;
+}
+
 /* Marquee track (used for the project / capability ticker) */
 @keyframes marquee {
   from {
