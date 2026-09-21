@@ -109,10 +109,21 @@
 
 import { Billboard, Grid, Html, OrbitControls } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { type JSX, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ComponentRef,
+  type JSX,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import * as THREE from "three";
-import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { ConstellationWorker } from "@/lib/workforce/types";
+
+// The OrbitControls instance type, resolved THROUGH drei (which owns three-stdlib)
+// rather than importing "three-stdlib" directly — a direct import of that
+// transitive dep fails under pnpm's isolated node_modules on Vercel.
+type OrbitControlsImpl = ComponentRef<typeof OrbitControls>;
 
 // ---------------------------------------------------------------------------
 // Public API
