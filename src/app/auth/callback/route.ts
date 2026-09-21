@@ -9,7 +9,10 @@ export async function GET(req: Request) {
   if (code) {
     const supabase = await supabaseAuth();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) return NextResponse.redirect(new URL(next.startsWith("/") ? next : "/dashboard", url.origin));
+    if (!error)
+      return NextResponse.redirect(
+        new URL(next.startsWith("/") ? next : "/dashboard", url.origin),
+      );
   }
   return NextResponse.redirect(new URL("/login?error=link", url.origin));
 }

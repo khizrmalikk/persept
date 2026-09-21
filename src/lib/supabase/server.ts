@@ -17,7 +17,8 @@ export async function supabaseAuth() {
       getAll: () => store.getAll(),
       setAll: (all) => {
         try {
-          for (const { name, value, options } of all) store.set(name, value, options);
+          for (const { name, value, options } of all)
+            store.set(name, value, options);
         } catch {
           // called from a Server Component: cookies are read-only there; proxy.ts refreshes them
         }
@@ -27,7 +28,10 @@ export async function supabaseAuth() {
 }
 
 export function supabaseAdmin() {
-  if (!URL || !SERVICE) throw new Error("NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_KEY are required");
+  if (!URL || !SERVICE)
+    throw new Error(
+      "NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_KEY are required",
+    );
   return createClient(URL, SERVICE, { auth: { persistSession: false } });
 }
 

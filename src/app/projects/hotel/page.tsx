@@ -1,6 +1,11 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
+import {
+  motion,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
@@ -22,7 +27,8 @@ import { useRef } from "react";
 import { Footer } from "@/components/sections/footer";
 import { Navbar } from "@/components/sections/navbar";
 import { ApertureField } from "@/components/ui/aperture-field";
-import { Kicker } from "@/components/ui/editorial";
+import { ConsoleLabel, LiveTag, Sparkline } from "@/components/ui/console";
+import { Kicker, SectionHead } from "@/components/ui/editorial";
 import {
   FadeUp,
   StaggerContainer,
@@ -36,16 +42,25 @@ const AGENTS = [
     icon: MessageSquare,
     t: "Guest Agent",
     d: "Answers every guest in minutes, 24/7. Questions, requests and check-in flows across OTA inboxes and WhatsApp — in the operator's voice.",
+    metric: "avg. reply",
+    value: "< 2 min",
+    trend: [7, 6, 5, 4, 3, 3, 2],
   },
   {
     icon: Wrench,
     t: "Ops Dispatcher",
     d: "Schedules cleaning between stays, dispatches maintenance, chases vendors until they confirm, and escalates whatever stalls.",
+    metric: "turnovers",
+    value: "auto",
+    trend: [3, 5, 4, 6, 7, 6, 8],
   },
   {
     icon: FileText,
     t: "Reporting Agent",
     d: "Daily ops digest for the team and monthly owner statements. Generated, checked and delivered on the 1st, every month.",
+    metric: "on the 1st",
+    value: "every mo.",
+    trend: [4, 4, 5, 5, 6, 6, 7],
   },
 ];
 
@@ -136,30 +151,11 @@ const SPECS = [
   ["Built in", "Dubai"],
 ];
 
-/* ── Live badge ────────────────────────────────────────────────────────── */
-
-function LiveBadge({ label }: { label: string }) {
-  return (
-    <span className="chip" style={{ color: "var(--accent-ink)" }}>
-      <span className="relative flex h-1.5 w-1.5">
-        <span
-          className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
-          style={{ backgroundColor: "var(--accent)" }}
-        />
-        <span
-          className="relative inline-flex h-1.5 w-1.5 rounded-full"
-          style={{ backgroundColor: "var(--accent)" }}
-        />
-      </span>
-      {label}
-    </span>
-  );
-}
-
 /* ── Hero ──────────────────────────────────────────────────────────────── */
 
 function Hero() {
   const ref = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
@@ -170,10 +166,13 @@ function Hero() {
   return (
     <section
       ref={ref}
-      className="relative grain overflow-hidden pt-28 pb-20 sm:pt-32 sm:pb-28"
+      className="relative grain overflow-hidden pt-28 pb-20 sm:pt-36 sm:pb-28"
     >
       <motion.div
-        style={{ y: fieldY, opacity: fieldOpacity }}
+        style={{
+          y: reduce ? 0 : fieldY,
+          opacity: reduce ? 1 : fieldOpacity,
+        }}
         className="pointer-events-none absolute top-[-6%] right-[-14%] hidden h-[46rem] w-[46rem] lg:block"
       >
         <ApertureField className="h-full w-full" />
@@ -199,9 +198,13 @@ function Hero() {
                 All work
               </span>
             </Link>
-            <span style={{ color: "var(--line-strong)" }}>·</span>
+            <span
+              aria-hidden="true"
+              className="h-3 w-px"
+              style={{ background: "var(--line-strong)" }}
+            />
             <span className="mono-label">Flagship service</span>
-            <LiveBadge label="Live" />
+            <LiveTag label="Workforce online" />
           </div>
         </FadeUp>
 
@@ -256,7 +259,7 @@ function Hero() {
         <FadeUp delay={0.4}>
           <dl className="mt-16 grid max-w-3xl grid-cols-2 gap-4 sm:grid-cols-4">
             {SPECS.map(([k, v]) => (
-              <div key={k} className="card p-5">
+              <div key={k} className="card ticked-corners relative p-5">
                 <dt className="mono-label">{k}</dt>
                 <dd
                   className="mt-2 text-[14px] leading-snug"
@@ -270,43 +273,6 @@ function Hero() {
         </FadeUp>
       </div>
     </section>
-  );
-}
-
-/* ── Section heading helper ────────────────────────────────────────────── */
-
-function SectionHead({
-  n,
-  kicker,
-  title,
-  lead,
-}: {
-  n: string;
-  kicker: string;
-  title: string;
-  lead?: string;
-}) {
-  return (
-    <div className="mb-14 flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-10">
-      <span className="figure-mark shrink-0">{n}</span>
-      <div className="max-w-3xl">
-        <Kicker className="mb-4">{kicker}</Kicker>
-        <h2
-          className="display"
-          style={{ fontSize: "clamp(2rem,4.8vw,3.5rem)" }}
-        >
-          {title}
-        </h2>
-        {lead && (
-          <p
-            className="mt-4 max-w-2xl text-[15px] leading-relaxed"
-            style={{ color: "var(--ink-soft)" }}
-          >
-            {lead}
-          </p>
-        )}
-      </div>
-    </div>
   );
 }
 
@@ -346,7 +312,7 @@ function Problem() {
           </div>
 
           <FadeUp>
-            <div className="panel-dark flex h-full flex-col justify-center gap-8 p-8 sm:p-10">
+            <div className="panel-dark ticked-corners relative flex h-full flex-col justify-center gap-8 p-8 sm:p-10">
               {PROBLEM_STATS.map(([big, small]) => (
                 <div key={big}>
                   <p
@@ -394,21 +360,33 @@ function Solution() {
             return (
               <StaggerItem key={a.t}>
                 <div className="card group flex h-full flex-col p-8 sm:p-9">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-start justify-between">
                     <span className="icon-tile">
                       <Icon className="h-5 w-5" />
                     </span>
-                    <span
-                      className="figure-mark"
-                      style={{ fontSize: "2.25rem" }}
+                    <div
+                      className="flex flex-col items-end gap-1"
+                      style={{ color: "var(--accent-ink)" }}
                     >
-                      {`0${i + 1}`}
-                    </span>
+                      <Sparkline values={a.trend} />
+                      <span
+                        className="font-mono text-[0.625rem] uppercase tracking-[0.1em]"
+                        style={{ color: "var(--ink-faint)" }}
+                      >
+                        {a.metric} · {a.value}
+                      </span>
+                    </div>
                   </div>
                   <h3
                     className="display mt-7"
                     style={{ fontSize: "1.45rem", fontWeight: 600 }}
                   >
+                    <span
+                      className="mr-2 font-mono text-[0.9rem]"
+                      style={{ color: "var(--ink-faint)", fontWeight: 500 }}
+                    >
+                      {`0${i + 1}`}
+                    </span>
                     {a.t}
                   </h3>
                   <p
@@ -424,7 +402,7 @@ function Solution() {
         </StaggerContainer>
 
         <FadeUp>
-          <div className="panel-dark mt-6 flex items-start gap-4 p-7 sm:p-8">
+          <div className="panel-dark ticked-corners relative mt-6 flex items-start gap-4 p-7 sm:p-8">
             <ShieldCheck
               className="mt-0.5 h-6 w-6 shrink-0"
               style={{ color: "#fdc91b" }}
@@ -465,7 +443,7 @@ function HowItWorks() {
             return (
               <FadeUp key={col.label}>
                 <div
-                  className={`flex h-full flex-col p-8 ${col.dark ? "panel-dark" : "card"}`}
+                  className={`relative flex h-full flex-col p-8 ${col.dark ? "panel-dark ticked-corners" : "card"}`}
                 >
                   <div className="flex items-center gap-3">
                     <Icon
@@ -569,7 +547,7 @@ function WhyNow() {
         </StaggerContainer>
 
         <FadeUp>
-          <div className="ticked mt-6 p-7 sm:p-9">
+          <div className="ticked ticked-corners relative mt-6 p-7 sm:p-9">
             <p
               className="text-[15px] leading-relaxed"
               style={{ color: "var(--ink)" }}
@@ -675,7 +653,7 @@ function NextAndCTA() {
   return (
     <section className="section">
       <div className="shell">
-        <div className="ticked p-10 sm:p-16">
+        <div className="ticked ticked-corners relative p-10 sm:p-16">
           <Kicker className="mb-6">
             Profitable from the first handful of clients
           </Kicker>
@@ -703,7 +681,7 @@ function NextAndCTA() {
           className="card group mt-8 flex items-center justify-between p-7 sm:p-9"
         >
           <div>
-            <Kicker className="mb-2">Our product</Kicker>
+            <ConsoleLabel className="mb-3">Our product</ConsoleLabel>
             <p
               className="display"
               style={{ fontSize: "clamp(1.4rem,3vw,2rem)" }}

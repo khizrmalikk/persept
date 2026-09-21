@@ -31,7 +31,42 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...        # anon key of the WORKFORCE project 
 SUPABASE_SERVICE_KEY=eyJ...                 # service_role key, server-side only
 DASHBOARD_ALLOWED_EMAILS=khizr.malik5@gmail.com   # comma-separated; only these can sign in
 NEXT_PUBLIC_SITE_URL=https://persept.ai     # used for the magic-link return address
+
+# Call mode text-to-speech (optional; unset → the browser's speechSynthesis is used).
+# The key is read only by /api/workforce/tts and never reaches the client.
+ELEVENLABS_API_KEY=                         # ElevenLabs API key; leave blank to use browser voice
+ELEVENLABS_VOICE_DEFAULT=                    # fallback voice id for any agent
+ELEVENLABS_VOICE_CHIEF=                      # per-agent voice ids (ELEVENLABS_VOICE_<AGENTID uppercased>)
+ELEVENLABS_VOICE_SCOUT=
+ELEVENLABS_VOICE_HUNTER=
+ELEVENLABS_MODEL=eleven_turbo_v2_5           # A/B: eleven_flash_v2_5 (faster) / eleven_multilingual_v2
+ELEVENLABS_SETTINGS_CHIEF=                   # optional per-agent JSON merged over defaults, e.g. {"style":0.2}
+
+# Live call channel on the VPS bridge (optional). When set, call mode streams the
+# reply and speaks it sentence-by-sentence; unset → the Supabase reply path is used.
+BRIDGE_CALL_URL=                             # e.g. https://persept-vps.tail6e1d89.ts.net/call
+BRIDGE_CALL_TOKEN=                           # bearer token; server-side only, never exposed
 ```
+
+## Call mode speech-to-text (Scribe)
+
+Call mode transcribes with **ElevenLabs Scribe v2 Realtime** (`@elevenlabs/react`'s
+`useScribe`), not the browser's Web Speech API — it has echo cancellation + noise
+suppression so the agent's own voice doesn't leak into the transcript, and lower
+latency. `GET /api/workforce/call/scribe-token` mints a single-use realtime token
+server-side (from `ELEVENLABS_API_KEY`; ~15 min TTL) so the browser connects to
+ElevenLabs **directly** — the key never reaches the client. If the key is unset (route
+returns 501) or Scribe fails to connect, the call falls back to the browser recogniser
+(the card shows `hearing: browser` vs `hearing: scribe`).
+
+Note the change to the privacy rule: with Scribe, mic audio **does leave the browser —
+but only to ElevenLabs** (never to our server, which only mints the token). Previously
+call-mode audio never left the browser.
+
+**Restart the dev server after editing `.env.local`.** Next.js reads env vars at process
+start, so a running `pnpm dev` will keep using the old values — if you add
+`ELEVENLABS_API_KEY` while the server is up, call mode will fall back to the browser
+voice ("voice: browser (no key)") until you restart.
 
 ## Supabase Auth setup (once, in the workforce project)
 

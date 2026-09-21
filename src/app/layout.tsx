@@ -41,11 +41,35 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const SITE_URL = "https://persept.ai";
+const DEFAULT_TITLE = "Persept — AI Workforce Studio in Dubai";
+const DEFAULT_DESCRIPTION =
+  "Persept is a Dubai AI workforce studio. We build agent teams that run real operations 24/7 — sold as a staffed outcome, not a tool — and ship our own product, GYST.";
+
 export const metadata: Metadata = {
-  title: "Persept — Software Innovation Lab",
-  description:
-    "Persept is a software innovation lab. We turn real-world problems into products worth shipping — from GYST (job applications on autopilot) to AI workforces and applied-data tooling.",
-  metadataBase: new URL("https://persept.ai"),
+  title: {
+    default: DEFAULT_TITLE,
+    template: "%s · Persept",
+  },
+  description: DEFAULT_DESCRIPTION,
+  metadataBase: new URL(SITE_URL),
+  applicationName: "Persept",
+  keywords: [
+    "AI workforce",
+    "AI agents",
+    "Dubai software studio",
+    "hospitality AI",
+    "hotel AI workforce",
+    "AI operations",
+    "GYST",
+    "agent workforce",
+  ],
+  authors: [{ name: "Persept", url: SITE_URL }],
+  creator: "Persept",
+  publisher: "Persept",
+  alternates: {
+    canonical: "/",
+  },
   icons: {
     icon: "/icon.svg",
     shortcut: "/icon.svg",
@@ -56,17 +80,51 @@ export const metadata: Metadata = {
     "color-scheme": "light",
   },
   openGraph: {
-    title: "Persept — Software Innovation Lab",
-    description:
-      "We turn real-world problems into products worth shipping. A software innovation lab building GYST, AI workforces, and applied-data tooling.",
-    url: "https://persept.ai",
-    siteName: "Persept Lab",
+    type: "website",
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    url: SITE_URL,
+    siteName: "Persept",
+    locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Persept — Software Innovation Lab",
-    description: "We turn real-world problems into products worth shipping.",
+    title: DEFAULT_TITLE,
+    description:
+      "A Dubai AI workforce studio. Agent teams that run real operations 24/7, plus our own product, GYST.",
+    creator: "@persept",
   },
+};
+
+const organizationLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": `${SITE_URL}/#organization`,
+  name: "Persept",
+  url: SITE_URL,
+  logo: `${SITE_URL}/icon.svg`,
+  description: DEFAULT_DESCRIPTION,
+  foundingLocation: {
+    "@type": "Place",
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "Dubai",
+      addressCountry: "AE",
+    },
+  },
+  email: "hello@persept.ai",
+  sameAs: ["https://www.linkedin.com/company/persept", "https://x.com/persept"],
+};
+
+const websiteLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": `${SITE_URL}/#website`,
+  name: "Persept",
+  url: SITE_URL,
+  description: DEFAULT_DESCRIPTION,
+  publisher: { "@id": `${SITE_URL}/#organization` },
+  inLanguage: "en",
 };
 
 export default function RootLayout({
@@ -85,6 +143,16 @@ export default function RootLayout({
       <body
         className={`${neueHaasDisplay.variable} ${geistMono.variable} antialiased`}
       >
+        <script
+          type="application/ld+json"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD is static, server-generated structured data
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLd) }}
+        />
+        <script
+          type="application/ld+json"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD is static, server-generated structured data
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteLd) }}
+        />
         {children}
         <Script
           src="https://assets.calendly.com/assets/external/widget.js"

@@ -67,4 +67,62 @@ export function SectionMarker({ n }: { n: string }) {
   );
 }
 
+/**
+ * SectionHead — the shared section header used across every page for a
+ * consistent rhythm: an optional oversized figure numeral, an aperture kicker,
+ * a display headline, and an optional lead paragraph. `meta` renders a
+ * right-aligned slot (e.g. a mono caption or sparkline) on wide screens.
+ * Pass `align="center"` for centered CTA-style heads.
+ *
+ * Every headline is an <h2> by default; pass `as` to override for pages that
+ * need a different level (never used for the page <h1>, which each hero owns).
+ */
+export function SectionHead({
+  n,
+  kicker,
+  title,
+  lead,
+  meta,
+  as: Tag = "h2",
+  headingSize = "clamp(2rem,4.8vw,3.5rem)",
+  className,
+}: {
+  n?: string;
+  kicker: ReactNode;
+  title: ReactNode;
+  lead?: ReactNode;
+  meta?: ReactNode;
+  as?: "h2" | "h3";
+  headingSize?: string;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "mb-12 flex flex-col gap-6 sm:mb-14 sm:flex-row sm:items-start sm:gap-10",
+        className,
+      )}
+    >
+      {n && <SectionMarker n={n} />}
+      <div className="max-w-3xl">
+        <Kicker className="mb-4">{kicker}</Kicker>
+        <Tag className="display" style={{ fontSize: headingSize }}>
+          {title}
+        </Tag>
+        {lead && (
+          <p
+            className="mt-5 max-w-2xl text-[clamp(1rem,1.4vw,1.15rem)] leading-relaxed"
+            style={{ color: "var(--ink-soft)" }}
+          >
+            {lead}
+          </p>
+        )}
+      </div>
+      {meta && (
+        <div className="hidden shrink-0 sm:ml-auto sm:block">{meta}</div>
+      )}
+    </div>
+  );
+}
+
 export default Kicker;
