@@ -1,38 +1,41 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { CSSProperties } from "react";
 import { supabaseAdmin } from "@/lib/supabase/server";
-import { sendMessageFromForm } from "@/lib/workforce/actions";
+import {
+  acceptLead,
+  approveFromForm,
+  rejectFromForm,
+  sendMessageFromForm,
+} from "@/lib/workforce/actions";
 import { getAgentFile, parseMarkdownTable } from "@/lib/workforce/files";
 import { getSuggestedLeads } from "@/lib/workforce/leads";
 import {
-  getCampaigns,
   getHandoffs,
   getMessages,
   groupThreads,
-  slugify,
+  parseOutbound,
 } from "@/lib/workforce/outreach";
+import { agentColor, rosterById } from "@/lib/workforce/roster";
+import { getActiveSubagents } from "@/lib/workforce/subagents";
 import {
   type Agent,
   type Approval,
   ago,
   STATUS_LABEL,
+  type Subagent,
   stripCallNote,
   type Task,
   type WfEvent,
   when,
 } from "@/lib/workforce/types";
-import { AgentChatView } from "../../_components/AgentChatView";
-import { ApprovalCard } from "../../_components/ApprovalCard";
+import "../../agent.css";
+import "../../hunter.css";
 import { CallPanel } from "../../_components/CallPanel";
 import { type ChatMessage, ChatPane } from "../../_components/ChatPane";
-import {
-  HunterChatView,
-  type HunterStats,
-} from "../../_components/HunterChatView";
+import { HunterHeader, type HunterStats } from "../../_components/HunterHeader";
 import { AgentPanels } from "../../_components/panels/AgentPanels";
 import { dueState } from "../../_components/panels/dates";
-import { Handoffs } from "../../_components/panels/Handoffs";
-import { PipelineSummary } from "../../_components/panels/PipelineSummary";
 import type { ProspectRow } from "../../_components/panels/PipelineTable";
 
 export default async function AgentPage({
@@ -48,6 +51,7 @@ export default async function AgentPage({
     { data: pending },
     { data: tasks },
     { data: roster },
+    workerRows,
   ] = await Promise.all([
     db.from("agents").select("*").eq("id", id).maybeSingle(),
     db
@@ -70,8 +74,24 @@ export default async function AgentPage({
       .order("started_at", { ascending: false })
       .limit(10),
     db.from("agents").select("*").order("id"),
+    getActiveSubagents(),
   ]);
-  if (!agent) notFound();
+
+  // Fixer (and any roster agent not yet in `agents`) is "not deployed" — render
+  // the full shell with a not-deployed work card rather than a 404.
+  if (!agent) {
+    const r = rosterById(id);
+    if (!r) notFound();
+    return (
+      <NotDeployedAgent
+        id={r.id}
+        name={r.name}
+        emoji={r.emoji}
+        hue={r.hue}
+        room={r.room}
+      />
+    );
+  }
   const a = agent as Agent;
   const agents = (roster as Agent[] | null) ?? [];
   const museEnabled = agents.some((ag) => ag.id === "muse");
@@ -138,111 +158,300 @@ export default async function AgentPage({
     return await buildHunterChat(a, agentName, chat);
   }
 
-  // ── LEFT: the agent's work (brief, backlog, memory, role-specific panels). ──
-  const work = (
-    <section className="wf-of-panel">
-      <div className="wf-of-panel-head">
-        <h2>work</h2>
-      </div>
-      <div className="wf-of-panel-body">
-        <AgentPanels agent={a} agents={agents} museEnabled={museEnabled} />
-      </div>
-    </section>
-  );
+  // ── the new agent shell: identity header + work / chat / right-rail ─────────
+  const r = rosterById(a.id);
+  const hue = r?.hue ?? 70;
+  const agcVars = {
+    "--agc": agentColor(hue),
+    "--agc-tint": agentColor(hue, 0.16),
+    "--agc-ring": agentColor(hue, 0.3),
+  } as CSSProperties;
+  const room = r?.room ?? "";
+  const tagline = TAGLINES[a.id] ?? "";
 
-  // ── RIGHT: approvals waiting on the owner. ──────────────────────────────────
-  const approvalsNode = (
-    <section className="wf-of-panel">
-      <div className="wf-of-panel-head">
-        <h2>
-          waiting for you
-          {pendingList.length > 0 && (
-            <span className="wf-of-panel-count">{pendingList.length}</span>
-          )}
-        </h2>
-      </div>
-      <div className="wf-of-panel-body">
-        {pendingList.length > 0 ? (
-          <div className="wf-out-approvals">
-            {pendingList.map((ap) => (
-              <ApprovalCard
-                key={ap.id}
-                ap={ap}
-                emoji={a.emoji}
-                name={agentName}
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="wf-of-mini-empty">nothing waiting on you.</p>
-        )}
-      </div>
-    </section>
+  const myWorkers = (workerRows as Subagent[]).filter(
+    (w) => w.agent_id === a.id,
   );
-
-  // ── RIGHT: recent runs. ─────────────────────────────────────────────────────
-  const runs = (
-    <section className="wf-of-panel">
-      <div className="wf-of-panel-head">
-        <h2>
-          recent runs
-          {recentRuns.length > 0 && (
-            <span className="wf-of-panel-count">{recentRuns.length}</span>
-          )}
-        </h2>
-      </div>
-      <div className="wf-of-panel-body">
-        {recentRuns.length > 0 ? (
-          <table className="table wf-runs">
-            <tbody>
-              {recentRuns.map((t) => (
-                <tr key={t.id}>
-                  <td className="muted">
-                    {when(t.started_at ?? t.finished_at)}
-                  </td>
-                  <td>{t.name ?? t.source}</td>
-                  <td
-                    className={
-                      t.status === "error"
-                        ? "err"
-                        : t.status === "ok"
-                          ? "ok"
-                          : "muted"
-                    }
-                  >
-                    {t.status}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="wf-of-mini-empty">no runs yet.</p>
-        )}
-      </div>
-    </section>
-  );
-
-  // Muse shows its drafts (pending approvals as post cards) inside the work
-  // panel, so the generic right-rail approvals would duplicate them — drop it.
-  const isMuse = a.id === "muse";
+  const running = myWorkers.filter((w) => w.status === "running");
+  const finished = myWorkers.filter((w) => w.status !== "running").slice(0, 3);
+  const workingNow = status === "working" || running.length > 0;
+  const chipKey = workingNow
+    ? "working"
+    : pendingList.length
+      ? "waiting"
+      : "idle";
 
   return (
-    <AgentChatView
-      identity={{
-        emoji: agentEmoji,
-        name: agentName,
-        statusKey: status,
-        statusLabel: STATUS_LABEL[status] ?? status,
-        model,
-        lastActive: ago(a.last_active_at),
-        currentTask: a.current_task,
-      }}
-      chat={chat}
-      work={work}
-      approvals={isMuse ? null : approvalsNode}
-      runs={runs}
-    />
+    <div className="wf-ag" style={agcVars}>
+      <header className="wf-ag-head">
+        <div className="wf-ag-glow" />
+        <span className={`wf-ag-avatar${workingNow ? " is-working" : ""}`}>
+          {agentEmoji}
+        </span>
+        <div className="wf-ag-id">
+          <div className="wf-ag-id-top">
+            <h1 className="wf-ag-name">{agentName}</h1>
+            <span className={`wf-ag-chip is-${chipKey}`}>
+              <span className="dot" />
+              {STATUS_LABEL[chipKey] ?? chipKey}
+            </span>
+            {room && <span className="wf-ag-room">{room}</span>}
+          </div>
+          {tagline && <div className="wf-ag-tagline">{tagline}</div>}
+        </div>
+        <dl className="wf-ag-meta">
+          {model && (
+            <div>
+              <dt>model</dt>
+              <dd className="mono">{model}</dd>
+            </div>
+          )}
+          <div>
+            <dt>last active</dt>
+            <dd>{ago(a.last_active_at)}</dd>
+          </div>
+          <div>
+            <dt>workers</dt>
+            <dd>{running.length}</dd>
+          </div>
+          <div>
+            <dt>waiting</dt>
+            <dd>{pendingList.length}</dd>
+          </div>
+        </dl>
+      </header>
+
+      <div className="wf-ag-cols">
+        <section className="wf-ag-work" aria-label="work">
+          <AgentPanels agent={a} agents={agents} museEnabled={museEnabled} />
+        </section>
+
+        <section className="wf-ag-chat" aria-label="chat">
+          {chat}
+        </section>
+
+        <aside className="wf-ag-rail" aria-label="approvals and workers">
+          <div className="wf-ag-card">
+            <div className="wf-ag-card-title">waiting for you</div>
+            {pendingList.length ? (
+              pendingList.map((ap) => {
+                const ob = parseOutbound(ap.draft);
+                const label = ob
+                  ? ob.channel.toLowerCase().includes("linkedin")
+                    ? "publish"
+                    : "send"
+                  : "approve";
+                const preview = (ob ? ob.body : (ap.draft ?? "")).trim();
+                return (
+                  <div className="wf-ag-wait" key={ap.id}>
+                    <div className="wf-ag-wait-action">
+                      {ap.action ?? "approval request"}
+                    </div>
+                    {preview && (
+                      <div className="wf-ag-wait-preview">{preview}</div>
+                    )}
+                    <div className="wf-ag-wait-btns">
+                      <form action={approveFromForm}>
+                        <input type="hidden" name="id" value={ap.id} />
+                        <input type="hidden" name="agent" value={a.id} />
+                        <button className="wf-ag-btn" type="submit">
+                          {label}
+                        </button>
+                      </form>
+                      <Link
+                        href="/dashboard/approvals"
+                        className="wf-ag-btn ghost"
+                      >
+                        edit
+                      </Link>
+                      <form action={rejectFromForm}>
+                        <input type="hidden" name="id" value={ap.id} />
+                        <input type="hidden" name="agent" value={a.id} />
+                        <button className="wf-ag-btn bare" type="submit">
+                          reject
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="wf-ag-empty">nothing waiting on you.</p>
+            )}
+          </div>
+
+          <div className="wf-ag-card">
+            <div className="wf-ag-card-head">
+              <span className="wf-ag-card-title">workers</span>
+              <span className="wf-ag-card-sub">{running.length} running</span>
+            </div>
+            {running.length === 0 && finished.length === 0 ? (
+              <p className="wf-ag-empty">
+                no workers running. {agentName.toLowerCase()} spins them up for
+                longer tasks; they show here while they run.
+              </p>
+            ) : (
+              <>
+                {running.map((w) => (
+                  <div className="wf-ag-worker" key={w.session_key}>
+                    <div className="wf-ag-worker-top">
+                      <span
+                        className="wf-ag-worker-dot"
+                        style={{ background: agentColor(hue, 0.22) }}
+                      />
+                      <span className="wf-ag-worker-task">
+                        {w.label ?? "background task"}
+                      </span>
+                      <span className="wf-ag-worker-age">
+                        {ago(w.started_at ?? w.updated_at)}
+                      </span>
+                    </div>
+                    <div className="wf-ag-worker-bar">
+                      <i />
+                    </div>
+                  </div>
+                ))}
+                {finished.map((w) => (
+                  <div className="wf-ag-finished" key={w.session_key}>
+                    <span className="tick">✓</span>
+                    <span className="wf-ag-worker-task">
+                      {w.label ?? "task"}
+                    </span>
+                    <span className="wf-ag-worker-age">
+                      {ago(w.updated_at ?? w.started_at)}
+                    </span>
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+
+          <div className="wf-ag-card">
+            <div className="wf-ag-card-title">recent runs</div>
+            {recentRuns.length ? (
+              recentRuns.map((t) => {
+                const st =
+                  t.status === "error"
+                    ? "err"
+                    : t.status === "ok"
+                      ? "ok"
+                      : "run";
+                return (
+                  <div className="wf-ag-run" key={t.id}>
+                    <span className="wf-ag-run-t">
+                      {ago(t.started_at ?? t.finished_at)}
+                    </span>
+                    <span className="wf-ag-run-job">
+                      {t.name ?? t.source ?? "run"}
+                    </span>
+                    <span className={`wf-ag-run-st ${st}`}>{t.status}</span>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="wf-ag-empty">no runs yet.</p>
+            )}
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+// per-agent tagline for the identity header (from the design)
+const TAGLINES: Record<string, string> = {
+  chief:
+    "the one who briefs you. morning brief, backlog, health, weekly review.",
+  scout:
+    "the one who finds leads and reads the market. weekly prospecting, daily digest.",
+  hunter:
+    "the one who does outreach. finds who to talk to, drafts every message.",
+  scribe:
+    "the one who writes proposals. call notes in, a page the prospect can open out.",
+  muse: "the one who does marketing. a weekly plan and drafts in your voice.",
+  fixer: "the one who fixes and builds internal things.",
+};
+
+// A roster agent with no `agents` row (e.g. Fixer) — the full shell with a
+// not-deployed work card instead of a 404.
+function NotDeployedAgent({
+  id,
+  name,
+  emoji,
+  hue,
+  room,
+}: {
+  id: string;
+  name: string;
+  emoji: string;
+  hue: number;
+  room: string;
+}) {
+  const agcVars = {
+    "--agc": agentColor(hue),
+    "--agc-tint": agentColor(hue, 0.16),
+    "--agc-ring": agentColor(hue, 0.3),
+  } as CSSProperties;
+  return (
+    <div className="wf-ag" style={agcVars}>
+      <header className="wf-ag-head">
+        <div className="wf-ag-glow" />
+        <span className="wf-ag-avatar">{emoji}</span>
+        <div className="wf-ag-id">
+          <div className="wf-ag-id-top">
+            <h1 className="wf-ag-name">{name}</h1>
+            <span className="wf-ag-chip is-idle">
+              <span className="dot" />
+              not deployed
+            </span>
+            {room && <span className="wf-ag-room">{room}</span>}
+          </div>
+          {TAGLINES[id] && <div className="wf-ag-tagline">{TAGLINES[id]}</div>}
+        </div>
+      </header>
+      <div className="wf-ag-cols">
+        <section className="wf-ag-work" aria-label="work">
+          <div className="wf-ag-fixer">
+            <h3>not deployed yet</h3>
+            <p>
+              {name.toLowerCase()} fixes and builds internal things: broken
+              integrations, failed runs, small tools the other agents need. once
+              deployed, its work panels show open fixes, recent patches and
+              anything it needs you to merge.
+            </p>
+            <div className="gates">
+              <span>→ you approve every merge</span>
+              <span>→ it never touches access or billing</span>
+            </div>
+            <Link href="/dashboard/agents/chief" className="wf-ag-btn">
+              ask chief to schedule it
+            </Link>
+          </div>
+        </section>
+        <section className="wf-ag-chat" aria-label="chat">
+          <div
+            className="wf-ag-card"
+            style={{
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+            }}
+          >
+            <p className="wf-ag-empty">
+              {name.toLowerCase()} isn’t deployed yet — chat opens once it’s
+              live.
+            </p>
+          </div>
+        </section>
+        <aside className="wf-ag-rail" aria-label="workers">
+          <div className="wf-ag-card">
+            <div className="wf-ag-card-title">waiting for you</div>
+            <p className="wf-ag-empty">nothing waiting on you.</p>
+          </div>
+        </aside>
+      </div>
+    </div>
   );
 }
 
@@ -251,13 +460,12 @@ export default async function AgentPage({
 // approvals + conversations + composer on the right. Campaigns are their own page
 // now. Reads are defensive (a missing table renders empty, never crashes).
 async function buildHunterChat(
-  a: Agent,
-  agentName: string,
+  _a: Agent,
+  _agentName: string,
   chat: React.ReactNode,
 ) {
-  const [campaigns, messages, handoffsOpen, prospectsFile, apRes, leads] =
+  const [messages, handoffsOpen, prospectsFile, apRes, leads, workerRows] =
     await Promise.all([
-      getCampaigns("hunter"),
       getMessages("hunter"),
       getHandoffs("hunter", ["open"]),
       getAgentFile("hunter", "PROSPECTS.md"),
@@ -268,178 +476,310 @@ async function buildHunterChat(
         .in("status", ["pending", "held"])
         .order("ts"),
       getSuggestedLeads(),
+      getActiveSubagents(),
     ]);
 
-  const table = parseMarkdownTable(prospectsFile?.content);
-  const rows = table.rows as ProspectRow[];
-  const dueOf: Record<string, ReturnType<typeof dueState>> = {};
-  for (const r of rows) dueOf[r.company] = dueState(r.next_due);
-
+  const rows = parseMarkdownTable(prospectsFile?.content).rows as ProspectRow[];
   const approvals = (apRes.data as Approval[] | null) ?? [];
   const threads = groupThreads(messages);
-  const handedOff = handoffsOpen
-    .map((h) => (h.company ?? "").toLowerCase())
-    .filter(Boolean);
-  const campaignOptions = campaigns.map((c) => ({
-    slug: slugify(c.name),
-    name: c.name,
-  }));
-
-  const repliedThreads = threads.filter((t) =>
+  const replied = threads.filter((t) =>
     t.messages.some((m) => m.direction === "in"),
   ).length;
+  const workers = (workerRows as Subagent[]).filter(
+    (w) => w.status === "running" && w.agent_id === "hunter",
+  );
   const stats: HunterStats = {
     prospects: rows.length,
-    replied: repliedThreads,
+    replied,
     handoffs: handoffsOpen.length,
     waiting: approvals.length,
+    workers: workers.length,
   };
 
-  // Top 3 prospects for the chat page — most urgent first (overdue → today →
-  // soonest). The full, sortable list lives on the prospects page.
+  // funnel across the 10 pipeline stages
+  const STAGES = [
+    "new",
+    "drafted",
+    "approached",
+    "followed up 1",
+    "followed up 2",
+    "replied",
+    "call booked",
+    "handed off",
+    "parked",
+    "no",
+  ];
+  const norm = (x: string) =>
+    (x ?? "").trim().toLowerCase().replace(/[_-]+/g, " ");
+  const counts: Record<string, number> = Object.fromEntries(
+    STAGES.map((s) => [s, 0]),
+  );
+  for (const r of rows) {
+    const st = norm(r.status ?? "");
+    if (st in counts) counts[st] += 1;
+  }
+  const fmax = Math.max(1, ...Object.values(counts));
+  const dueToday = rows.filter((r) => dueState(r.next_due) === "today").length;
+  const overdue = rows.filter((r) => dueState(r.next_due) === "overdue").length;
+
   const dueRank = (d: string | undefined) => {
     const s = dueState(d);
     return s === "overdue" ? 0 : s === "today" ? 1 : s === "future" ? 2 : 3;
   };
   const topProspects = [...rows]
-    .sort((a, b) => {
-      const r = dueRank(a.next_due) - dueRank(b.next_due);
-      if (r !== 0) return r;
-      return (a.next_due ?? "").localeCompare(b.next_due ?? "");
-    })
+    .sort(
+      (x, y) =>
+        dueRank(x.next_due) - dueRank(y.next_due) ||
+        (x.next_due ?? "").localeCompare(y.next_due ?? ""),
+    )
     .slice(0, 3);
 
-  const pipeline = (
-    <div className="wf-hub-pipeline">
-      <PipelineSummary
-        table={table}
-        fileContent={prospectsFile?.content ?? null}
-      />
-      {rows.length > 0 && (
-        <section className="wf-of-panel">
-          <div className="wf-of-panel-head">
-            <h2>
-              prospects <span className="wf-of-panel-count">{rows.length}</span>
-            </h2>
-            <Link
-              href="/dashboard/agents/hunter/prospects"
-              className="wf-of-link"
-            >
-              see all →
-            </Link>
-          </div>
-          <div className="wf-of-panel-body">
-            <ul className="wf-prosp-mini">
-              {topProspects.map((r) => {
-                const due = dueState(r.next_due);
-                const dueCls =
-                  due === "overdue"
-                    ? "err"
-                    : due === "today"
-                      ? "accent"
-                      : "muted";
-                return (
-                  <li key={r.company} className="wf-prosp-mini-row">
-                    <span className="wf-prosp-mini-co" title={r.company}>
-                      {r.company}
-                    </span>
-                    {r.status && (
-                      <span className="wf-chip sm">
-                        {r.status.replace(/[_-]+/g, " ")}
-                      </span>
-                    )}
-                    {r.next_due && (
-                      <span className={`wf-prosp-mini-due ${dueCls}`}>
-                        {r.next_due}
-                      </span>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        </section>
-      )}
-    </div>
-  );
-
-  const approvalsNode = (
-    <section className="wf-of-panel">
-      <div className="wf-of-panel-head">
-        <h2>
-          approvals
-          {approvals.length > 0 && (
-            <span className="wf-of-panel-count">{approvals.length}</span>
-          )}
-        </h2>
-      </div>
-      <div className="wf-of-panel-body">
-        {approvals.length > 0 ? (
-          <div className="wf-out-approvals">
-            {approvals.map((ap) => (
-              <ApprovalCard
-                key={ap.id}
-                ap={ap}
-                emoji={a.emoji}
-                name={agentName}
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="wf-of-mini-empty">nothing waiting for you.</p>
-        )}
-      </div>
-    </section>
-  );
-
-  // Compact "new leads" strip — Scout's suggested leads that can become Hunter
-  // prospects. Only shown when there are any; full triage is on Scout's page.
-  const leadsStrip =
-    leads.length > 0 ? (
-      <section className="wf-of-panel wf-leads-strip">
-        <div className="wf-of-panel-head">
-          <h2>
-            new leads <span className="wf-of-panel-count">{leads.length}</span>
-          </h2>
-          <Link
-            href="/dashboard/agents/scout#wf-leads-anchor"
-            className="wf-of-link"
-          >
-            review →
-          </Link>
-        </div>
-        <div className="wf-of-panel-body">
-          <ul className="wf-leads-mini">
-            {leads.slice(0, 3).map((l) => (
-              <li key={l.id} className="wf-leads-mini-row">
-                <span className="wf-leads-mini-co" title={l.company}>
-                  {l.company}
-                </span>
-                {l.angle && (
-                  <span className="wf-leads-mini-angle" title={l.angle}>
-                    {l.angle}
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-    ) : null;
+  const hn = agentColor(150);
+  const dueColor = (d: string | undefined) => {
+    const s = dueState(d);
+    return s === "overdue"
+      ? "var(--err)"
+      : s === "today"
+        ? "var(--accent)"
+        : "var(--ink-faint)";
+  };
+  const threadStatus = (t: (typeof threads)[number]) =>
+    handoffsOpen.some(
+      (h) => (h.company ?? "").toLowerCase() === t.company.toLowerCase(),
+    )
+      ? "handed off"
+      : t.messages.some((m) => m.direction === "in")
+        ? "replied"
+        : "awaiting reply";
+  const stColor = (st: string): CSSProperties =>
+    st === "replied"
+      ? { background: "oklch(0.8 0.14 70 / 0.16)", color: "var(--accent)" }
+      : st === "handed off"
+        ? { background: "oklch(0.8 0.16 150 / 0.14)", color: "var(--ok)" }
+        : { background: "rgba(255,255,255,0.07)", color: "var(--ink-soft)" };
 
   return (
-    <HunterChatView
-      chat={chat}
-      stats={stats}
-      leads={leadsStrip}
-      pipeline={pipeline}
-      approvals={approvalsNode}
-      handoffs={<Handoffs handoffs={handoffsOpen} />}
-      threads={threads}
-      handedOff={handedOff}
-      campaigns={campaignOptions}
-      handoffCount={handoffsOpen.length}
-    />
+    <div className="wf-hn">
+      <HunterHeader stats={stats} pending={approvals.length} />
+      <div className="wf-hn-chat">
+        {/* left flank: pipeline funnel + top prospects */}
+        <section className="wf-hn-flank left">
+          <div className="wf-hn-panel">
+            <div className="wf-hn-panel-head">
+              <span className="wf-hn-panel-title">pipeline</span>
+              <Link
+                href="/dashboard/agents/hunter/prospects"
+                className="wf-hn-link"
+              >
+                {rows.length} prospects →
+              </Link>
+            </div>
+            {STAGES.map((st) => (
+              <div
+                key={st}
+                className={`wf-hn-funnel-row${counts[st] ? "" : " dim"}`}
+              >
+                <span className="wf-hn-funnel-label">{st}</span>
+                <span className="wf-hn-funnel-bar">
+                  <span
+                    style={{
+                      width: `${(counts[st] / fmax) * 100}%`,
+                      background: hn,
+                    }}
+                  />
+                </span>
+                <span className="wf-hn-funnel-n">{counts[st]}</span>
+              </div>
+            ))}
+            <div className="wf-hn-nextdue">
+              next due:{" "}
+              <span className="wf-hn-due-today">{dueToday} today</span> ·{" "}
+              <span className="wf-hn-due-over">{overdue} overdue</span>
+            </div>
+          </div>
+          {topProspects.length > 0 && (
+            <div className="wf-hn-panel">
+              <div className="wf-hn-panel-title">top prospects</div>
+              {topProspects.map((r) => (
+                <div key={r.company} className="wf-hn-prow">
+                  <div className="wf-hn-prow-top">
+                    <span className="wf-hn-prow-co">{r.company}</span>
+                    <span
+                      className="wf-hn-prow-due"
+                      style={{ color: dueColor(r.next_due) }}
+                    >
+                      {r.next_due
+                        ? dueState(r.next_due) === "today"
+                          ? "today"
+                          : r.next_due
+                        : ""}
+                    </span>
+                  </div>
+                  {(r.angle ?? r.notes) && (
+                    <div className="wf-hn-prow-angle">{r.angle ?? r.notes}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* center: the chat */}
+        <section className="wf-hn-center">{chat}</section>
+
+        {/* right flank: approvals · workers · conversations · new leads */}
+        <section className="wf-hn-flank">
+          <div className="wf-hn-panel">
+            <div className="wf-hn-panel-head">
+              <span className="wf-hn-panel-title">
+                approvals{" "}
+                <span className="wf-hn-chipct">{approvals.length}</span>
+              </span>
+              <Link
+                href="/dashboard/agents/hunter/approvals"
+                className="wf-hn-link"
+              >
+                open →
+              </Link>
+            </div>
+            {approvals.length === 0 ? (
+              <div className="wf-hn-empty">nothing waiting for you.</div>
+            ) : (
+              approvals.slice(0, 3).map((ap) => {
+                const ob = parseOutbound(ap.draft);
+                const held = ap.status === "held";
+                return (
+                  <div key={ap.id} className="wf-hn-mini">
+                    <div className="wf-hn-mini-tags">
+                      <span className="wf-chip-mono">
+                        {ob?.channel ?? "note"}
+                      </span>
+                      {held && (
+                        <span className="wf-hn-note">held · daily cap</span>
+                      )}
+                    </div>
+                    <div className="wf-hn-mini-to">
+                      {ob?.to ?? ap.action ?? "outbound"}
+                    </div>
+                    <div className="wf-hn-mini-btns">
+                      <form
+                        action={approveFromForm}
+                        style={{ display: "inline" }}
+                      >
+                        <input type="hidden" name="id" value={ap.id} />
+                        <input type="hidden" name="agent" value="hunter" />
+                        <button type="submit" className="wf-hn-btn amber sm">
+                          {held ? "release" : "send"}
+                        </button>
+                      </form>
+                      <Link
+                        href="/dashboard/agents/hunter/approvals"
+                        className="wf-hn-btn ghost sm"
+                      >
+                        review
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <div className="wf-hn-panel">
+            <div className="wf-hn-panel-head">
+              <span className="wf-hn-panel-title">workers</span>
+              <span className="wf-hn-note">{workers.length} running</span>
+            </div>
+            {workers.length === 0 ? (
+              <div className="wf-hn-empty">no workers running.</div>
+            ) : (
+              workers.map((w) => (
+                <div key={w.session_key} className="wf-hn-worker">
+                  <div className="wf-hn-worker-top">
+                    <span className="wf-hn-worker-dot" />
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      {w.label ?? "background task"}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="wf-hn-panel">
+            <div className="wf-hn-panel-head">
+              <span className="wf-hn-panel-title">conversations</span>
+              <Link
+                href="/dashboard/agents/hunter/conversations"
+                className="wf-hn-link"
+              >
+                all →
+              </Link>
+            </div>
+            {threads.length === 0 ? (
+              <div className="wf-hn-empty">no threads yet.</div>
+            ) : (
+              threads.slice(0, 3).map((t) => {
+                const st = threadStatus(t);
+                return (
+                  <Link
+                    key={t.key}
+                    href="/dashboard/agents/hunter/conversations"
+                    className="wf-hn-thread"
+                  >
+                    <span className="wf-hn-thread-top">
+                      <span className="wf-hn-thread-co">{t.company}</span>
+                      <span className="wf-hn-stpill" style={stColor(st)}>
+                        {st}
+                      </span>
+                    </span>
+                    <span className="wf-hn-thread-last">
+                      {
+                        (t.messages[t.messages.length - 1].body ?? "").split(
+                          "\n",
+                        )[0]
+                      }
+                    </span>
+                  </Link>
+                );
+              })
+            )}
+          </div>
+
+          {leads.length > 0 && (
+            <div className="wf-hn-panel">
+              <div className="wf-hn-panel-head">
+                <span className="wf-hn-panel-title">new leads</span>
+                <Link
+                  href="/dashboard/agents/scout#wf-leads-anchor"
+                  className="wf-hn-link"
+                >
+                  from 🔭 scout
+                </Link>
+              </div>
+              {leads.slice(0, 3).map((l) => (
+                <div key={l.id} className="wf-hn-lead">
+                  <span className="wf-hn-lead-co">
+                    {l.company}{" "}
+                    {l.size && (
+                      <span className="wf-hn-lead-size">{l.size}</span>
+                    )}
+                  </span>
+                  <form
+                    action={acceptLead.bind(null, l.id)}
+                    style={{ display: "inline" }}
+                  >
+                    <button type="submit" className="wf-hn-btn ghost sm">
+                      add
+                    </button>
+                  </form>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+    </div>
   );
 }
 

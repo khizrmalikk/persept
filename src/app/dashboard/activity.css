@@ -1,0 +1,192 @@
+/* Activity page (redesign). Scoped under .wf; dark amber tokens. */
+.wf .wf-ac {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 28px clamp(20px, 3vw, 40px) 48px;
+  max-width: 1240px;
+}
+.wf .wf-ac-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.wf .wf-ac-h1 {
+  font-family: var(--font-arch);
+  font-weight: 800;
+  font-size: 34px;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+.wf .wf-ac-lede {
+  margin: 6px 0 0;
+  font-size: 15px;
+  color: var(--ink-mut);
+  max-width: 60ch;
+}
+
+.wf .wf-ac-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.wf .wf-ac-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.wf .wf-ac-filter-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  width: 48px;
+}
+.wf .wf-ac-chip {
+  font-size: 12px;
+  border-radius: 999px;
+  padding: 5px 11px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--ink-soft);
+  border: 1px solid var(--line-strong);
+}
+.wf .wf-ac-chip:hover {
+  border-color: rgba(255, 255, 255, 0.24);
+}
+.wf .wf-ac-chip.is-on {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+}
+
+.wf .wf-ac-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.wf .wf-ac-panel {
+  border-radius: 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.wf .wf-ac-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.wf .wf-ac-panel-title {
+  font-family: var(--font-arch);
+  font-weight: 700;
+  font-size: 15px;
+}
+.wf .wf-ac-panel-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+.wf .wf-ac-empty {
+  padding: 24px 20px;
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+
+/* feed rows */
+.wf .wf-ac-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 11px 20px;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.wf .wf-ac-row.is-child {
+  padding-left: 44px;
+}
+.wf .wf-ac-time {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-ghost);
+  width: 40px;
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+.wf .wf-ac-conn {
+  font-family: var(--font-mono);
+  color: #5f5a53;
+}
+.wf .wf-ac-tile {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.wf .wf-ac-name {
+  font-weight: 600;
+  width: 56px;
+  flex-shrink: 0;
+}
+.wf .wf-ac-kind {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.wf .wf-ac-sum {
+  color: var(--ink-soft);
+  flex: 1;
+  min-width: 0;
+}
+
+/* scheduled runs */
+.wf .wf-ac-run {
+  display: grid;
+  grid-template-columns: 60px 24px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 12px;
+}
+.wf .wf-ac-run-when {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.wf .wf-ac-run-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.wf .wf-ac-run-job {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wf .wf-ac-run-model {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-ghost);
+}
+.wf .wf-ac-run-status {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}

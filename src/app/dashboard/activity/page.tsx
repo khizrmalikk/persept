@@ -1,172 +1,102 @@
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { ROSTER, rosterById } from "@/lib/workforce/roster";
+import type { Task, WfEvent } from "@/lib/workforce/types";
 import {
-  type Agent,
-  ago,
-  type Task,
-  type WfEvent,
-  when,
-} from "@/lib/workforce/types";
+  ActivityView,
+  type FeedRow,
+  type RunRow,
+} from "../_components/ActivityView";
+import "../activity.css";
 
-export default async function Activity({
-  searchParams,
-}: {
-  searchParams: Promise<{ agent?: string; kind?: string }>;
-}) {
-  const { agent, kind } = await searchParams;
+export const dynamic = "force-dynamic";
+
+const KINDS = [
+  "message",
+  "worker",
+  "cron",
+  "lead",
+  "approval",
+  "post",
+  "error",
+];
+function normKind(raw: string | null): string {
+  const k = (raw ?? "message").toLowerCase();
+  if (k === "subagent" || k === "worker") return "worker";
+  if (k === "run") return "cron";
+  return KINDS.includes(k) ? k : "message";
+}
+function hhmm(iso: string | null): string {
+  if (!iso) return "--:--";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "--:--";
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Dubai",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(d);
+}
+function cleanSummary(raw: string): string {
+  let s = (raw ?? "").trim();
+  s = s.replace(/^(assistant|user|owner)\s*:\s*/i, "");
+  return s || raw;
+}
+function runStatus(t: Task): "ok" | "running" | "error" | "scheduled" {
+  if (t.status === "ok") return "ok";
+  if (t.status === "error") return "error";
+  if (t.started_at && !t.finished_at) return "running";
+  return "scheduled";
+}
+
+export default async function Activity() {
   const db = supabaseAdmin();
-  let q = db
-    .from("events")
-    .select("*")
-    .order("ts", { ascending: false })
-    .limit(150);
-  if (agent) q = q.eq("agent_id", agent);
-  if (kind) q = q.eq("kind", kind);
-  const [{ data: events }, { data: tasks }, { data: agents }] =
-    await Promise.all([
-      q,
-      db
-        .from("tasks")
-        .select("*")
-        .order("started_at", { ascending: false })
-        .limit(20),
-      db.from("agents").select("id, name, emoji"),
-    ]);
+  const [{ data: eventRows }, { data: taskRows }] = await Promise.all([
+    db.from("events").select("*").order("ts", { ascending: false }).limit(80),
+    db
+      .from("tasks")
+      .select("*")
+      .order("started_at", { ascending: false, nullsFirst: false })
+      .limit(14),
+  ]);
 
-  const agentList =
-    (agents as Pick<Agent, "id" | "name" | "emoji">[] | null) ?? [];
-  const kindHref = kind ? `&kind=${kind}` : "";
+  const events = (eventRows as WfEvent[] | null) ?? [];
+  const tasks = (taskRows as Task[] | null) ?? [];
 
-  return (
-    <>
-      <header className="wf-page-head">
-        <div className="wf-page-head-l">
-          <p className="kicker">activity</p>
-          <h1>
-            what happened
-            <span className="cursor" />
-          </h1>
-          <p className="lede">
-            the live event stream and scheduled runs across the workforce.
-          </p>
-        </div>
-      </header>
+  const feed: FeedRow[] = events.map((e) => {
+    const r = rosterById(e.agent_id ?? "");
+    const kind = normKind(e.kind);
+    const summary = cleanSummary(e.summary ?? e.kind ?? "event");
+    const child = kind === "worker" && /finished/i.test(summary);
+    return {
+      id: e.id,
+      t: hhmm(e.ts),
+      agentId: e.agent_id ?? "",
+      name: (r?.name ?? e.agent_id ?? "system").toLowerCase(),
+      emoji: r?.emoji ?? "◆",
+      hue: r?.hue ?? 70,
+      kind,
+      summary,
+      child,
+    };
+  });
 
-      <div className="chips" style={{ marginBottom: 20 }}>
-        <a
-          className={`chip-link ${agent ? "" : "active"}`}
-          href={`/dashboard/activity${kind ? `?kind=${kind}` : ""}`}
-        >
-          all
-        </a>
-        {agentList.map((a) => (
-          <a
-            key={a.id}
-            className={`chip-link ${agent === a.id ? "active" : ""}`}
-            href={`/dashboard/activity?agent=${a.id}${kindHref}`}
-          >
-            {a.emoji ? `${a.emoji} ` : ""}
-            {a.name ?? a.id}
-          </a>
-        ))}
-      </div>
+  const runs: RunRow[] = tasks.map((t) => {
+    const r = rosterById(t.agent_id ?? "");
+    return {
+      id: t.id,
+      when: hhmm(t.started_at ?? t.finished_at),
+      emoji: r?.emoji ?? "◆",
+      job: t.name ?? t.source ?? "task",
+      model: (t.model ?? "").replace(/^anthropic\//, ""),
+      status: runStatus(t),
+    };
+  });
 
-      <div className="two">
-        <section className="activity-feed">
-          <div className="panel hud-bracket">
-            <div className="hud-head">
-              <span className="hud-head-l">event feed</span>
-              <span className="hud-head-r">{events?.length ?? 0} events</span>
-            </div>
-            {!events?.length ? (
-              <div className="empty">nothing yet</div>
-            ) : (
-              <ul className="feed">
-                {(events as WfEvent[]).map((e) => (
-                  <li key={e.id}>
-                    <span className="t" title={when(e.ts)}>
-                      {ago(e.ts)}
-                    </span>
-                    <span className="who">{e.agent_id ?? "system"}</span>
-                    <span>
-                      <span
-                        className={`kind ${
-                          e.kind === "error"
-                            ? "error"
-                            : e.kind === "subagent"
-                              ? "worker"
-                              : ""
-                        }`}
-                      >
-                        {e.kind === "subagent" ? "worker" : e.kind}
-                      </span>
-                      {e.summary}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </section>
+  const agents = ROSTER.map((r) => ({
+    id: r.id,
+    name: r.name,
+    emoji: r.emoji,
+  }));
 
-        <aside className="activity-runs">
-          <div className="panel hud-bracket table-scroll">
-            <div className="hud-head">
-              <span className="hud-head-l">scheduled runs</span>
-            </div>
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>when</th>
-                  <th>agent</th>
-                  <th>job</th>
-                  <th>status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {((tasks as Task[] | null) ?? []).map((t) => (
-                  <tr key={t.id}>
-                    <td className="muted">
-                      {when(t.started_at ?? t.finished_at)}
-                    </td>
-                    <td>{t.agent_id}</td>
-                    <td>
-                      {t.name ?? t.source}
-                      <br />
-                      <span className="muted">
-                        {(t.model ?? "").replace("anthropic/", "")}
-                      </span>
-                      {t.error && (
-                        <>
-                          <br />
-                          <span className="err">{t.error.slice(0, 120)}</span>
-                        </>
-                      )}
-                    </td>
-                    <td
-                      className={
-                        t.status === "error"
-                          ? "err"
-                          : t.status === "ok"
-                            ? "ok"
-                            : "muted"
-                      }
-                    >
-                      {t.status}
-                    </td>
-                  </tr>
-                ))}
-                {!tasks?.length && (
-                  <tr>
-                    <td colSpan={4} className="muted">
-                      no runs recorded yet
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </aside>
-      </div>
-    </>
-  );
+  return <ActivityView agents={agents} feed={feed} runs={runs} />;
 }

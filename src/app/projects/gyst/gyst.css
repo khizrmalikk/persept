@@ -1,0 +1,397 @@
+/* GYST — the `.pl` dark landing system with a GYST-yellow accent. Scoped to
+   `.pl.gyst` so it overrides the amber locally without touching the landing.
+   Reuses landing.css base + pill/section classes; adds GYST-specific pieces. */
+
+.pl.gyst {
+  --amber: oklch(0.88 0.16 95);
+  --amber-hi: oklch(0.9 0.16 95);
+}
+.pl.gyst ::selection {
+  background: oklch(0.88 0.16 95);
+  color: #0e0d0c;
+}
+
+/* nav yellow trial CTA */
+.pl.gyst a.gyst-trial {
+  background: var(--amber);
+  color: #0e0d0c;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+.pl.gyst a.gyst-trial:hover {
+  background: var(--light);
+  color: #0e0d0c;
+}
+
+/* hero */
+.gyst-hero {
+  position: relative;
+  padding: clamp(64px, 10vw, 130px) clamp(20px, 4vw, 56px) 90px;
+}
+.gyst-hero-glow {
+  position: absolute;
+  inset: -200px 0 auto 0;
+  height: 900px;
+  background: radial-gradient(
+    50% 50% at 75% 30%,
+    oklch(0.7 0.14 95 / 0.2),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+.gyst-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mut);
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+.gyst-eyebrow a {
+  color: var(--mut);
+}
+.gyst-live {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: oklch(0.8 0.16 150 / 0.14);
+  color: oklch(0.8 0.16 150);
+}
+.gyst-live span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: oklch(0.8 0.16 150);
+}
+.gyst-title {
+  font-family: var(--arch);
+  font-weight: 900;
+  font-size: clamp(96px, 18vw, 280px);
+  line-height: 0.82;
+  letter-spacing: -0.06em;
+  margin: 0;
+}
+.gyst-tagline {
+  font-family: var(--arch);
+  font-weight: 800;
+  font-size: clamp(28px, 3.4vw, 52px);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin-top: 24px;
+}
+.gyst-hero-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 32px;
+  margin-top: 32px;
+}
+.gyst-lead {
+  font-size: clamp(18px, 1.5vw, 21px);
+  line-height: 1.55;
+  color: var(--tx2);
+  max-width: 600px;
+  margin: 0;
+  text-wrap: pretty;
+}
+.gyst-hero-cta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+.gyst-note {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--mut3);
+}
+
+/* meta row */
+.gyst-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1px;
+  margin-top: 64px;
+  background: var(--bd2);
+  border-top: 1px solid var(--bd2);
+  border-bottom: 1px solid var(--bd2);
+}
+.gyst-meta-cell {
+  background: var(--bg);
+  padding: 22px 20px;
+}
+.gyst-meta-cell:first-child {
+  padding-left: 0;
+}
+.gyst-meta-k {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mut3);
+}
+.gyst-meta-v {
+  font-size: 17px;
+  margin-top: 6px;
+}
+
+/* why (dark band) */
+.gyst-why {
+  background: #131210;
+}
+.gyst-why-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 64px;
+  align-items: start;
+}
+.gyst-quote {
+  margin: 0;
+  font-size: clamp(22px, 2vw, 28px);
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  color: #ece7df;
+  text-wrap: pretty;
+}
+.gyst-figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.gyst-figcap {
+  font-size: 14px;
+  color: var(--mut2);
+}
+
+/* path steps */
+.gyst-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 1px;
+  background: var(--bd2);
+  border: 1px solid var(--bd2);
+  border-radius: 20px;
+  overflow: hidden;
+}
+.gyst-step {
+  background: var(--bg);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 240px;
+  transition: background 0.18s ease;
+}
+.gyst-step:hover {
+  background: #161412;
+}
+.gyst-step-n {
+  font-family: var(--arch);
+  font-weight: 800;
+  font-size: 40px;
+  letter-spacing: -0.04em;
+  color: var(--amber);
+}
+.gyst-step-title {
+  font-family: var(--arch);
+  font-weight: 700;
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.gyst-step-body {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--mut);
+  margin: 0;
+  text-wrap: pretty;
+}
+.gyst-soon {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 32px;
+  border-radius: 16px;
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+}
+.gyst-soon-h {
+  font-family: var(--arch);
+  font-weight: 800;
+  font-size: 22px;
+}
+.gyst-soon-badge {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--amber);
+  color: #0e0d0c;
+}
+.gyst-soon-note {
+  font-size: 15px;
+  color: var(--mut);
+}
+
+/* features (cream band) */
+.gyst-feats {
+  background: #f4f1ec;
+  color: #0e0d0c;
+}
+.gyst-feats .gyst-eyebrow {
+  color: #6b655d;
+}
+.gyst-feat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 40px 32px;
+}
+.gyst-feat {
+  border-top: 2px solid #0e0d0c;
+  padding-top: 20px;
+}
+.gyst-feat-h {
+  font-family: var(--arch);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  margin: 0 0 10px;
+}
+.gyst-feat-b {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.55;
+  color: #4a453f;
+}
+
+/* pricing */
+.gyst-price-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: 48px;
+  align-items: center;
+}
+.gyst-price-h {
+  font-family: var(--arch);
+  font-weight: 900;
+  font-size: clamp(48px, 7vw, 112px);
+  line-height: 0.88;
+  letter-spacing: -0.055em;
+  margin: 0;
+}
+.gyst-price-card {
+  border-radius: 24px;
+  padding: 40px;
+  background: var(--amber);
+  color: #0e0d0c;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.gyst-price-tag {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.gyst-price-amt {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.gyst-price-num {
+  font-family: var(--arch);
+  font-weight: 900;
+  font-size: 88px;
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+.gyst-price-sub {
+  font-size: 15px;
+}
+.gyst-price-feats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(14, 13, 12, 0.2);
+  font-size: 15px;
+}
+.gyst-price-cta {
+  align-self: flex-start;
+  background: #0e0d0c;
+  color: #f4f1ec;
+  padding: 15px 26px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+.gyst-price-cta:hover {
+  color: var(--amber);
+}
+
+/* final CTA */
+.gyst-cta-sec {
+  position: relative;
+  padding: 150px clamp(20px, 4vw, 56px) 110px;
+  text-align: center;
+  border-top: 1px solid var(--bd);
+}
+.gyst-cta-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    50% 60% at 50% 100%,
+    oklch(0.7 0.14 95 / 0.2),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+.gyst-cta-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+.gyst-cta-h {
+  font-family: var(--arch);
+  font-weight: 900;
+  font-size: clamp(48px, 8vw, 130px);
+  line-height: 0.9;
+  letter-spacing: -0.055em;
+  margin: 0;
+}
+
+/* footer */
+.gyst-footer {
+  padding: 40px clamp(20px, 4vw, 56px);
+  border-top: 1px solid var(--bd);
+  font-size: 14px;
+  color: var(--mut3);
+}
+.gyst-footer-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 24px;
+}
+.gyst-footer-links {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.gyst-footer-links a {
+  color: var(--mut3);
+}

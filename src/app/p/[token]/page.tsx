@@ -39,32 +39,60 @@ export default async function PublicProposal({
   const ua = (await headers()).get("user-agent") ?? "";
   await recordProposalView(proposal, ua);
 
-  const prepared = [
-    proposal.company ? `prepared for ${proposal.company}` : "",
-    proposal.prepared_by ? `by ${proposal.prepared_by}` : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-  const dates = [
+  // "prepared for <company> by <prepared_by> · <date> · valid until <date>"
+  const by = [
+    proposal.company ? `prepared for ` : "",
+    proposal.prepared_by ? ` by ${proposal.prepared_by}` : "",
+  ];
+  const tail = [
     proposal.date,
     proposal.valid_until ? `valid until ${proposal.valid_until}` : "",
-  ]
-    .filter(Boolean)
-    .join(", ");
-  const preparedLine = [prepared, dates].filter(Boolean).join(", ");
+  ].filter(Boolean);
 
   return (
     <main className="prop-page">
       <article className="prop-doc">
-        <header className="prop-header">
-          {preparedLine && <p className="prop-prepared">{preparedLine}</p>}
-          {proposal.title && <h1 className="prop-title">{proposal.title}</h1>}
+        <header className="prop-head">
+          <span className="prop-brand">
+            <svg
+              viewBox="0 0 143.44 126.56"
+              width="24"
+              height="21"
+              aria-hidden="true"
+            >
+              <polygon
+                points="26.85 126.06 100.34 .5 142.56 .5 68.83 126.06 26.85 126.06"
+                fill="oklch(0.62 0.14 60)"
+              />
+              <polyline
+                points="100.34 .5 1.02 .5 26.85 33.86 80.82 33.86"
+                fill="none"
+                stroke="#1a1714"
+                strokeWidth="9"
+              />
+            </svg>
+            <span className="prop-brand-word">Persept</span>
+          </span>
+          <span className="prop-kicker">proposal</span>
         </header>
+
+        {(proposal.company || tail.length > 0) && (
+          <p className="prop-prepared">
+            {by[0]}
+            {proposal.company && <strong>{proposal.company}</strong>}
+            {by[1]}
+            {tail.length > 0 && ` · ${tail.join(" · ")}`}
+          </p>
+        )}
+        {proposal.title && <h1 className="prop-title">{proposal.title}</h1>}
+
         <div className="prop-body">
           <Markdown source={proposal.markdown} />
         </div>
+
         <footer className="prop-footer">
           <span className="prop-mark">Persept</span>
+          <span>an ai workforce studio · Dubai</span>
           <a className="prop-mail" href="mailto:khizr@persept.ai">
             khizr@persept.ai
           </a>

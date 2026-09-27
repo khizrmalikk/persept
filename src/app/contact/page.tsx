@@ -1,95 +1,31 @@
 "use client";
 
-import { motion } from "framer-motion";
-import {
-  ArrowRight,
-  ArrowUpRight,
-  Calendar,
-  Check,
-  Copy,
-  Mail,
-  MapPin,
-  Radio,
-} from "lucide-react";
-import Link from "next/link";
 import { type ChangeEvent, type FormEvent, useState } from "react";
-import { Footer } from "@/components/sections/footer";
-import { Navbar } from "@/components/sections/navbar";
-import { ConsoleLabel, LiveTag } from "@/components/ui/console";
-import { Kicker } from "@/components/ui/editorial";
-import { FadeUp, SlideIn } from "@/components/ui/scroll-animations";
+import "@/components/sections/landing.css";
+import {
+  BOOKING_HREF,
+  bookAttrs,
+  PlFooter,
+  PlNav,
+} from "@/components/sections/pl-chrome";
 
-/* ── Static lab metadata ───────────────────────────────────────────────── */
-
-const CONTACT_EMAIL = "hello@persept.ai";
-const CALENDLY_URL = "https://calendly.com/persept";
+const CONTACT_EMAIL = "khizr@persept.ai";
 
 const SPEC = [
-  { label: "EMAIL", value: CONTACT_EMAIL, href: `mailto:${CONTACT_EMAIL}` },
-  { label: "LOCATION", value: "Dubai, UAE" },
-  { label: "AVAILABILITY", value: "Taking on select projects" },
-  { label: "RESPONSE", value: "Within 1–2 working days" },
-];
-
-const SOCIALS = [
-  { label: "LinkedIn", href: "https://www.linkedin.com/company/persept" },
-  { label: "X / Twitter", href: "https://x.com/persept" },
-  { label: "GitHub", href: "https://github.com/persept" },
+  { label: "Email", value: CONTACT_EMAIL, href: `mailto:${CONTACT_EMAIL}` },
+  { label: "Location", value: "Dubai, UAE" },
+  { label: "Availability", value: "Taking on select clients" },
+  { label: "Response", value: "Within 1–2 working days" },
 ];
 
 const PROJECT_TYPES = [
   "Pick one — optional",
   "Consultation — where can agents help?",
-  "AI agents / automation",
-  "Outreach / email / replies",
-  "Reporting / operations analysis",
-  "Something else — let's talk",
+  "30-day paid pilot",
+  "Outreach / replies / proposals",
+  "Reporting / operations",
+  "Something else",
 ];
-
-const BUDGETS = [
-  "Pick a range — optional",
-  "Under $10k",
-  "$10k – $25k",
-  "$25k – $50k",
-  "$50k+",
-  "Let's discuss",
-];
-
-/* ── Reusable field label ──────────────────────────────────────────────── */
-
-function FieldLabel({
-  children,
-  htmlFor,
-}: {
-  children: string;
-  htmlFor: string;
-}) {
-  return (
-    <label
-      htmlFor={htmlFor}
-      className="mb-2 flex items-center gap-2 text-[0.8rem] font-medium"
-      style={{ color: "var(--ink-soft)", letterSpacing: "0.01em" }}
-    >
-      {children}
-    </label>
-  );
-}
-
-/* ── Shared input styling ──────────────────────────────────────────────── */
-
-const fieldClass =
-  "w-full bg-transparent px-4 py-3 text-[15px] outline-none transition-colors duration-200 " +
-  "placeholder:text-[var(--ink-faint)] focus:border-[var(--accent)] " +
-  "focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--paper)]";
-
-const fieldStyle = {
-  color: "var(--ink)",
-  border: "1px solid var(--line)",
-  borderRadius: "var(--radius-sm)",
-  backgroundColor: "var(--paper)",
-} as const;
-
-/* ── Page ──────────────────────────────────────────────────────────────── */
 
 export default function ContactPage() {
   const [form, setForm] = useState({
@@ -97,7 +33,6 @@ export default function ContactPage() {
     email: "",
     company: "",
     type: PROJECT_TYPES[0],
-    budget: BUDGETS[0],
     message: "",
   });
   const [submitted, setSubmitted] = useState(false);
@@ -112,30 +47,25 @@ export default function ContactPage() {
     ) =>
       setForm((prev) => ({ ...prev, [key]: e.target.value }));
 
-  // Build a graceful mailto: fallback so the message is actually deliverable.
   const buildMailto = () => {
-    const subject = `New project enquiry — ${form.name || "Persept"}`;
+    const subject = `Persept enquiry — ${form.name || "new"}`;
     const lines = [
       `Name: ${form.name}`,
       `Email: ${form.email}`,
       form.company && `Company: ${form.company}`,
-      form.type !== PROJECT_TYPES[0] && `Project type: ${form.type}`,
-      form.budget !== BUDGETS[0] && `Budget: ${form.budget}`,
+      form.type !== PROJECT_TYPES[0] && `Interested in: ${form.type}`,
       "",
-      "What we're building:",
+      "Where the time goes:",
       form.message,
     ].filter(Boolean);
-    return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
-      lines.join("\n"),
-    )}`;
+    return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
+      subject,
+    )}&body=${encodeURIComponent(lines.join("\n"))}`;
   };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Open the user's mail client with a pre-filled draft, then confirm on-brand.
-    if (typeof window !== "undefined") {
-      window.location.href = buildMailto();
-    }
+    if (typeof window !== "undefined") window.location.href = buildMailto();
     setSubmitted(true);
   };
 
@@ -145,418 +75,252 @@ export default function ContactPage() {
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } catch {
-      /* clipboard unavailable — no-op, the mailto link still works */
+      /* clipboard unavailable — the mailto link still works */
     }
   };
 
   return (
-    <main style={{ backgroundColor: "var(--paper)" }}>
-      <Navbar />
+    <main>
+      <div className="pl" id="top">
+        <PlNav base="/" />
 
-      {/* ── Header ──────────────────────────────────────────────────────── */}
-      <section className="relative grain aperture-quiet overflow-hidden pt-32">
-        {/* paper vignette to soften the field toward the edges */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(ellipse at 50% 0%, rgba(247,242,234,0) 30%, rgba(247,242,234,0.7) 85%)",
-          }}
-        />
-        <div className="shell relative z-[1] pb-12 sm:pb-16">
-          <FadeUp>
-            <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2">
-              <Kicker>Start a project</Kicker>
-              <span
-                aria-hidden="true"
-                className="hidden h-3 w-px sm:block"
-                style={{ background: "var(--line-strong)" }}
-              />
-              <LiveTag label="Open studio · briefing new work" />
+        {/* ── Header ─────────────────────────────────────────────────── */}
+        <header className="pl-hero" style={{ paddingBottom: 40 }}>
+          <div className="pl-hero-glow" />
+          <div className="pl-hero-inner">
+            <div className="pl-eyebrow pl-hero-eyebrow">
+              <span className="pl-live" />
+              <span>Fifteen minutes · Dubai · book a call</span>
             </div>
-          </FadeUp>
-
-          <FadeUp delay={0.08}>
-            <h1
-              className="display max-w-4xl"
-              style={{
-                fontSize: "clamp(2.5rem, 7.5vw, 6rem)",
-                fontWeight: 600,
-              }}
-            >
-              Let's put agents
-              <br />
-              on <span className="accent">the busywork</span>
+            <h1 className="pl-h1" style={{ fontSize: "clamp(44px,7vw,104px)" }}>
+              Tell me where <span className="pl-amber">the time goes.</span>
             </h1>
-          </FadeUp>
-
-          <FadeUp delay={0.18}>
-            <p
-              className="mt-7 max-w-xl text-[clamp(1rem,1.5vw,1.2rem)] leading-relaxed"
-              style={{ color: "var(--ink-soft)" }}
-            >
-              Persept is a Dubai-based AI workforce studio. We set up agents
-              that take over repetitive small-business work. Tell us what's
-              eating your week — or book a consultation and we'll point to where
-              an agent helps.
+            <p className="pl-lead" style={{ marginTop: 32 }}>
+              I&rsquo;ll tell you which parts an agent could take. Send the note
+              below, or book a fifteen-minute call. It reaches me directly, no
+              funnel.
             </p>
-          </FadeUp>
-        </div>
-      </section>
+          </div>
+        </header>
 
-      {/* ── Two-column body ─────────────────────────────────────────────── */}
-      <section className="section">
-        <div className="shell">
-          <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
-            {/* ── Left: direct line ────────────────────────────────────── */}
-            <SlideIn direction="left" className="h-full">
-              <div className="card ticked-corners relative flex h-full flex-col p-7 sm:p-10">
-                <ConsoleLabel className="mb-6">Direct line</ConsoleLabel>
+        {/* ── Two-column body ────────────────────────────────────────── */}
+        <section
+          className="pl-section"
+          style={{ paddingTop: 40, paddingBottom: 120 }}
+        >
+          <div className="pl-inner pl-contact-grid">
+            {/* left: direct line */}
+            <div className="pl-panel">
+              <div className="pl-eyebrow amber" style={{ marginBottom: 22 }}>
+                Direct line
+              </div>
+              <p
+                className="pl-role-body"
+                style={{ color: "var(--tx2)", maxWidth: "34ch" }}
+              >
+                No gatekeepers. This reaches the person who builds and runs the
+                deployments. Prefer to skip the form? Email or book a call.
+              </p>
 
-                <p
-                  className="max-w-sm text-[15px] leading-relaxed"
-                  style={{ color: "var(--ink-soft)" }}
+              <div className="pl-spec">
+                {SPEC.map((row) => (
+                  <div className="pl-spec-row" key={row.label}>
+                    <span className="pl-spec-k">{row.label}</span>
+                    <span className="pl-spec-v">
+                      {row.href ? (
+                        <a href={row.href} className="pl-amber">
+                          {row.value}
+                        </a>
+                      ) : (
+                        row.value
+                      )}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: 12,
+                  flexWrap: "wrap",
+                  marginTop: 28,
+                }}
+              >
+                <button
+                  type="button"
+                  className="pl-ghost-sm"
+                  onClick={copyEmail}
                 >
-                  No funnels, no gatekeepers. The form reaches the people who
-                  build. Prefer to skip it? Email us directly or book a call.
-                </p>
-
-                {/* Spec / definition list */}
-                <dl className="mt-10 flex flex-col">
-                  {SPEC.map((row, i) => (
-                    <div
-                      key={row.label}
-                      className="flex flex-col gap-1.5 py-4 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6"
-                      style={{
-                        borderTop: i === 0 ? "none" : "1px solid var(--line)",
-                      }}
-                    >
-                      <dt
-                        className="mono-label"
-                        style={{ color: "var(--ink-faint)" }}
-                      >
-                        {row.label}
-                      </dt>
-                      <dd
-                        className="text-[15px]"
-                        style={{ color: "var(--ink)" }}
-                      >
-                        {row.href ? (
-                          <a href={row.href} className="link-underline">
-                            {row.value}
-                          </a>
-                        ) : (
-                          row.value
-                        )}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-
-                {/* Status strip */}
-                <div
-                  className="mt-8 flex items-center gap-3 p-4"
-                  style={{
-                    background: "var(--paper-3)",
-                    borderRadius: "var(--radius-sm)",
-                  }}
+                  {copied ? "Copied" : "Copy email"}
+                </button>
+                <a
+                  href={BOOKING_HREF}
+                  className="pl-pill pl-amber-btn sm"
+                  {...bookAttrs}
                 >
-                  <span className="live-dot" aria-hidden="true" />
-                  <span
-                    className="mono-label"
-                    style={{ color: "var(--ink-soft)" }}
-                  >
-                    Open studio — currently briefing new work
-                  </span>
+                  Book a call
+                </a>
+              </div>
+
+              <div style={{ marginTop: 36 }}>
+                <div className="pl-spec-k" style={{ marginBottom: 12 }}>
+                  Elsewhere
                 </div>
-
-                {/* Quick actions */}
-                <div className="mt-8 flex flex-wrap gap-3">
-                  <button
-                    type="button"
-                    onClick={copyEmail}
-                    className="btn-ghost"
-                  >
-                    {copied ? (
-                      <Check className="h-3.5 w-3.5" />
-                    ) : (
-                      <Copy className="h-3.5 w-3.5" />
-                    )}
-                    {copied ? "Copied" : "Copy email"}
-                  </button>
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 8 }}
+                >
                   <a
-                    href={CALENDLY_URL}
+                    href="https://www.linkedin.com/company/persept"
                     target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-ghost"
+                    rel="noreferrer"
+                    className="pl-spec-v"
                   >
-                    <Calendar className="h-3.5 w-3.5" />
-                    Book a call
+                    LinkedIn ↗
+                  </a>
+                  <a href="/login" className="pl-spec-v">
+                    Client sign in ↗
                   </a>
                 </div>
-
-                {/* Socials */}
-                <div className="mt-auto pt-10">
-                  <p
-                    className="mono-label mb-3"
-                    style={{ color: "var(--ink-faint)" }}
-                  >
-                    Elsewhere
-                  </p>
-                  <div className="flex flex-col gap-2">
-                    {SOCIALS.map((s) => (
-                      <a
-                        key={s.label}
-                        href={s.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group inline-flex items-center justify-between text-[15px]"
-                        style={{ color: "var(--ink)", maxWidth: "16rem" }}
-                      >
-                        <span className="link-underline">{s.label}</span>
-                        <ArrowUpRight
-                          className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                          style={{ color: "var(--ink-faint)" }}
-                        />
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </SlideIn>
-
-            {/* ── Right: form ─────────────────────────────────────────── */}
-            <SlideIn direction="right" className="h-full">
-              <div className="card ticked-corners relative flex h-full flex-col p-7 sm:p-10">
-                <ConsoleLabel className="mb-6">The brief</ConsoleLabel>
-
-                {submitted ? (
-                  /* ── Success state ──────────────────────────────────── */
-                  <motion.div
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                    className="flex flex-1 flex-col items-start justify-center"
-                  >
-                    <div className="ticked ticked-corners relative w-full p-8 sm:p-10">
-                      <div className="icon-tile mb-6">
-                        <Check className="h-5 w-5" />
-                      </div>
-                      <h2
-                        className="display"
-                        style={{ fontSize: "clamp(1.6rem,3.4vw,2.4rem)" }}
-                      >
-                        Message received.
-                        <br />
-                        We'll be in <span className="accent">touch</span>
-                      </h2>
-                      <p
-                        className="mt-4 max-w-md text-[15px] leading-relaxed"
-                        style={{ color: "var(--ink-soft)" }}
-                      >
-                        We just opened a draft in your mail client — hit send
-                        and it lands with us. Expect a reply within 1–2 working
-                        days.
-                      </p>
-
-                      <div className="mt-8 flex flex-wrap gap-3">
-                        <a href={`mailto:${CONTACT_EMAIL}`} className="btn">
-                          <Mail className="h-3.5 w-3.5" />
-                          Email instead
-                        </a>
-                        <button
-                          type="button"
-                          onClick={() => setSubmitted(false)}
-                          className="btn-ghost"
-                        >
-                          Edit the brief
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                ) : (
-                  /* ── Form ───────────────────────────────────────────── */
-                  <form
-                    onSubmit={handleSubmit}
-                    className="flex flex-1 flex-col"
-                  >
-                    <div className="grid gap-6 sm:grid-cols-2">
-                      <div className="flex flex-col">
-                        <FieldLabel htmlFor="name">Name</FieldLabel>
-                        <input
-                          id="name"
-                          name="name"
-                          type="text"
-                          required
-                          autoComplete="name"
-                          value={form.name}
-                          onChange={update("name")}
-                          placeholder="Your name"
-                          className={fieldClass}
-                          style={fieldStyle}
-                        />
-                      </div>
-
-                      <div className="flex flex-col">
-                        <FieldLabel htmlFor="email">Email</FieldLabel>
-                        <input
-                          id="email"
-                          name="email"
-                          type="email"
-                          required
-                          autoComplete="email"
-                          value={form.email}
-                          onChange={update("email")}
-                          placeholder="you@company.com"
-                          className={fieldClass}
-                          style={fieldStyle}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="mt-6 flex flex-col">
-                      <FieldLabel htmlFor="company">
-                        Company — optional
-                      </FieldLabel>
-                      <input
-                        id="company"
-                        name="company"
-                        type="text"
-                        autoComplete="organization"
-                        value={form.company}
-                        onChange={update("company")}
-                        placeholder="Where you work"
-                        className={fieldClass}
-                        style={fieldStyle}
-                      />
-                    </div>
-
-                    <div className="mt-6 grid gap-6 sm:grid-cols-2">
-                      <div className="flex flex-col">
-                        <FieldLabel htmlFor="type">Project type</FieldLabel>
-                        <select
-                          id="type"
-                          name="type"
-                          value={form.type}
-                          onChange={update("type")}
-                          className={`${fieldClass} appearance-none`}
-                          style={fieldStyle}
-                        >
-                          {PROJECT_TYPES.map((t) => (
-                            <option key={t} value={t}>
-                              {t}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="flex flex-col">
-                        <FieldLabel htmlFor="budget">Budget</FieldLabel>
-                        <select
-                          id="budget"
-                          name="budget"
-                          value={form.budget}
-                          onChange={update("budget")}
-                          className={`${fieldClass} appearance-none`}
-                          style={fieldStyle}
-                        >
-                          {BUDGETS.map((b) => (
-                            <option key={b} value={b}>
-                              {b}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="mt-6 flex flex-1 flex-col">
-                      <FieldLabel htmlFor="message">
-                        What are you building?
-                      </FieldLabel>
-                      <textarea
-                        id="message"
-                        name="message"
-                        required
-                        rows={6}
-                        value={form.message}
-                        onChange={update("message")}
-                        placeholder="The problem, who has it, and what 'fixed' looks like."
-                        className={`${fieldClass} min-h-[9rem] flex-1 resize-y`}
-                        style={fieldStyle}
-                      />
-                    </div>
-
-                    <div className="mt-8 flex flex-wrap items-center gap-4">
-                      <button type="submit" className="btn">
-                        Send the brief
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </button>
-                      <span
-                        className="mono-label inline-flex items-center gap-2"
-                        style={{ color: "var(--ink-faint)" }}
-                      >
-                        <Radio className="h-3.5 w-3.5" />
-                        Opens a pre-filled email
-                      </span>
-                    </div>
-                  </form>
-                )}
-              </div>
-            </SlideIn>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Secondary CTA: book a call ──────────────────────────────────── */}
-      <section
-        className="section grain"
-        style={{ backgroundColor: "var(--paper-2)" }}
-      >
-        <div className="shell">
-          <FadeUp>
-            <div className="ticked ticked-corners relative flex flex-col items-start justify-between gap-8 p-8 sm:flex-row sm:items-center sm:p-12">
-              <div>
-                <p className="mono-label mb-4 inline-flex items-center gap-2">
-                  <MapPin
-                    className="h-3.5 w-3.5"
-                    style={{ color: "var(--accent-ink)" }}
-                  />
-                  Prefer a conversation?
-                </p>
-                <h2
-                  className="display max-w-2xl"
-                  style={{ fontSize: "clamp(1.75rem,4vw,2.75rem)" }}
-                >
-                  Book a 30-minute call.
-                </h2>
-                <p
-                  className="mt-3 max-w-md text-[15px] leading-relaxed"
-                  style={{ color: "var(--ink-soft)" }}
-                >
-                  Bring the problem. We'll sketch the first version of the fix
-                  together — no slides.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <a
-                  href={CALENDLY_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn"
-                >
-                  <Calendar className="h-3.5 w-3.5" />
-                  Schedule a call
-                </a>
-                <Link href="/projects" className="btn-ghost">
-                  See the work
-                </Link>
               </div>
             </div>
-          </FadeUp>
-        </div>
-      </section>
 
-      <Footer />
+            {/* right: the note */}
+            <div className="pl-panel">
+              <div className="pl-eyebrow amber" style={{ marginBottom: 22 }}>
+                The note
+              </div>
+
+              {submitted ? (
+                <div className="pl-success">
+                  <h2
+                    className="pl-h2-med"
+                    style={{ fontSize: "clamp(28px,4vw,44px)" }}
+                  >
+                    Message ready. <span className="pl-amber">Hit send.</span>
+                  </h2>
+                  <p
+                    className="pl-lead"
+                    style={{ fontSize: 17, maxWidth: "44ch" }}
+                  >
+                    A draft just opened in your mail client. Send it and it
+                    lands with me. Expect a reply within 1–2 working days.
+                  </p>
+                  <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                    <a
+                      href={`mailto:${CONTACT_EMAIL}`}
+                      className="pl-pill pl-amber-btn sm"
+                    >
+                      Email instead
+                    </a>
+                    <button
+                      type="button"
+                      className="pl-ghost-sm"
+                      onClick={() => setSubmitted(false)}
+                    >
+                      Edit the note
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit}>
+                  <div className="pl-field-grid two">
+                    <div>
+                      <label className="pl-field-label" htmlFor="name">
+                        Name
+                      </label>
+                      <input
+                        id="name"
+                        className="pl-input"
+                        type="text"
+                        required
+                        autoComplete="name"
+                        value={form.name}
+                        onChange={update("name")}
+                        placeholder="Your name"
+                      />
+                    </div>
+                    <div>
+                      <label className="pl-field-label" htmlFor="email">
+                        Email
+                      </label>
+                      <input
+                        id="email"
+                        className="pl-input"
+                        type="email"
+                        required
+                        autoComplete="email"
+                        value={form.email}
+                        onChange={update("email")}
+                        placeholder="you@company.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: 18 }}>
+                    <label className="pl-field-label" htmlFor="company">
+                      Company — optional
+                    </label>
+                    <input
+                      id="company"
+                      className="pl-input"
+                      type="text"
+                      autoComplete="organization"
+                      value={form.company}
+                      onChange={update("company")}
+                      placeholder="Where you work"
+                    />
+                  </div>
+
+                  <div style={{ marginTop: 18 }}>
+                    <label className="pl-field-label" htmlFor="type">
+                      Interested in
+                    </label>
+                    <select
+                      id="type"
+                      className="pl-select"
+                      value={form.type}
+                      onChange={update("type")}
+                    >
+                      {PROJECT_TYPES.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div style={{ marginTop: 18 }}>
+                    <label className="pl-field-label" htmlFor="message">
+                      Where does the time go?
+                    </label>
+                    <textarea
+                      id="message"
+                      className="pl-textarea"
+                      required
+                      rows={6}
+                      value={form.message}
+                      onChange={update("message")}
+                      placeholder="The repetitive work eating your week, and who has it."
+                    />
+                  </div>
+
+                  <div className="pl-form-foot">
+                    <button type="submit" className="pl-pill pl-amber-btn sm">
+                      Send the note →
+                    </button>
+                    <span className="pl-form-note">
+                      Opens a pre-filled email
+                    </span>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <PlFooter />
+      </div>
     </main>
   );
 }

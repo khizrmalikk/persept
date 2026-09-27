@@ -4437,7 +4437,10 @@
 }
 .wf button.wf-chip {
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
 }
 .wf button.wf-chip:hover {
   border-color: var(--line-strong);
@@ -4500,7 +4503,9 @@
   font: inherit;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 .wf-hunter-tab:hover {
   color: var(--ink);
@@ -4584,7 +4589,10 @@
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s,
+    transform 0.15s;
 }
 .wf-campaign-card:hover {
   border-color: var(--line-strong);
@@ -5377,7 +5385,9 @@
   text-align: left;
   color: inherit;
   cursor: pointer;
-  transition: background 0.12s ease, border-color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
 }
 .wf button.wf-of-rost:hover {
   background: var(--surface-2);
@@ -5813,7 +5823,8 @@
   animation-name: wf-walk-bob-l;
 }
 @keyframes wf-walk-bob {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -5821,7 +5832,8 @@
   }
 }
 @keyframes wf-walk-bob-l {
-  0%, 100% {
+  0%,
+  100% {
     transform: scaleX(-1) translateY(0);
   }
   50% {
@@ -5866,7 +5878,8 @@
     drop-shadow(0 0 8px rgba(255, 59, 92, 0.6));
 }
 @keyframes wf-of-glow {
-  0%, 100% {
+  0%,
+  100% {
     filter: drop-shadow(0 0 2px rgba(var(--accent-rgb), 0.85))
       drop-shadow(0 0 6px rgba(var(--accent-rgb), 0.45));
   }
@@ -6113,38 +6126,53 @@
    Scoped to the office page only via :has(.wf-of), so the other (still light)
    dashboard pages are untouched until they get their own pass.
    ========================================================================== */
-.wf.shell.wf-dark {
-  /* "Blackout Green" — near-black base, vivid green primary. /color-palette. */
-  --bg: #060609; /* page — near-black */
-  --surface: #101016; /* cards */
-  --surface-2: #191921; /* inset / hover */
-  --surface-3: #23232d; /* deeper hover / active */
-  --ink: #f5f6f8;
-  --ink-soft: #a2a7b4;
-  --ink-faint: #5f636e;
+.wf.wf-dark {
+  /* "Cinematic amber" — matches the marketing landing so the product reads as
+     one surface. Warm near-black base + amber primary. See redesign handoff. */
+  --bg: #0e0d0c; /* page */
+  --sidebar: #121110; /* left nav */
+  --panel: #161412; /* major panels */
+  --surface: #161412; /* cards (= panel) */
+  --surface-2: #1c1a18; /* inset / card */
+  --surface-3: #201d1a; /* deeper hover / active */
+  --input: #121110; /* deep input wells */
+  --chat: #131210; /* chat column */
+  --ink: #f4f1ec;
+  --ink-2: #e2ddd5; /* secondary strong */
+  --ink-soft: #cfc9c0; /* secondary */
+  --ink-mut: #b9b3aa; /* muted */
+  --ink-faint: #8a847b; /* faint */
+  --ink-ghost: #6f6a62; /* ghost / eyebrow labels */
   --line: rgba(255, 255, 255, 0.07);
-  --line-strong: rgba(255, 255, 255, 0.15);
-  --accent: #4ade80; /* vivid green — pops on black */
-  --accent-rgb: 74, 222, 128;
-  --accent-ink: #86efac; /* lighter green for text on dark */
-  --accent-wash: rgba(74, 222, 128, 0.14);
-  --ok: #22d3ee; /* cyan — "live" (kept distinct from the green accent) */
-  --warn: #ffc23d; /* amber */
-  --err: #ff4d6a; /* hot red */
-  --ok-bg: rgba(34, 211, 238, 0.13);
-  --warn-bg: rgba(255, 194, 61, 0.15);
-  --err-bg: rgba(255, 77, 106, 0.15);
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.6);
-  --shadow-md: 0 14px 36px -16px rgba(0, 0, 0, 0.85);
-  /* boxier: tighter corners */
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 10px;
+  --line-soft: rgba(255, 255, 255, 0.05);
+  --line-strong: rgba(255, 255, 255, 0.12);
+  --accent: oklch(0.8 0.14 70); /* amber — primary actions, "waiting on you" */
+  --accent-hi: oklch(0.82 0.14 70);
+  --accent-rgb: 232, 162, 76; /* amber, for washes */
+  --accent-ink: oklch(0.85 0.13 75); /* amber text on dark */
+  --accent-wash: oklch(0.8 0.14 70 / 0.14);
+  --accent-ink-on: #0e0d0c; /* text ON amber fills */
+  --ok: oklch(0.8 0.16 150);
+  --warn: oklch(0.8 0.14 70);
+  --err: oklch(0.72 0.17 25);
+  --running: oklch(0.82 0.1 220); /* sub-agent / worker blue */
+  --ok-bg: oklch(0.8 0.16 150 / 0.14);
+  --warn-bg: oklch(0.8 0.14 70 / 0.14);
+  --err-bg: oklch(0.72 0.17 25 / 0.14);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 18px 48px -22px rgba(0, 0, 0, 0.8);
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --font-arch: var(--font-archivo), "Archivo", sans-serif;
+  --font-body: var(--font-geist), system-ui, sans-serif;
+  --font-mono: var(--font-jbmono), ui-monospace, monospace;
   background: var(--bg);
+  font-family: var(--font-body);
 }
 /* dark top bar across the themed dashboard */
 .wf.shell.wf-dark .wf-topbar {
-  background: rgba(6, 6, 9, 0.94);
+  background: rgba(14, 13, 12, 0.94);
   border-bottom-color: var(--line);
 }
 
@@ -6447,7 +6475,10 @@
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) minmax(0, 1.75fr) minmax(300px, 1.1fr);
+  grid-template-columns: minmax(260px, 1fr) minmax(0, 1.75fr) minmax(
+      300px,
+      1.1fr
+    );
   gap: 8px;
 }
 .wf .wf-hub-col {
@@ -6732,7 +6763,10 @@
 }
 /* work column wider (AgentPanels bento); approvals + runs on the right */
 .wf .wf-agent-body {
-  grid-template-columns: minmax(300px, 1.35fr) minmax(0, 1.7fr) minmax(280px, 1fr);
+  grid-template-columns: minmax(300px, 1.35fr) minmax(0, 1.7fr) minmax(
+      280px,
+      1fr
+    );
 }
 @media (max-width: 1180px) {
   .wf .wf-agent-identity-meta {
@@ -6979,7 +7013,10 @@
   font-family: var(--font-geist-mono);
   font-size: 0.72rem;
   cursor: pointer;
-  transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
+  transition:
+    border-color 0.12s ease,
+    color 0.12s ease,
+    background 0.12s ease;
 }
 .wf .wf-archive-date:hover {
   color: var(--ink);
@@ -8374,4 +8411,253 @@ a.wf-lead-co:hover {
 }
 .wf .wf-review-check-actions form {
   display: inline;
+}
+
+/* ============================================================================
+   APP SHELL + SIDEBAR (redesign) — left nav + full-width content
+   ========================================================================== */
+.wf.wf-app {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  min-height: 100vh;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+}
+.wf .wf-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────────── */
+.wf .wf-sb {
+  width: 236px;
+  flex-shrink: 0;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  background: var(--sidebar);
+  border-right: 1px solid var(--line);
+  padding: 20px 12px 16px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.wf .wf-sb::-webkit-scrollbar {
+  display: none;
+}
+.wf .wf-sb-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px;
+  color: var(--ink);
+}
+.wf .wf-sb-brand:hover {
+  color: var(--ink);
+}
+.wf .wf-sb-word {
+  font-family: var(--font-arch);
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+.wf .wf-sb-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+.wf .wf-sb-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.wf .wf-sb-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-ghost);
+  padding: 0 10px 8px;
+}
+.wf .wf-sb-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--ink-mut);
+  transition:
+    background 0.14s ease,
+    color 0.14s ease;
+}
+.wf .wf-sb-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink);
+}
+.wf .wf-sb-item.is-active {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--ink);
+}
+.wf .wf-sb-glyph {
+  width: 16px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+.wf .wf-sb-item-label {
+  flex: 1;
+}
+.wf .wf-sb-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  min-width: 20px;
+  text-align: center;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink-on);
+}
+.wf .wf-sb-agent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--ink-soft);
+  transition:
+    background 0.14s ease,
+    color 0.14s ease;
+}
+.wf .wf-sb-agent:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink);
+}
+.wf .wf-sb-agent.is-active {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--ink);
+}
+.wf .wf-sb-agent.is-soon {
+  opacity: 0.6;
+}
+.wf .wf-sb-tile {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  flex: none;
+}
+.wf .wf-sb-agent-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  min-width: 0;
+}
+.wf .wf-sb-agent-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wf .wf-sb-agent-sub {
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.wf .wf-sb-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+}
+.wf .wf-sb-spacer {
+  flex: 1;
+}
+.wf .wf-sb-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.wf .wf-sb-foot-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.wf .wf-sb-ok-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 8px var(--ok);
+}
+.wf .wf-sb-foot-clock {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.wf .wf-sb-foot-sync {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.wf .wf-sb-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.wf .wf-sb-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #2a2724;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  flex: none;
+}
+.wf .wf-sb-user-name {
+  flex: 1;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wf .wf-sb-signout {
+  font-size: 12px;
+  color: var(--ink-faint);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+}
+.wf .wf-sb-signout:hover {
+  color: var(--ink);
+}
+
+/* content padding for the existing (not-yet-rebuilt) pages that used the old
+   .shell container. The office fills the area; other pages get a comfortable gutter. */
+.wf .wf-content > .wf-office,
+.wf .wf-content > .wf-hub {
+  min-height: 100vh;
 }

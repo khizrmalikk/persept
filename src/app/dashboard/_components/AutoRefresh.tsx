@@ -1,6 +1,6 @@
 "use client";
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 // v1 keeps it simple: re-render server components every few seconds. Supabase Realtime can
 // replace this later without touching the pages.

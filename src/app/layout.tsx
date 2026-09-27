@@ -1,8 +1,27 @@
 import type { Metadata } from "next";
-import { Geist_Mono } from "next/font/google";
+import { Archivo, Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import Script from "next/script";
 import "./globals.css";
+
+// Cinematic landing / contact fonts (dark redesign): Archivo for headlines,
+// Geist for body, JetBrains Mono for eyebrows + labels. Exposed as CSS vars and
+// only referenced by the `.pl` scope, so the rest of the site keeps Neue Haas.
+const archivo = Archivo({
+  subsets: ["latin"],
+  variable: "--font-archivo",
+  display: "swap",
+});
+const geistSans = Geist({
+  subsets: ["latin"],
+  variable: "--font-geist",
+  display: "swap",
+});
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jbmono",
+  display: "swap",
+});
 
 const neueHaasDisplay = localFont({
   src: [
@@ -158,7 +177,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${neueHaasDisplay.variable} ${geistMono.variable} antialiased`}
+        className={`${neueHaasDisplay.variable} ${geistMono.variable} ${archivo.variable} ${geistSans.variable} ${jetbrainsMono.variable} antialiased`}
       >
         <script
           type="application/ld+json"

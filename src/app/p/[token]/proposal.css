@@ -1,109 +1,145 @@
-/* Public proposal page — the site's paper look (tokens come from design-system.css
-   via globals.css / the root layout). Styles the minimal Markdown output directly
-   since the .wf-md rules are dashboard-scoped and don't reach here. */
+/* Public proposal — a premium paper document (its own light scope, not `.pl`).
+   #f7f4ee sheet on a #e9e4dc desk, max-width 780, prints clean on white.
+   Matches the redesign handoff (Proposal.dc.html). */
+
 .prop-page {
   min-height: 100vh;
-  background: var(--paper);
-  color: var(--ink);
-  padding: clamp(28px, 6vw, 80px) 20px;
-  display: flex;
-  justify-content: center;
-}
-.prop-doc {
-  width: 100%;
-  max-width: 42rem;
-}
-.prop-header {
-  padding-bottom: 20px;
-  margin-bottom: 24px;
-  border-bottom: 1px solid var(--line);
-}
-.prop-prepared {
-  margin: 0;
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 0.78rem;
-  letter-spacing: 0.02em;
-  color: var(--ink-faint);
-}
-.prop-title {
-  margin: 10px 0 0;
-  font-size: clamp(1.6rem, 4vw, 2.2rem);
-  font-weight: 600;
-  line-height: 1.15;
-  letter-spacing: -0.015em;
+  padding: 48px 20px;
+  background: #e9e4dc;
+  color: #1a1714;
+  font-family: var(--font-geist), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* the markdown body (Markdown renders h3/h4/h5, p, ul/li, a, strong inside .wf-md) */
+.prop-doc {
+  max-width: 780px;
+  margin: 0 auto;
+  background: #f7f4ee;
+  border-radius: 6px;
+  box-shadow: 0 30px 80px rgba(40, 30, 20, 0.12);
+  padding: clamp(32px, 6vw, 72px);
+}
+
+/* header: logo + wordmark on the left, "proposal" label on the right */
+.prop-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid #d9d2c6;
+}
+.prop-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.prop-brand-word {
+  font-family: var(--font-archivo), "Archivo", sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+}
+.prop-kicker {
+  font-family: var(--font-jbmono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #6b655d;
+}
+
+.prop-prepared {
+  padding: 36px 0 8px;
+  margin: 0;
+  font-family: var(--font-jbmono), ui-monospace, monospace;
+  font-size: 12px;
+  color: #6b655d;
+  line-height: 1.7;
+}
+.prop-prepared strong {
+  color: #1a1714;
+  font-weight: 500;
+}
+
+.prop-title {
+  font-family: var(--font-archivo), "Archivo", sans-serif;
+  font-weight: 900;
+  font-size: clamp(36px, 5.5vw, 56px);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+  margin: 12px 0 28px;
+  text-wrap: balance;
+}
+
+/* the markdown body (Markdown renders h2/h3, p, ul/li, a, strong inside .wf-md) */
 .prop-body {
-  font-size: 1.02rem;
-  line-height: 1.65;
-  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.75;
+  color: #3a352f;
 }
-.prop-body :where(h3) {
-  font-size: 1.35rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  margin: 28px 0 8px;
-}
-.prop-body :where(h4) {
-  font-size: 1.12rem;
-  font-weight: 600;
-  margin: 22px 0 6px;
-}
-.prop-body :where(h5) {
-  font-size: 1rem;
-  font-weight: 600;
-  margin: 18px 0 4px;
+.prop-body :where(h2, h3, h4) {
+  font-family: var(--font-archivo), "Archivo", sans-serif;
+  font-weight: 800;
+  font-size: 24px;
+  letter-spacing: -0.02em;
+  color: #1a1714;
+  margin: 36px 0 14px;
 }
 .prop-body :where(p) {
-  margin: 0 0 14px;
+  margin: 0 0 20px;
 }
-.prop-body :where(ul) {
-  margin: 0 0 14px;
-  padding-left: 1.25rem;
+.prop-body :where(ul, ol) {
+  margin: 0 0 24px;
+  padding-left: 20px;
 }
 .prop-body :where(li) {
   margin: 4px 0;
 }
 .prop-body :where(strong) {
   font-weight: 600;
+  color: #1a1714;
 }
 .prop-body :where(a) {
-  color: var(--accent, #cf5a34);
+  color: #1a1714;
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+.prop-body :where(a):hover {
+  color: oklch(0.55 0.13 60);
+}
 
 .prop-footer {
-  margin-top: 40px;
-  padding-top: 18px;
-  border-top: 1px solid var(--line);
   display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
   align-items: baseline;
   gap: 12px;
-  font-size: 0.85rem;
-  color: var(--ink-faint);
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid #d9d2c6;
+  font-size: 13px;
+  color: #6b655d;
 }
 .prop-mark {
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--ink);
+  font-family: var(--font-archivo), "Archivo", sans-serif;
+  font-weight: 800;
+  color: #1a1714;
 }
 .prop-mail {
-  color: var(--ink-soft);
+  color: #6b655d;
 }
 .prop-mail:hover {
-  color: var(--ink);
+  color: #1a1714;
 }
 
-/* print cleanly: no page chrome, comfortable margins */
 @media print {
   .prop-page {
     background: #fff;
     padding: 0;
   }
-  .prop-footer {
-    color: #444;
+  .prop-doc {
+    box-shadow: none;
+    border-radius: 0;
+    max-width: none;
   }
   @page {
     margin: 18mm;

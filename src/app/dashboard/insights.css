@@ -1,0 +1,339 @@
+/* Insights page (redesign). Scoped under .wf; uses the dark amber tokens. */
+.wf .wf-in {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 28px clamp(20px, 3vw, 40px) 48px;
+  max-width: 1240px;
+}
+.wf .wf-in-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+.wf .wf-in-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.wf .wf-in-h1 {
+  font-family: var(--font-arch);
+  font-weight: 800;
+  font-size: 34px;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+.wf .wf-in-lede {
+  margin: 6px 0 0;
+  font-size: 15px;
+  color: var(--ink-mut);
+}
+.wf .wf-in-range {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+.wf .wf-in-range-btn {
+  font-size: 13px;
+  font-weight: 500;
+  border: 0;
+  border-radius: 7px;
+  padding: 7px 14px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--ink-mut);
+}
+.wf .wf-in-range-btn.is-on {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+/* KPI cards */
+.wf .wf-in-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+.wf .wf-in-kpi {
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+.wf .wf-in-kpi-label {
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+.wf .wf-in-kpi-value {
+  font-family: var(--font-arch);
+  font-weight: 800;
+  font-size: 32px;
+  letter-spacing: -0.03em;
+  margin-top: 4px;
+}
+.wf .wf-in-kpi-note {
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+/* panels */
+.wf .wf-in-panel {
+  border-radius: 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 20px 22px;
+}
+.wf .wf-in-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 20px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.wf .wf-in-panel-title {
+  font-family: var(--font-arch);
+  font-weight: 700;
+  font-size: 15px;
+}
+.wf .wf-in-panel-sub {
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin-top: 2px;
+}
+.wf .wf-in-legend {
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--ink-mut);
+}
+.wf .wf-in-legend span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.wf .wf-in-sw {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+.wf .wf-in-sw-ring {
+  border-radius: 50%;
+  border: 1.5px solid var(--ink-mut);
+}
+
+/* throughput bars */
+.wf .wf-in-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 220px;
+  border-bottom: 1px solid var(--line-strong);
+  padding: 0 2px;
+}
+.wf .wf-in-bar {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 2px;
+}
+.wf .wf-in-seg {
+  width: 100%;
+  max-width: 26px;
+}
+.wf .wf-in-seg-w {
+  border-radius: 3px 3px 0 0;
+  border: 1.5px dashed rgba(255, 255, 255, 0.18);
+  border-bottom: 0;
+}
+.wf .wf-in-xaxis {
+  display: flex;
+  gap: 6px;
+  padding: 8px 2px 0;
+}
+.wf .wf-in-tick {
+  flex: 1;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-ghost);
+}
+.wf .wf-in-empty {
+  padding: 40px 8px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--ink-faint);
+}
+.wf .wf-in-empty-inline {
+  font-size: 13px;
+  color: var(--ink-faint);
+  margin: 0;
+}
+
+/* turnaround + rejections row */
+.wf .wf-in-two {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 16px;
+}
+.wf .wf-in-turn {
+  display: flex;
+  gap: 28px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.wf .wf-in-ring {
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.wf .wf-in-ring-hole {
+  width: 106px;
+  height: 106px;
+  border-radius: 50%;
+  background: var(--panel);
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+.wf .wf-in-ring-n {
+  font-family: var(--font-arch);
+  font-weight: 800;
+  font-size: 28px;
+}
+.wf .wf-in-ring-l {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.wf .wf-in-turn-body {
+  flex: 1;
+  min-width: 180px;
+}
+.wf .wf-in-kv {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  row-gap: 8px;
+  column-gap: 12px;
+  font-size: 13px;
+  margin: 0;
+}
+.wf .wf-in-kv dt {
+  color: var(--ink-faint);
+}
+.wf .wf-in-kv dd {
+  margin: 0;
+  text-align: right;
+}
+.wf .wf-in-rej {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+.wf .wf-in-rej-row {
+  display: flex;
+  gap: 10px;
+}
+.wf .wf-in-rej-n {
+  font-family: var(--font-mono);
+  color: var(--err);
+  width: 28px;
+  flex: none;
+}
+.wf .wf-in-rej-link {
+  font-size: 12px;
+  color: var(--accent);
+  margin-top: 4px;
+}
+
+/* per-agent table */
+.wf .wf-in-table-wrap {
+  padding: 0;
+  overflow-x: auto;
+}
+.wf .wf-in-table-head {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 22px;
+  min-width: 980px;
+  border-bottom: 1px solid var(--line);
+  gap: 12px;
+}
+.wf .wf-in-table {
+  min-width: 980px;
+}
+.wf .wf-in-tr {
+  display: grid;
+  grid-template-columns: minmax(140px, 1.2fr) 60px 60px 90px 80px 80px minmax(
+      120px,
+      1fr
+    ) 70px 90px;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 22px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.wf .wf-in-th {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding: 10px 22px;
+}
+.wf .wf-in-agent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.wf .wf-in-agent-tile {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  flex: none;
+}
+.wf .wf-in-agent-name {
+  font-weight: 600;
+}
+.wf .wf-in-mono {
+  font-family: var(--font-mono);
+}
+.wf .wf-in-last {
+  color: var(--ink-faint);
+  font-size: 12px;
+}
+.wf .wf-in-spark {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 22px;
+}
+.wf .wf-in-spark-bar {
+  flex: 1;
+  max-width: 8px;
+  min-height: 2px;
+  border-radius: 1px;
+}

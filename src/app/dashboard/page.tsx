@@ -1,51 +1,82 @@
+import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { approveFromForm, rejectFromForm } from "@/lib/workforce/actions";
 import { getOpenBacklog, parseHealth } from "@/lib/workforce/backlog";
 import { getAgentFile } from "@/lib/workforce/files";
-import { looksLikeChief, toConstellationStatus } from "@/lib/workforce/format";
 import { getHealth } from "@/lib/workforce/metrics";
-import { getHandoffs } from "@/lib/workforce/outreach";
+import { getHandoffs, parseOutbound } from "@/lib/workforce/outreach";
+import { agentColor, ROSTER, rosterById } from "@/lib/workforce/roster";
 import { getActiveSubagents } from "@/lib/workforce/subagents";
-import {
-  type Agent,
-  type Approval,
-  ago,
-  type ConstellationWorker,
-  STATUS_LABEL,
-  type Subagent,
-  type Task,
-  type WfEvent,
-} from "@/lib/workforce/types";
-import {
-  type OfficeAgent,
-  type OfficeApproval,
-  type OfficeBacklog,
-  type OfficeData,
-  type OfficeEvent,
-  type OfficeSubagent,
-  type OfficeTask,
-  type OfficeUrgent,
-  OfficeView,
-} from "./_components/ConstellationPanel";
+import type { Agent, Approval, WfEvent } from "@/lib/workforce/types";
+import { type OfficeRoom, OfficeRooms } from "./_components/office/OfficeRooms";
 import { dueState } from "./_components/panels/dates";
+import "./office.css";
 
-// The office is the light centrepiece: a WebGL-free 2D agent network with a calm
-// identity/status strip + live stats, the pending-approvals queue embedded
-// alongside, and a latest-activity peek. Background workers appear as satellites
-// on their parent node. This page is a pure server component: it fetches the
-// agents/workers/events/stats plus the pending approval rows for the embed and
-// hands a fully-serializable payload to the client OfficeView.
+// Office home (redesign): the six-room office + running/backlog/health + the
+// waiting/urgent/latest/pulse rail. Server component (real reads, 6s refresh);
+// only the room grid is a client island (wandering workers + climbing bars).
+
+const AMBER = "oklch(0.8 0.14 70)";
+const GREEN = "oklch(0.8 0.16 150)";
+const RED = "oklch(0.72 0.17 25)";
+const RISK: Record<string, [string, string]> = {
+  low: ["rgba(255,255,255,0.07)", "#cfc9c0"],
+  medium: ["oklch(0.8 0.14 70 / 0.16)", AMBER],
+  high: ["oklch(0.72 0.17 25 / 0.18)", RED],
+};
+const ROOM_ORDER = ["scout", "fixer", "muse", "hunter", "chief", "scribe"];
+
+function severity(risk: string | null | undefined): "low" | "medium" | "high" {
+  const w =
+    (risk ?? "")
+      .trim()
+      .match(/^([A-Za-z]+)/)?.[1]
+      ?.toLowerCase() ?? "";
+  if (w === "high" || w === "critical") return "high";
+  if (w === "medium" || w === "moderate") return "medium";
+  return "low";
+}
+function hhmm(iso: string | null | undefined): string {
+  if (!iso) return "--:--";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "--:--";
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Dubai",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(d);
+}
+function cleanSummary(raw: string): string {
+  let s = (raw ?? "").trim();
+  s = s.replace(/^(assistant|user|owner)\s*:\s*/i, "");
+  if (/^\[voice call ended\]/i.test(s))
+    return (
+      s.replace(/^\[voice call ended\]\s*/i, "").trim() || "voice call ended"
+    );
+  if (/^\[voice call\]/i.test(s))
+    return s.replace(/^\[voice call\]\s*/i, "").trim() || "voice call";
+  return s || raw;
+}
+function healthHref(text: string): string {
+  const t = text.toLowerCase();
+  if (/repl(y|ies)|no response|conversation/.test(t))
+    return "/dashboard/agents/hunter/conversations?filter=awaiting";
+  if (/prospect|overdue|next touch/.test(t))
+    return "/dashboard/agents/hunter/prospects";
+  return "/dashboard/agents/chief#wf-backlog";
+}
+
 export default async function Office() {
   const db = supabaseAdmin();
   const since = new Date();
   since.setHours(0, 0, 0, 0);
 
   const [
-    { data: agents },
+    { data: agentRows },
     { data: pending },
     { data: recent },
     { data: todays },
-    { data: runningTasks },
     workerRows,
     health,
     handoffs,
@@ -53,26 +84,17 @@ export default async function Office() {
     chiefState,
   ] = await Promise.all([
     db.from("agents").select("*").order("id"),
-    // Full pending rows (newest handled first in the queue, oldest first here to
-    // match the approvals page order) for the office embed + the waiting count.
     db
       .from("approvals")
-      .select("id, agent_id, action, risk, ts")
+      .select("id, agent_id, action, risk, draft, ts")
       .eq("status", "pending")
       .order("ts", { ascending: true }),
-    db.from("events").select("*").order("ts", { ascending: false }).limit(6),
+    db.from("events").select("*").order("ts", { ascending: false }).limit(24),
     db
       .from("events")
       .select("agent_id")
       .gte("ts", since.toISOString())
       .in("kind", ["run", "cron", "message"]),
-    // Tasks in progress (started, not yet finished) for the left rail.
-    db
-      .from("tasks")
-      .select("id, agent_id, name, source, started_at, status")
-      .is("finished_at", null)
-      .order("started_at", { ascending: false })
-      .limit(12),
     getActiveSubagents(),
     getHealth(),
     getHandoffs("hunter", ["open"]),
@@ -80,272 +102,499 @@ export default async function Office() {
     getAgentFile("chief", "STATE.md"),
   ]);
 
-  // Compact backlog for the home: the top open items, with a due-state colour
-  // class (overdue → err, today → accent, else muted).
-  const dueClass = (d: string | null) => {
-    const s = d ? dueState(d) : "";
-    return s === "overdue" ? "err" : s === "today" ? "accent" : "muted";
+  const dbAgents = (agentRows as Agent[] | null) ?? [];
+  const liveById = new Map(dbAgents.map((a) => [a.id, a]));
+
+  type Pend = Pick<Approval, "id" | "agent_id" | "action" | "risk" | "ts"> & {
+    draft: string | null;
   };
-  const backlog: OfficeBacklog[] = openBacklog.slice(0, 6).map((b) => ({
-    id: b.id,
-    title: b.title,
-    owner: b.owner,
-    due: b.due,
-    priority: b.priority,
-    dueCls: b.due ? dueClass(b.due) : "",
-  }));
-  const backlogOpen = openBacklog.length;
+  const pendingList = (pending as Pend[] | null) ?? [];
+  const pendingByAgent = new Map<string, number>();
+  for (const p of pendingList)
+    if (p.agent_id)
+      pendingByAgent.set(p.agent_id, (pendingByAgent.get(p.agent_id) ?? 0) + 1);
 
-  type PendingRow = Pick<
-    Approval,
-    "id" | "agent_id" | "action" | "risk" | "ts"
-  >;
-  const pendingRows = (pending as PendingRow[] | null) ?? [];
+  const workersByAgent = new Map<string, { label: string }[]>();
+  for (const w of workerRows)
+    if (w.status === "running" && w.agent_id) {
+      const arr = workersByAgent.get(w.agent_id) ?? [];
+      arr.push({ label: w.label ?? "background task" });
+      workersByAgent.set(w.agent_id, arr);
+    }
+  const totalWorkers = [...workersByAgent.values()].reduce(
+    (n, a) => n + a.length,
+    0,
+  );
 
-  const pendingBy = new Map<string, number>();
-  for (const p of pendingRows)
-    pendingBy.set(p.agent_id ?? "", (pendingBy.get(p.agent_id ?? "") ?? 0) + 1);
+  type St = "working" | "waiting" | "idle" | "soon";
+  const statusOf = (id: string): St => {
+    if (!liveById.has(id)) return "soon";
+    const a = liveById.get(id);
+    if (a?.status === "working" || (workersByAgent.get(id)?.length ?? 0) > 0)
+      return "working";
+    if ((pendingByAgent.get(id) ?? 0) > 0) return "waiting";
+    return "idle";
+  };
 
-  const all = (agents as Agent[] | null) ?? [];
-  const working = all.filter((a) => a.status === "working").length;
-  const waiting = pendingRows.length;
+  const deployed = ROSTER.filter((r) => liveById.has(r.id)).length;
+  const working = ROSTER.filter((r) => statusOf(r.id) === "working").length;
+  const pendingCount = pendingList.length;
   const doneToday = ((todays as unknown[] | null) ?? []).length;
 
-  // Exactly one hub: the first chief-like agent, else the first agent.
-  const hubIndex = (() => {
-    const i = all.findIndex((a) => looksLikeChief(a));
-    return i >= 0 ? i : 0;
-  })();
-
-  // Background workers → satellites on their parent node + a per-agent running count.
-  const agentIds = new Set(all.map((a) => a.id));
-  const workerList = workerRows.filter(
-    (w: Subagent) => w.agent_id && agentIds.has(w.agent_id),
-  );
-  const workers: ConstellationWorker[] = workerList.map((w) => ({
-    id: w.session_key,
-    parentId: w.agent_id as string,
-    label: w.label,
-    status: w.status === "running" ? "running" : "done",
-    startedAt: w.started_at ?? w.updated_at ?? new Date(0).toISOString(),
-  }));
-  const runningByAgent = new Map<string, number>();
-  for (const w of workerList)
-    if (w.status === "running")
-      runningByAgent.set(
-        w.agent_id as string,
-        (runningByAgent.get(w.agent_id as string) ?? 0) + 1,
-      );
-
-  const officeAgents: OfficeAgent[] = all.map((a, i) => {
-    const raw = pendingBy.get(a.id) ? "waiting" : (a.status ?? "idle");
+  // ── rooms ──────────────────────────────────────────────────────────────
+  const rooms: OfficeRoom[] = ROOM_ORDER.map((id) => {
+    const a = rosterById(id);
+    const hue = a?.hue ?? 70;
+    const c = agentColor(hue);
+    const st = statusOf(id);
+    const ws = workersByAgent.get(id) ?? [];
+    const waitN = pendingByAgent.get(id) ?? 0;
+    const chipBg =
+      st === "working"
+        ? agentColor(hue, 0.18)
+        : st === "waiting"
+          ? "oklch(0.8 0.14 70 / 0.16)"
+          : "rgba(255,255,255,0.06)";
     return {
-      id: a.id,
-      name: a.name ?? a.id,
-      emoji: a.emoji,
-      status: raw,
-      statusLabel: STATUS_LABEL[raw] ?? raw,
-      netStatus: pendingBy.get(a.id)
-        ? "waiting"
-        : toConstellationStatus(a.status),
-      isHub: i === hubIndex,
-      pending: pendingBy.get(a.id) ?? 0,
-      workers: runningByAgent.get(a.id) ?? 0,
-      currentTask: a.current_task ?? null,
-      lastActive: ago(a.last_active_at),
+      id,
+      href: `/dashboard/agents/${id}`,
+      room: a?.room ?? id,
+      name: a?.name ?? id,
+      emoji: a?.emoji ?? "◆",
+      color: c,
+      tint: agentColor(hue, 0.16),
+      glow: `radial-gradient(55% 65% at 50% 42%, ${agentColor(hue, st === "working" ? 0.2 : 0.06)}, transparent 72%)`,
+      border:
+        st === "soon"
+          ? "rgba(255,255,255,0.12)"
+          : st === "working"
+            ? agentColor(hue, 0.35)
+            : "rgba(255,255,255,0.07)",
+      borderStyle: st === "soon" ? "dashed" : "solid",
+      avatarShadow:
+        st === "working"
+          ? `0 0 0 2px ${c}, 0 0 30px ${agentColor(hue, 0.55)}`
+          : "0 0 0 1px rgba(255,255,255,0.1)",
+      statusLabel: st === "soon" ? "soon" : st,
+      chipBg,
+      chipFg: st === "working" ? c : st === "waiting" ? AMBER : "#8a847b",
+      status: st,
+      task:
+        st === "soon"
+          ? "not deployed yet"
+          : (liveById.get(id)?.current_task ?? "idle · next run scheduled"),
+      basePct: st === "working" ? 42 : 0,
+      workerLine: ws.length
+        ? `${ws.length} worker${ws.length > 1 ? "s" : ""}`
+        : "",
+      waiting: waitN > 0,
+      waitingText: `needs you · ${waitN}`,
+      opacity: st === "soon" ? 0.6 : 1,
+      workers: ws.map((w) => ({
+        color: c,
+        fill: agentColor(hue, 0.2),
+        task: w.label,
+      })),
     };
   });
 
-  const nameById = new Map<string, { name: string; emoji: string | null }>();
-  for (const a of all)
-    nameById.set(a.id, { name: a.name ?? a.id, emoji: a.emoji });
-  const meta = (id: string | null) =>
-    (id ? nameById.get(id) : undefined) ?? {
-      name: id ?? "system",
-      emoji: null,
-    };
-
-  // Sub-agents: the running background workers, newest first, for the left rail.
-  const subagents: OfficeSubagent[] = workerList
-    .filter((w) => w.status === "running")
-    .map((w) => {
-      const m = meta(w.agent_id);
+  // ── running tree ───────────────────────────────────────────────────────
+  const running = ROSTER.filter((r) => statusOf(r.id) === "working").map(
+    (r) => {
+      const c = agentColor(r.hue);
+      const ws = workersByAgent.get(r.id) ?? [];
       return {
-        id: w.session_key,
-        agentId: w.agent_id ?? "",
-        agentName: m.name,
-        agentEmoji: m.emoji,
-        label: w.label ?? "background task",
-        ago: ago(w.started_at ?? w.updated_at),
-      };
-    });
-
-  // Tasks in progress (started, unfinished) for the left rail.
-  const tasks: OfficeTask[] = ((runningTasks as Task[] | null) ?? []).map(
-    (t) => {
-      const m = meta(t.agent_id);
-      return {
-        id: t.id,
-        agentId: t.agent_id ?? "",
-        agentName: m.name,
-        agentEmoji: m.emoji,
-        name: t.name ?? t.source ?? "task",
-        ago: ago(t.started_at),
+        id: r.id,
+        name: r.name,
+        emoji: r.emoji,
+        tint: agentColor(r.hue, 0.16),
+        task: liveById.get(r.id)?.current_task ?? "coordinating workers",
+        workers: ws.map((w) => ({ task: w.label, color: c })),
       };
     },
   );
 
-  // Compact pending-approval rows for the embed (top of queue). Parse the
-  // severity word out of the "SEVERITY — reason" risk string (same as ApprovalCard).
-  const approvals: OfficeApproval[] = pendingRows.map((p) => {
-    const meta = p.agent_id ? nameById.get(p.agent_id) : undefined;
+  // ── backlog ────────────────────────────────────────────────────────────
+  const backlog = openBacklog.slice(0, 4).map((b) => {
+    const owner = rosterById(b.owner ?? "");
+    let due = { text: "no date", color: "#6f6a62" };
+    if (b.due) {
+      const s = dueState(b.due);
+      due =
+        s === "overdue"
+          ? { text: b.due, color: RED }
+          : s === "today"
+            ? { text: "today", color: AMBER }
+            : { text: b.due, color: "#8a847b" };
+    }
+    return { id: b.id, emoji: owner?.emoji ?? "•", title: b.title, due };
+  });
+
+  // ── health ─────────────────────────────────────────────────────────────
+  const health2 = parseHealth(chiefState?.content)
+    .slice(0, 4)
+    .map((text, i) => ({
+      key: `h${i}`,
+      text,
+      href: healthHref(text),
+      color: /overdue|past due/i.test(text) ? RED : AMBER,
+    }));
+
+  // ── waiting queue (top 3) ──────────────────────────────────────────────
+  const queue = pendingList.slice(0, 3).map((p) => {
+    const a = rosterById(p.agent_id ?? "");
+    const sev = severity(p.risk);
+    const out = parseOutbound(p.draft) !== null;
     return {
       id: p.id,
       agentId: p.agent_id ?? "chief",
-      agentName: meta?.name ?? p.agent_id ?? "system",
-      agentEmoji: meta?.emoji ?? null,
+      emoji: a?.emoji ?? "◆",
+      name: a?.name ?? p.agent_id ?? "system",
+      tint: agentColor(a?.hue ?? 70, 0.16),
       action: p.action ?? "approval request",
-      severity: parseSeverity(p.risk),
-      ago: ago(p.ts),
+      risk: sev,
+      riskBg: RISK[sev][0],
+      riskFg: RISK[sev][1],
+      approveLabel: out ? "send" : "approve",
     };
   });
 
-  const events: OfficeEvent[] = ((recent as WfEvent[] | null) ?? []).map(
-    (e) => {
-      // A post event carries the published link in its summary; lift it out so
-      // the feed can render a "link →" and the summary reads clean without it.
-      const raw = cleanSummary(e.summary ?? e.kind ?? "event");
-      const url =
-        e.kind === "post" ? (raw.match(/https?:\/\/\S+/)?.[0] ?? null) : null;
-      const summary = url
-        ? raw.replace(url, "").replace(/\s+$/, "").trim()
-        : raw;
-      return {
-        id: e.id,
-        agent: e.agent_id ?? "system",
-        summary,
-        time: clock(e.ts),
-        isError: e.kind === "error",
-        kind: e.kind ?? "",
-        url,
-      };
-    },
-  );
-
-  // Urgent: the things that actually want the owner's eye — risky approvals,
-  // recent errors, and open hand-offs from Hunter — in one short list.
-  const urgent: OfficeUrgent[] = [];
-  for (const ap of approvals) {
-    if (ap.severity === "high" || ap.severity === "critical")
+  // ── urgent ─────────────────────────────────────────────────────────────
+  const events = (recent as WfEvent[] | null) ?? [];
+  const urgent: {
+    key: string;
+    kind: string;
+    text: string;
+    href: string;
+    bg: string;
+    fg: string;
+  }[] = [];
+  for (const p of pendingList)
+    if (severity(p.risk) === "high")
       urgent.push({
-        id: `ap-${ap.id}`,
-        kind: "approval",
-        emoji: ap.agentEmoji,
-        text: ap.action,
-        meta: `${ap.agentName} · ${ap.ago}`,
-        severity: ap.severity,
+        key: `ap-${p.id}`,
+        kind: "risk",
+        text: p.action ?? "risky approval",
+        href: "/dashboard/approvals",
+        bg: RISK.high[0],
+        fg: RED,
       });
-  }
-  for (const e of events) {
-    if (e.isError)
-      urgent.push({
-        id: `ev-${e.id}`,
-        kind: "error",
-        emoji: "⚠",
-        text: e.summary,
-        meta: `${e.agent} · ${e.time}`,
-      });
-  }
-  for (const h of handoffs) {
-    const m = meta("hunter");
+  for (const e of events.filter((e) => e.kind === "error").slice(0, 2))
     urgent.push({
-      id: `ho-${h.id}`,
-      kind: "handoff",
-      emoji: m.emoji,
-      text: `hand-off: ${h.company ?? "a prospect"}`,
-      meta: h.why ? h.why : `${m.name} · ${ago(h.ts)}`,
+      key: `er-${e.id}`,
+      kind: "error",
+      text: cleanSummary(e.summary ?? "error"),
+      href: "/dashboard/activity",
+      bg: RISK.high[0],
+      fg: RED,
     });
-  }
+  for (const h of handoffs.slice(0, 2))
+    urgent.push({
+      key: `ho-${h.id}`,
+      kind: "hand-off",
+      text: h.why ?? `hand-off: ${h.company ?? "a prospect"}`,
+      href: "/dashboard/agents/hunter/conversations",
+      bg: "rgba(255,255,255,0.07)",
+      fg: "#cfc9c0",
+    });
 
-  // Chief's health discrepancies (from STATE.md) for the strip under the roster.
-  const healthLines = parseHealth(chiefState?.content);
+  // ── latest feed ────────────────────────────────────────────────────────
+  const latest = events.slice(0, 7).map((e) => {
+    const a = rosterById(e.agent_id ?? "");
+    const child = e.kind === "worker" || e.kind === "subagent";
+    return {
+      id: e.id,
+      t: hhmm(e.ts),
+      emoji: a?.emoji ?? "•",
+      text: cleanSummary(e.summary ?? e.kind ?? "event"),
+      indent: child ? 16 : 0,
+      fg: child ? "#8a847b" : "#cfc9c0",
+    };
+  });
 
-  const data: OfficeData = {
-    agents: officeAgents,
-    workers,
-    subagents,
-    tasks,
-    events,
-    approvals,
-    urgent,
-    backlog,
-    backlogOpen,
-    health: healthLines,
-    stats: {
-      online: health.agentsOnline,
-      total: health.agentsTotal,
-      working,
-      waiting,
-      doneToday,
+  const pulse = [
+    {
+      label: "bridge",
+      value: health.bridgeStale ? "degraded" : "live",
+      color: health.bridgeStale ? AMBER : GREEN,
     },
-    bridgeStale: health.bridgeStale,
-  };
+    { label: "deployed", value: `${deployed} / 6`, color: "#f4f1ec" },
+    { label: "workers now", value: String(totalWorkers), color: "#f4f1ec" },
+    { label: "done today", value: String(doneToday), color: "#f4f1ec" },
+  ];
 
-  if (all.length === 0) {
-    return (
-      <div className="wf-office">
-        <div className="wf-office-empty">
-          no agents yet. once the bridge is connected they appear here.
-        </div>
-      </div>
-    );
-  }
+  // ── header text ────────────────────────────────────────────────────────
+  const now = new Date();
+  const dubaiHour = Number(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Dubai",
+      hour: "2-digit",
+      hour12: false,
+    }).format(now),
+  );
+  const partOfDay =
+    dubaiHour < 12 ? "morning" : dubaiHour < 18 ? "afternoon" : "evening";
+  const dateLine = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Dubai",
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  })
+    .format(now)
+    .toLowerCase();
+  const summaryLine = `${pendingCount} ${pendingCount === 1 ? "thing is" : "things are"} waiting for you. ${working} ${working === 1 ? "agent is" : "agents are"} working with ${totalWorkers} worker${totalWorkers === 1 ? "" : "s"}.`;
+
+  const stats = [
+    { value: String(deployed), of: " / 6", label: "online", color: "#f4f1ec" },
+    { value: String(working), of: "", label: "working", color: "#f4f1ec" },
+    {
+      value: String(pendingCount),
+      of: "",
+      label: "waiting on you",
+      color: pendingCount ? AMBER : "#f4f1ec",
+    },
+    { value: String(doneToday), of: "", label: "done today", color: "#f4f1ec" },
+  ];
 
   return (
-    <OfficeView
-      data={data}
-      approveAction={approveFromForm}
-      rejectAction={rejectFromForm}
-    />
+    <div className="of-wrap">
+      <div className="of-head">
+        <div>
+          <div className="of-eyebrow">office · {dateLine}</div>
+          <h1 className="of-h1">good {partOfDay}, khizr</h1>
+          <p className="of-sum">{summaryLine}</p>
+        </div>
+      </div>
+      <div className="of-stats">
+        {stats.map((s) => (
+          <div className="of-stat" key={s.label}>
+            <div className="of-stat-n" style={{ color: s.color }}>
+              {s.value}
+              {s.of && <span className="of-stat-of">{s.of}</span>}
+            </div>
+            <div className="of-stat-l">{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="of-body">
+        <div className="of-main">
+          <OfficeRooms rooms={rooms} />
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))",
+              gap: 16,
+            }}
+          >
+            {/* running */}
+            <div className="of-panel">
+              <div className="of-panel-head">
+                <span className="of-panel-title">running</span>
+                <span className="of-panel-note">
+                  {working} agents · {totalWorkers} workers
+                </span>
+              </div>
+              {running.length === 0 ? (
+                <div className="of-empty">nothing running right now.</div>
+              ) : (
+                running.map((r) => (
+                  <div className="of-run-row" key={r.id}>
+                    <div className="of-run-head">
+                      <span
+                        className="of-run-emoji"
+                        style={{ background: r.tint }}
+                      >
+                        {r.emoji}
+                      </span>
+                      <span className="of-run-name">{r.name}</span>
+                      <span className="of-run-task">{r.task}</span>
+                    </div>
+                    {r.workers.map((w) => (
+                      <div className="of-run-worker" key={w.task}>
+                        <span className="of-connector">└</span>
+                        <span
+                          className="of-run-wdot"
+                          style={{ border: `1.5px solid ${w.color}` }}
+                        />
+                        <span className="of-run-wtask">{w.task}</span>
+                        <span className="of-run-wbar">
+                          <span style={{ width: "60%", background: w.color }} />
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* backlog */}
+            <div className="of-panel">
+              <div className="of-panel-head">
+                <span className="of-panel-title">backlog</span>
+                <Link href="/dashboard/agents/chief" className="of-panel-link">
+                  open →
+                </Link>
+              </div>
+              {backlog.length === 0 ? (
+                <div className="of-empty">backlog is clear.</div>
+              ) : (
+                backlog.map((b) => (
+                  <div className="of-row" key={b.id}>
+                    <span>{b.emoji}</span>
+                    <span className="of-row-title">{b.title}</span>
+                    <span className="of-row-due" style={{ color: b.due.color }}>
+                      {b.due.text}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* health */}
+            <div className="of-panel">
+              <div className="of-panel-head">
+                <span className="of-panel-title">health</span>
+                <span className="of-panel-note">from chief · STATE.md</span>
+              </div>
+              {health2.length === 0 ? (
+                <div className="of-empty">all clear.</div>
+              ) : (
+                health2.map((h) => (
+                  <Link href={h.href} className="of-h-row" key={h.key}>
+                    <span
+                      className="of-h-dot"
+                      style={{ background: h.color }}
+                    />
+                    <span className="of-h-text">{h.text}</span>
+                    <span className="of-h-arrow">→</span>
+                  </Link>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* right rail */}
+        <div className="of-rail">
+          <div className="of-panel">
+            <div className="of-panel-head">
+              <span className="of-panel-title">
+                waiting for you{" "}
+                <span style={{ color: AMBER }}>{pendingCount}</span>
+              </span>
+              <Link href="/dashboard/approvals" className="of-panel-link">
+                open inbox →
+              </Link>
+            </div>
+            {queue.length === 0 ? (
+              <div className="of-empty">
+                nothing waiting. the agents are working inside their limits.
+              </div>
+            ) : (
+              queue.map((q) => (
+                <div className="of-q-card" key={q.id}>
+                  <div className="of-q-top">
+                    <span className="of-q-tile" style={{ background: q.tint }}>
+                      {q.emoji}
+                    </span>
+                    <span className="of-q-name">{q.name}</span>
+                    <span style={{ flex: 1 }} />
+                    <span
+                      className="of-q-risk"
+                      style={{ background: q.riskBg, color: q.riskFg }}
+                    >
+                      {q.risk}
+                    </span>
+                  </div>
+                  <div className="of-q-action">{q.action}</div>
+                  <div className="of-q-actions">
+                    <form action={approveFromForm}>
+                      <input type="hidden" name="id" value={q.id} />
+                      <input type="hidden" name="agent" value={q.agentId} />
+                      <button type="submit" className="of-btn-amber">
+                        {q.approveLabel}
+                      </button>
+                    </form>
+                    <Link
+                      href="/dashboard/approvals"
+                      className="of-btn-outline"
+                    >
+                      review
+                    </Link>
+                    <form action={rejectFromForm}>
+                      <input type="hidden" name="id" value={q.id} />
+                      <input type="hidden" name="agent" value={q.agentId} />
+                      <button type="submit" className="of-btn-ghost">
+                        reject
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="of-panel">
+            <div className="of-panel-title" style={{ marginBottom: 8 }}>
+              urgent
+            </div>
+            {urgent.length === 0 ? (
+              <div className="of-empty">all calm. nothing on fire.</div>
+            ) : (
+              urgent.map((u) => (
+                <Link href={u.href} className="of-u-row" key={u.key}>
+                  <span
+                    className="of-u-kind"
+                    style={{ background: u.bg, color: u.fg }}
+                  >
+                    {u.kind}
+                  </span>
+                  <span>{u.text}</span>
+                </Link>
+              ))
+            )}
+          </div>
+
+          <div className="of-panel">
+            <div className="of-panel-head">
+              <span className="of-panel-title">latest</span>
+              <Link href="/dashboard/activity" className="of-panel-link">
+                see all →
+              </Link>
+            </div>
+            {latest.length === 0 ? (
+              <div className="of-empty">nothing yet.</div>
+            ) : (
+              latest.map((e) => (
+                <div
+                  className="of-l-row"
+                  key={e.id}
+                  style={{ paddingLeft: e.indent }}
+                >
+                  <span className="of-l-time">{e.t}</span>
+                  <span>{e.emoji}</span>
+                  <span className="of-l-text" style={{ color: e.fg }}>
+                    {e.text}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="of-panel of-pulse">
+            {pulse.map((p) => (
+              <div key={p.label}>
+                <div className="of-pulse-l">{p.label}</div>
+                <div className="of-pulse-v" style={{ color: p.color }}>
+                  {p.value}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
   );
-}
-
-// Pull the severity word out of a "SEVERITY — reason…" risk string; lowercased,
-// or "" when absent. Mirrors ApprovalCard so the embed chip matches the page.
-function parseSeverity(risk: string | null | undefined): string {
-  const raw = (risk ?? "").trim();
-  if (!raw) return "";
-  const m = raw.match(/^([A-Za-z]+)\s*[—–-]\s*/);
-  return (m?.[1] ?? raw.split(/\s/)[0] ?? "").toLowerCase();
-}
-
-// Strip raw chat plumbing from event summaries so the office feed reads cleanly:
-// drop "assistant:"/"user:"/"owner:" role prefixes and unwrap the [voice call]
-// call-mode tags into plain language.
-function cleanSummary(raw: string): string {
-  let s = (raw ?? "").trim();
-  s = s.replace(/^(assistant|user|owner)\s*:\s*/i, "");
-  if (/^\[voice call ended\]/i.test(s)) {
-    const rest = s.replace(/^\[voice call ended\]\s*/i, "").trim();
-    return rest ? `call ended · ${rest}` : "voice call ended";
-  }
-  if (/^\[voice call\]/i.test(s)) {
-    const rest = s.replace(/^\[voice call\]\s*/i, "").trim();
-    return rest || "voice call";
-  }
-  return s || raw;
-}
-
-// hh:mm:ss for the activity peek (Asia/Dubai, matching the top-bar clock).
-function clock(iso: string | null | undefined): string {
-  if (!iso) return "--:--:--";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "--:--:--";
-  return new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Asia/Dubai",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  }).format(d);
 }

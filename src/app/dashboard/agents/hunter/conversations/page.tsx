@@ -1,55 +1,96 @@
-import { ConversationsBoard } from "@/app/dashboard/_components/ConversationsBoard";
-import { HunterTabs } from "@/app/dashboard/_components/HunterTabs";
 import {
-  getCampaigns,
+  type ConvoThread,
+  HunterConversationsView,
+} from "@/app/dashboard/_components/HunterConversationsView";
+import { HunterHeader } from "@/app/dashboard/_components/HunterHeader";
+import {
   getHandoffs,
   getMessages,
-  getOpenHandoffCount,
   groupThreads,
-  slugify,
 } from "@/lib/workforce/outreach";
+import { when } from "@/lib/workforce/types";
+import { getHunterHeaderStats } from "../_data";
+import "../../../hunter.css";
 
 export const dynamic = "force-dynamic";
 
-// Hunter's full conversation log — every thread + the "send as me" composer. The
-// chat page shows a compact version alongside the chat; this is the whole thing.
-export default async function ConversationsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ filter?: string }>;
-}) {
-  const { filter } = await searchParams;
-  const [messages, handoffsOpen, campaigns, handoffCount] = await Promise.all([
+const _HN = "oklch(0.78 0.12 150)";
+const AMBER = "var(--accent)";
+const KIND: Record<string, string> = {
+  first_touch: "first touch",
+  follow_up: "follow-up",
+  reply: "reply",
+  inbound: "inbound",
+};
+function stColors(status: string): [string, string] {
+  if (status === "replied") return ["oklch(0.8 0.14 70 / 0.16)", AMBER];
+  if (status === "handed off")
+    return ["oklch(0.8 0.16 150 / 0.14)", "var(--ok)"];
+  return ["rgba(255,255,255,0.07)", "var(--ink-soft)"];
+}
+
+export default async function ConversationsPage() {
+  const [{ stats, pending }, messages, handoffsOpen] = await Promise.all([
+    getHunterHeaderStats(),
     getMessages("hunter"),
     getHandoffs("hunter", ["open"]),
-    getCampaigns("hunter"),
-    getOpenHandoffCount("hunter"),
   ]);
+  const handedOff = new Set(
+    handoffsOpen.map((h) => (h.company ?? "").toLowerCase()).filter(Boolean),
+  );
   const threads = groupThreads(messages);
-  const handedOff = handoffsOpen
-    .map((h) => (h.company ?? "").toLowerCase())
-    .filter(Boolean);
-  const campaignOptions = campaigns.map((c) => ({
-    slug: slugify(c.name),
-    name: c.name,
-  }));
+
+  const vms: ConvoThread[] = threads.map((t) => {
+    const hasIn = t.messages.some((m) => m.direction === "in");
+    const status = handedOff.has(t.company.toLowerCase())
+      ? "handed off"
+      : hasIn
+        ? "replied"
+        : "awaiting reply";
+    const [sbg, sfg] = stColors(status);
+    const last = t.messages[t.messages.length - 1];
+    const first = t.messages[0];
+    return {
+      key: t.key,
+      company: t.company,
+      email: t.contact ?? "—",
+      campaign: "",
+      status,
+      statusBg: sbg,
+      statusFg: sfg,
+      last: (last.body ?? "").split("\n")[0],
+      channel: first.channel ?? "email",
+      threadId: first.thread_id ?? t.key,
+      subject: last.subject ?? "",
+      msgs: t.messages.map((m) => ({
+        out: m.direction === "out",
+        channel: m.channel ?? "email",
+        kind: KIND[m.kind] ?? m.kind,
+        t: when(m.ts),
+        subject: m.subject ?? "",
+        body: m.body ?? "",
+        foot:
+          m.direction === "out"
+            ? m.status === "approved_manual"
+              ? "sent · approved by you"
+              : "sent"
+            : "received",
+      })),
+    };
+  });
 
   return (
-    <div className="wf-hub wf-dark wf-hub-single">
-      <div className="wf-hub-head">
-        <HunterTabs handoffCount={handoffCount} />
-      </div>
-      <div className="wf-hub-scroll">
-        <div className="wf-prospects">
-          <h1 className="wf-campaigns-title">conversations</h1>
-          <ConversationsBoard
-            threads={threads}
-            handedOff={handedOff}
-            campaigns={campaignOptions}
-            initialFilter={filter}
-          />
+    <div className="wf-hn">
+      <HunterHeader stats={stats} pending={pending} />
+      {vms.length === 0 ? (
+        <div className="wf-hn-panel">
+          <div className="wf-hn-empty">
+            no conversations yet. approve a first touch and it appears here.
+          </div>
         </div>
-      </div>
+      ) : (
+        <HunterConversationsView threads={vms} />
+      )}
     </div>
   );
 }

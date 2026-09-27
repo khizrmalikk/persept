@@ -1,119 +1,125 @@
 import { supabaseAdmin } from "@/lib/supabase/server";
-import { type Agent, type Approval, ago } from "@/lib/workforce/types";
-import { ApprovalCard } from "../_components/ApprovalCard";
+import {
+  approveFromForm,
+  rejectFromForm,
+  sendApprovedEdit,
+} from "@/lib/workforce/actions";
+import { parseOutbound } from "@/lib/workforce/outreach";
+import { agentColor, rosterById } from "@/lib/workforce/roster";
+import { type Approval, ago } from "@/lib/workforce/types";
+import {
+  ApprovalsView,
+  type ApprovalVM,
+  type DecidedVM,
+} from "./_components/ApprovalsView";
+import "../approvals.css";
 
-export default async function Approvals() {
+export const dynamic = "force-dynamic";
+
+type RiskLevel = "low" | "medium" | "high";
+
+// "SEVERITY — reason" → a risk level + the reason text (mirrors ApprovalCard).
+function parseRisk(
+  risk: string | null,
+  why: string | null,
+): { level: RiskLevel; reason: string } {
+  const raw = (risk ?? "").trim();
+  const m = raw.match(/^([A-Za-z]+)\s*[—–-]\s*([\s\S]*)$/);
+  const word = (m?.[1] ?? raw.split(/\s/)[0] ?? "").toLowerCase();
+  const level: RiskLevel =
+    word === "high" || word === "critical"
+      ? "high"
+      : word === "medium" || word === "med"
+        ? "medium"
+        : "low";
+  const reason = (m?.[2]?.trim() || why || "").trim();
+  return { level, reason };
+}
+
+function channelFor(action: string, outboundChannel: string | null): string {
+  if (outboundChannel) return outboundChannel;
+  const a = action.toLowerCase();
+  if (a.includes("proposal")) return "proposal";
+  if (a.includes("backlog")) return "backlog";
+  if (a.includes("merge")) return "merge";
+  return "review";
+}
+
+function toVM(ap: Approval): ApprovalVM {
+  const r = rosterById(ap.agent_id ?? "") ?? {
+    id: ap.agent_id ?? "system",
+    name: ap.agent_id ?? "system",
+    emoji: "◆",
+    hue: 70,
+    room: "",
+    role: "",
+  };
+  const outbound = parseOutbound(ap.draft);
+  const { level, reason } = parseRisk(ap.risk, ap.why);
+  return {
+    id: ap.id,
+    agentId: r.id,
+    agentName: r.name,
+    emoji: r.emoji,
+    tint: agentColor(r.hue, 0.16),
+    tintHead: agentColor(r.hue, 0.08),
+    selBorder: agentColor(r.hue, 0.6),
+    channel: channelFor(ap.action ?? "", outbound?.channel ?? null),
+    when: ago(ap.ts),
+    action: ap.action ?? "approval request",
+    risk: level,
+    reason: reason || "needs your decision",
+    outbound: !!outbound,
+    to: outbound?.to ?? "",
+    subject: outbound?.subject || "",
+    context: outbound?.campaign || "",
+    body: (outbound ? outbound.body : ap.draft) ?? "",
+    held: ap.status === "held",
+  };
+}
+
+export default async function ApprovalsPage() {
   const db = supabaseAdmin();
-  const [{ data: pending }, { data: done }, { data: agentRows }] =
-    await Promise.all([
-      db
-        .from("approvals")
-        .select("*")
-        .eq("status", "pending")
-        .order("ts", { ascending: true }),
-      db
-        .from("approvals")
-        .select("*")
-        .neq("status", "pending")
-        .order("decided_at", { ascending: false })
-        .limit(15),
-      db.from("agents").select("id, name, emoji"),
-    ]);
+  const [{ data: pend }, { data: dec }] = await Promise.all([
+    db
+      .from("approvals")
+      .select("*")
+      .in("status", ["pending", "held"])
+      .order("ts", { ascending: false }),
+    db
+      .from("approvals")
+      .select("*")
+      .not("status", "in", "(pending,held)")
+      .order("decided_at", { ascending: false })
+      .limit(30),
+  ]);
 
-  const meta = new Map<string, { name: string; emoji: string | null }>();
-  for (const a of (agentRows as
-    | Pick<Agent, "id" | "name" | "emoji">[]
-    | null) ?? [])
-    meta.set(a.id, { name: a.name ?? a.id, emoji: a.emoji });
+  const all = (pend as Approval[] | null) ?? [];
+  const waiting = all.filter((a) => a.status !== "held").map(toVM);
+  const held = all.filter((a) => a.status === "held").map(toVM);
 
-  const waiting = (pending as Approval[] | null) ?? [];
-  const decided = (done as Approval[] | null) ?? [];
+  const decided: DecidedVM[] = ((dec as Approval[] | null) ?? []).map((d) => {
+    const r = rosterById(d.agent_id ?? "");
+    const status = (d.status ?? "decided").toLowerCase();
+    return {
+      id: d.id,
+      when: ago(d.decided_at ?? d.ts),
+      emoji: r?.emoji ?? "◆",
+      agentName: r?.name ?? d.agent_id ?? "system",
+      action: d.action ?? "",
+      status,
+      bad: status === "rejected",
+    };
+  });
 
   return (
-    <>
-      <header className="wf-page-head">
-        <div className="wf-page-head-l">
-          <p className="kicker">approvals</p>
-          <h1>
-            waiting for you
-            <span className="cursor" />
-          </h1>
-          <p className="lede">
-            agents draft and prepare. you press send, merge, publish and pay.
-          </p>
-        </div>
-        {waiting.length > 0 && (
-          <div className="wf-page-head-r">
-            <span className="pill waiting">
-              <span className="dot waiting" />
-              {waiting.length} in queue
-            </span>
-          </div>
-        )}
-      </header>
-
-      {!waiting.length ? (
-        <div className="empty">
-          nothing waiting. the agents are working inside their limits.
-        </div>
-      ) : (
-        <div className="approvals-queue">
-          {waiting.map((ap) => {
-            const m = ap.agent_id ? meta.get(ap.agent_id) : undefined;
-            return (
-              <ApprovalCard
-                key={ap.id}
-                ap={ap}
-                emoji={m?.emoji}
-                name={m?.name}
-              />
-            );
-          })}
-        </div>
-      )}
-
-      {decided.length > 0 && (
-        <>
-          <p className="kicker" style={{ marginTop: 34, marginBottom: 12 }}>
-            decided
-          </p>
-          <div className="panel hud-bracket table-scroll">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>when</th>
-                  <th>agent</th>
-                  <th>action</th>
-                  <th>decision</th>
-                </tr>
-              </thead>
-              <tbody>
-                {decided.map((ap) => {
-                  const m = ap.agent_id ? meta.get(ap.agent_id) : undefined;
-                  return (
-                    <tr key={ap.id}>
-                      <td className="muted">{ago(ap.decided_at ?? ap.ts)}</td>
-                      <td>
-                        <span className="agent-cell">
-                          <span className="e">{m?.emoji ?? "•"}</span>
-                          <span>{m?.name ?? ap.agent_id}</span>
-                        </span>
-                      </td>
-                      <td>{ap.action}</td>
-                      <td className={ap.status === "approved" ? "ok" : "err"}>
-                        {ap.status}
-                        {ap.decision_note ? (
-                          <span className="muted"> · {ap.decision_note}</span>
-                        ) : null}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
-    </>
+    <ApprovalsView
+      waiting={waiting}
+      held={held}
+      decided={decided}
+      approveAction={approveFromForm}
+      rejectAction={rejectFromForm}
+      sendEditAction={sendApprovedEdit}
+    />
   );
 }
