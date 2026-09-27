@@ -1,0 +1,474 @@
+/* ============================================================================
+   AGENT PAGES (redesign) — identity header + work / chat / right-rail, scoped
+   to `.wf-ag`. Reuses the existing ChatPane + AgentPanels and restyles them to
+   the new flat-card look. Per-agent hue comes in via --agc / --agc-tint.
+   ========================================================================== */
+.wf .wf-ag {
+  --agc: var(--accent);
+  --agc-tint: var(--accent-wash);
+  --agc-ring: rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 100vh;
+  padding: 20px 24px 24px;
+}
+
+/* ── identity header ─────────────────────────────────────────────────────── */
+.wf .wf-ag-head {
+  position: relative;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  overflow: hidden;
+  padding: 18px 22px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+}
+.wf .wf-ag-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    60% 130% at 12% 0%,
+    var(--agc-tint),
+    transparent 60%
+  );
+  pointer-events: none;
+}
+.wf .wf-ag-avatar {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 26px;
+  background: var(--agc-tint);
+  box-shadow: inset 0 0 0 1px var(--agc-ring);
+  flex: none;
+}
+.wf .wf-ag-avatar.is-working {
+  box-shadow:
+    0 0 0 2px var(--agc),
+    0 0 18px -2px var(--agc);
+}
+.wf .wf-ag-id {
+  position: relative;
+  flex: 1 1 280px;
+  min-width: 0;
+}
+.wf .wf-ag-id-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.wf .wf-ag-name {
+  font-family: var(--font-arch);
+  font-weight: 800;
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.wf .wf-ag-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.wf .wf-ag-chip .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.wf .wf-ag-chip.is-working {
+  background: var(--agc-tint);
+  color: var(--agc);
+}
+.wf .wf-ag-chip.is-waiting {
+  background: var(--accent-wash);
+  color: var(--accent);
+}
+.wf .wf-ag-chip.is-idle {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink-mut);
+}
+.wf .wf-ag-room {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+.wf .wf-ag-tagline {
+  font-size: 14px;
+  color: var(--ink-mut);
+  margin-top: 4px;
+}
+.wf .wf-ag-meta {
+  position: relative;
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.wf .wf-ag-meta dt {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+.wf .wf-ag-meta dd {
+  font-size: 14px;
+  margin: 3px 0 0;
+  white-space: nowrap;
+}
+
+/* ── three columns ───────────────────────────────────────────────────────── */
+.wf .wf-ag-cols {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  flex: 1;
+  min-height: 0;
+}
+.wf .wf-ag-work {
+  flex: 1 1 340px;
+  max-width: 460px;
+  min-width: 0;
+  height: max(560px, calc(100vh - 150px));
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding-right: 2px;
+}
+.wf .wf-ag-work::-webkit-scrollbar {
+  display: none;
+}
+.wf .wf-ag-chat {
+  flex: 2 1 420px;
+  min-width: 0;
+  height: max(560px, calc(100vh - 150px));
+  display: flex;
+  min-height: 0;
+}
+.wf .wf-ag-rail {
+  flex: 1 1 260px;
+  max-width: 340px;
+  min-width: 0;
+  height: max(560px, calc(100vh - 150px));
+  overflow-y: auto;
+  scrollbar-width: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.wf .wf-ag-rail::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── new flat-card look applied to the reused work panels (hud-panel) ──────── */
+.wf .wf-ag-work .wf-panels {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.wf .wf-ag-work .wf-cell,
+.wf .wf-ag-work .wf-cell-wide {
+  grid-column: auto !important;
+}
+.wf .wf-ag .hud-panel,
+.wf .wf-ag .wf-panel {
+  border-radius: 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: none;
+}
+.wf .wf-ag .hud-panel::before,
+.wf .wf-ag .hud-panel::after,
+.wf .wf-ag .hud-bracket::before,
+.wf .wf-ag .hud-bracket::after {
+  display: none !important;
+}
+.wf .wf-ag .hud-head {
+  border-bottom: 1px solid var(--line);
+  padding: 14px 18px;
+}
+.wf .wf-ag .hud-head-l {
+  font-family: var(--font-arch);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0;
+  color: var(--ink);
+}
+.wf .wf-ag .hud-head-l .sep {
+  display: none;
+}
+.wf .wf-ag .hud-head-r {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.wf .wf-ag .hud-body {
+  padding: 16px 18px;
+}
+
+/* ── chat column: restyle the reused ChatPane ─────────────────────────────── */
+.wf .wf-ag-chat .chat-panel {
+  flex: 1;
+  border-radius: 16px;
+  background: var(--chat);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.wf .wf-ag-chat .chat-head {
+  border-bottom: 1px solid var(--line);
+  padding: 14px 18px;
+}
+.wf .wf-ag-chat .chat-avatar {
+  background: var(--agc-tint);
+  border-radius: 10px;
+}
+.wf .wf-ag-chat .bubble {
+  border-radius: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.wf .wf-ag-chat .bubble-row.mine .bubble {
+  background: var(--accent-wash);
+  border-color: transparent;
+}
+.wf .wf-ag-chat .composer {
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+}
+.wf .wf-ag-chat .composer-send {
+  background: var(--accent);
+  color: var(--accent-ink-on);
+  border-radius: 9px;
+}
+
+/* ── right rail cards ────────────────────────────────────────────────────── */
+.wf .wf-ag-card {
+  border-radius: 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.wf .wf-ag-card-title {
+  font-family: var(--font-arch);
+  font-weight: 700;
+  font-size: 15px;
+}
+.wf .wf-ag-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.wf .wf-ag-card-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.wf .wf-ag-wait {
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.wf .wf-ag-wait-action {
+  font-size: 13px;
+  line-height: 1.4;
+}
+.wf .wf-ag-wait-preview {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-mut);
+  white-space: pre-wrap;
+  max-height: 84px;
+  overflow: hidden;
+}
+.wf .wf-ag-wait-btns {
+  display: flex;
+  gap: 6px;
+}
+.wf .wf-ag-wait-btns form {
+  display: inline;
+}
+.wf .wf-ag-btn {
+  font-size: 12px;
+  font-weight: 600;
+  border: 0;
+  border-radius: 7px;
+  padding: 6px 12px;
+  background: var(--accent);
+  color: var(--accent-ink-on);
+  cursor: pointer;
+}
+.wf .wf-ag-btn.ghost {
+  background: transparent;
+  color: var(--ink-mut);
+  border: 1px solid var(--line-strong);
+  font-weight: 500;
+}
+.wf .wf-ag-btn.bare {
+  background: transparent;
+  color: var(--ink-faint);
+  border: 0;
+  font-weight: 500;
+}
+.wf .wf-ag-worker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--agc-ring);
+}
+.wf .wf-ag-worker-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.wf .wf-ag-worker-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1.5px solid var(--agc);
+  flex: none;
+}
+.wf .wf-ag-worker-task {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wf .wf-ag-worker-age {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-faint);
+}
+.wf .wf-ag-worker-bar {
+  height: 3px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+.wf .wf-ag-worker-bar i {
+  display: block;
+  height: 100%;
+  width: 40%;
+  background: var(--agc);
+  border-radius: 3px;
+  animation: wf-ag-run 1.6s ease-in-out infinite;
+}
+@keyframes wf-ag-run {
+  0% {
+    margin-left: -40%;
+  }
+  100% {
+    margin-left: 100%;
+  }
+}
+.wf .wf-ag-finished {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ink-faint);
+  padding: 2px;
+}
+.wf .wf-ag-finished .tick {
+  color: var(--ok);
+}
+.wf .wf-ag-run {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 0;
+  border-top: 1px solid var(--line-soft);
+  font-size: 12px;
+}
+.wf .wf-ag-run-t {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  width: 52px;
+}
+.wf .wf-ag-run-job {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wf .wf-ag-run-st {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+.wf .wf-ag-run-st.ok {
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+.wf .wf-ag-run-st.err {
+  background: var(--err-bg);
+  color: var(--err);
+}
+.wf .wf-ag-run-st.run {
+  background: oklch(0.82 0.1 220 / 0.16);
+  color: var(--running);
+}
+.wf .wf-ag-empty {
+  font-size: 13px;
+  color: var(--ink-faint);
+  line-height: 1.5;
+}
+
+/* ── fixer: not deployed card ─────────────────────────────────────────────── */
+.wf .wf-ag-fixer {
+  border-radius: 14px;
+  border: 1px dashed var(--line-strong);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.wf .wf-ag-fixer h3 {
+  font-family: var(--font-arch);
+  font-weight: 700;
+  font-size: 18px;
+  margin: 0;
+}
+.wf .wf-ag-fixer p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  margin: 0;
+}
+.wf .wf-ag-fixer .gates {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ink-mut);
+}

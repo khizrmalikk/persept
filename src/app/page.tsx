@@ -1,15 +1,12 @@
 import type { Metadata } from "next";
-import { Footer } from "@/components/sections/footer";
-import { HomeClient } from "@/components/sections/home-client";
-import { Navbar } from "@/components/sections/navbar";
+import { PerseptLanding } from "@/components/sections/persept-landing";
 
 /*
- * Landing route: a thin server component wrapper. All interactive/motion
- * content lives in <HomeClient> ("use client") so this file stays a server
- * component and can export `metadata` + JSON-LD here directly.
+ * Landing route: the single-page cinematic redesign. The static markup is a
+ * server component; only the hero "office" simulation is a client island.
  */
 const DESCRIPTION =
-  "named agents run the repetitive work of a small business 24/7: outreach, replies, proposals, reports. you press send. book a 15-minute call.";
+  "Hire an AI workforce and keep the final say. Named agents run outreach, replies, proposals and reports 24/7. A person presses send. Book a 15-minute call.";
 
 export const metadata: Metadata = {
   title: {
@@ -34,10 +31,8 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <main className="theme-dark" style={{ backgroundColor: "var(--paper)" }}>
-      <Navbar />
-      <HomeClient />
-      <Footer />
+    <main>
+      <PerseptLanding />
     </main>
   );
 }

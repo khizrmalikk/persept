@@ -14,7 +14,10 @@ const COLS =
 const rank = (s: Subagent) => (s.status === "running" ? 0 : 1);
 
 /** Workers for one agent — running first, then newest — capped (for the panel). */
-export async function getAgentSubagents(agentId: string, limit = 8): Promise<Subagent[]> {
+export async function getAgentSubagents(
+  agentId: string,
+  limit = 8,
+): Promise<Subagent[]> {
   try {
     const { data } = await supabaseAdmin()
       .from("subagents")
@@ -24,7 +27,9 @@ export async function getAgentSubagents(agentId: string, limit = 8): Promise<Sub
       .limit(50);
     const rows = (data as Subagent[] | null) ?? [];
     rows.sort(
-      (a, b) => rank(a) - rank(b) || (b.updated_at ?? "").localeCompare(a.updated_at ?? ""),
+      (a, b) =>
+        rank(a) - rank(b) ||
+        (b.updated_at ?? "").localeCompare(a.updated_at ?? ""),
     );
     return rows.slice(0, limit);
   } catch {

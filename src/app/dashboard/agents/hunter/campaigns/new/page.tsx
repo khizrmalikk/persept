@@ -1,37 +1,32 @@
-import Link from "next/link";
-import { CampaignEditor } from "@/app/dashboard/_components/panels/CampaignEditor";
-import { type Campaign, DEFAULT_RULES } from "@/lib/workforce/outreach";
+import { HunterCampaignForm } from "@/app/dashboard/_components/HunterCampaignForm";
+import { HunterHeader } from "@/app/dashboard/_components/HunterHeader";
+import { DEFAULT_RULES } from "@/lib/workforce/outreach";
+import { getHunterHeaderStats } from "../../_data";
+import "../../../../hunter.css";
 
 export const dynamic = "force-dynamic";
 
-// New campaign → the editor with an empty draft. Saving writes the row and
-// redirects to the campaign's page.
-export default function NewCampaignPage() {
-  const campaign: Campaign = {
-    id: "",
-    agent_id: "hunter",
-    name: "",
-    status: "active",
-    goal: "",
-    audience: "",
-    offer: "",
-    description: "",
-    assets: [],
-    rules: { ...DEFAULT_RULES },
-    created_at: null,
-    updated_at: null,
-  };
+export default async function NewCampaignPage() {
+  const { stats, pending } = await getHunterHeaderStats();
   return (
-    <div className="wf-hub wf-dark wf-hub-single">
-      <div className="wf-hub-scroll">
-        <div className="wf-campaign-editor-bar">
-          <Link href="/dashboard/agents/hunter/campaigns" className="wf-back">
-            ← campaigns
-          </Link>
-          <span className="wf-campaign-editor-title">new campaign</span>
-        </div>
-        <CampaignEditor campaign={campaign} isNew />
-      </div>
+    <div className="wf-hn">
+      <HunterHeader stats={stats} pending={pending} />
+      <HunterCampaignForm
+        initial={{
+          id: "",
+          name: "",
+          status: "active",
+          goal: "",
+          audience: "",
+          offer: "",
+          description: "",
+          channels: [...DEFAULT_RULES.channels],
+          daily_cap: DEFAULT_RULES.daily_cap,
+          follow_up_days: [...DEFAULT_RULES.follow_up_days],
+          assets: [],
+          slug: "",
+        }}
+      />
     </div>
   );
 }

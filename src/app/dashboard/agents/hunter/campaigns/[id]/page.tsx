@@ -1,281 +1,243 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { HunterTabs } from "@/app/dashboard/_components/HunterTabs";
-import { Conversations } from "@/app/dashboard/_components/panels/Conversations";
+import { HunterHeader } from "@/app/dashboard/_components/HunterHeader";
 import { dueState } from "@/app/dashboard/_components/panels/dates";
-import {
-  PipelineTable,
-  type ProspectRow,
-} from "@/app/dashboard/_components/panels/PipelineTable";
 import { getAgentFile, parseMarkdownTable } from "@/lib/workforce/files";
 import {
-  type CampaignAsset,
   getCampaign,
   getHandoffs,
   getMessages,
-  getOpenHandoffCount,
-  groupThreads,
   slugify,
 } from "@/lib/workforce/outreach";
+import { getHunterHeaderStats } from "../../_data";
+import "../../../../hunter.css";
 
 export const dynamic = "force-dynamic";
 
-function youtubeId(url: string): string | null {
-  const m = url.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/,
-  );
-  return m ? m[1] : null;
+const HN = "oklch(0.78 0.12 150)";
+const AMBER = "var(--accent)";
+const RED = "var(--err)";
+function stPill(status: string): { background: string; color: string } {
+  if (status === "active")
+    return { background: "oklch(0.78 0.12 150 / 0.16)", color: HN };
+  if (status === "paused")
+    return { background: "rgba(255,255,255,0.07)", color: "var(--ink-mut)" };
+  return { background: "rgba(255,255,255,0.05)", color: "var(--ink-faint)" };
 }
-function vimeoId(url: string): string | null {
-  const m = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
-  return m ? m[1] : null;
+function dueBits(next: string | undefined): { label: string; color: string } {
+  const s = dueState(next);
+  if (!next) return { label: "—", color: "var(--ink-faint)" };
+  if (s === "overdue") return { label: `${next}`, color: RED };
+  if (s === "today") return { label: "today", color: AMBER };
+  return { label: next, color: "var(--ink-faint)" };
 }
-
-function Asset({ asset }: { asset: CampaignAsset }) {
-  const { url, type, title, use } = asset;
-  let media: React.ReactNode;
-  if (type === "video") {
-    const yt = youtubeId(url);
-    const vm = vimeoId(url);
-    if (yt)
-      media = (
-        <iframe
-          className="wf-cv-asset-embed"
-          src={`https://www.youtube.com/embed/${yt}`}
-          title={title || "video"}
-          allow="accelerometer; encrypted-media; picture-in-picture"
-          allowFullScreen
-        />
-      );
-    else if (vm)
-      media = (
-        <iframe
-          className="wf-cv-asset-embed"
-          src={`https://player.vimeo.com/video/${vm}`}
-          title={title || "video"}
-          allowFullScreen
-        />
-      );
-    else if (/\.mp4($|\?)/i.test(url))
-      media = (
-        // biome-ignore lint/a11y/useMediaCaption: owner-supplied asset, no captions
-        <video
-          className="wf-cv-asset-embed"
-          src={url}
-          controls
-          preload="metadata"
-        />
-      );
-  } else if (type === "image") {
-    // biome-ignore lint/performance/noImgElement: arbitrary external asset URL
-    media = <img className="wf-cv-asset-img" src={url} alt={title || ""} />;
-  }
-  return (
-    <li className="wf-cv-asset">
-      {media ?? (
-        <a
-          className="wf-cv-asset-link"
-          href={url}
-          target="_blank"
-          rel="noreferrer"
-        >
-          {url}
-        </a>
-      )}
-      <div className="wf-cv-asset-meta">
-        <span className="wf-chip sm">{type}</span>
-        <span className="wf-cv-asset-title">{title || "untitled"}</span>
-      </div>
-      {use && <p className="wf-cv-asset-use">{use}</p>}
-    </li>
-  );
+function prospPill(status: string): { background: string; color: string } {
+  const s = (status ?? "").toLowerCase();
+  if (s.includes("repl"))
+    return { background: "oklch(0.8 0.14 70 / 0.16)", color: AMBER };
+  if (s.includes("hand"))
+    return { background: "oklch(0.8 0.16 150 / 0.14)", color: "var(--ok)" };
+  if (s.includes("draft"))
+    return {
+      background: "oklch(0.78 0.12 220 / 0.16)",
+      color: "oklch(0.84 0.09 220)",
+    };
+  if (s.includes("approach"))
+    return { background: "oklch(0.78 0.12 150 / 0.16)", color: HN };
+  return { background: "rgba(255,255,255,0.07)", color: "var(--ink-soft)" };
 }
 
-export default async function CampaignPage({
+export default async function CampaignViewPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const campaign = await getCampaign(id);
-  if (!campaign) notFound();
-
-  const [messages, handoffsOpen, prospectsFile, handoffCount] =
+  const [{ stats, pending }, campaign, messages, handoffsOpen, prospectsFile] =
     await Promise.all([
+      getHunterHeaderStats(),
+      getCampaign(id),
       getMessages("hunter"),
       getHandoffs("hunter", ["open"]),
       getAgentFile("hunter", "PROSPECTS.md"),
-      getOpenHandoffCount("hunter"),
     ]);
+  if (!campaign) notFound();
 
   const slug = slugify(campaign.name);
-  const allRows = parseMarkdownTable(prospectsFile?.content)
-    .rows as ProspectRow[];
-  const rows = allRows.filter((r) => (r.campaign ?? "").trim() === slug);
-  const dueOf: Record<string, ReturnType<typeof dueState>> = {};
-  for (const r of rows) dueOf[r.company] = dueState(r.next_due);
-
-  const campMsgs = messages.filter((m) => m.campaign_id === campaign.id);
-  const threads = groupThreads(campMsgs);
-  const sent = campMsgs.filter((m) => m.direction === "out").length;
-  const replies = campMsgs.filter((m) => m.direction === "in").length;
+  const rows = parseMarkdownTable(prospectsFile?.content).rows.filter(
+    (r) => (r.campaign ?? "").trim() === slug,
+  );
+  let sent = 0;
+  let replies = 0;
+  for (const m of messages)
+    if (m.campaign_id === campaign.id) {
+      if (m.direction === "out") sent++;
+      else replies++;
+    }
+  const companies = new Set(rows.map((r) => (r.company ?? "").toLowerCase()));
   const handoffs = handoffsOpen.filter((h) =>
-    rows.some(
-      (r) =>
-        (r.company ?? "").toLowerCase() === (h.company ?? "").toLowerCase(),
-    ),
+    companies.has((h.company ?? "").toLowerCase()),
   ).length;
 
-  const editHref = `/dashboard/agents/hunter/campaigns/${campaign.id}/edit`;
+  const brief: [string, string][] = [
+    ["who we’re contacting", campaign.audience],
+    ["what we’re offering", campaign.offer],
+    ["goal", campaign.goal],
+    ["instructions for hunter", campaign.description],
+  ];
+  const nums: [string, number][] = [
+    ["sent", sent],
+    ["replies", replies],
+    ["hand-offs", handoffs],
+    ["prospects", rows.length],
+  ];
 
   return (
-    <div className="wf-hub wf-dark wf-hub-single">
-      <div className="wf-hub-head">
-        <HunterTabs handoffCount={handoffCount} />
-      </div>
-      <div className="wf-hub-scroll">
-        <div className="wf-cv">
-          <header className="wf-cv-head">
-            <Link href="/dashboard/agents/hunter/campaigns" className="wf-back">
-              ← campaigns
-            </Link>
-            <div className="wf-cv-title-row">
-              <h1 className="wf-cv-title">{campaign.name}</h1>
-              <span className={`wf-campaign-status is-${campaign.status}`}>
-                {campaign.status}
-              </span>
-              <Link href={editHref} className="act secondary wf-cv-edit">
-                edit
-              </Link>
-            </div>
-            {campaign.goal && <p className="wf-cv-goal">{campaign.goal}</p>}
-          </header>
+    <div className="wf-hn">
+      <HunterHeader stats={stats} pending={pending} />
 
-          <div className="wf-cv-cards">
-            <section className="wf-of-panel">
-              <div className="wf-of-panel-head">
-                <h2>brief</h2>
-              </div>
-              <div className="wf-of-panel-body wf-cv-brief">
-                <Field label="who we're contacting" value={campaign.audience} />
-                <Field label="what we're offering" value={campaign.offer} />
-                <Field
-                  label="instructions for hunter"
-                  value={campaign.description}
-                />
-              </div>
-            </section>
-
-            <section className="wf-of-panel">
-              <div className="wf-of-panel-head">
-                <h2>rules</h2>
-              </div>
-              <div className="wf-of-panel-body wf-cv-rules">
-                <div className="wf-cv-chips">
-                  {campaign.rules.channels.map((ch) => (
-                    <span key={ch} className="wf-chip sm">
-                      {ch}
-                    </span>
-                  ))}
-                </div>
-                <Field
-                  label="daily cap"
-                  value={String(campaign.rules.daily_cap)}
-                />
-                <Field
-                  label="follow-up days"
-                  value={campaign.rules.follow_up_days.join(", ")}
-                />
-              </div>
-            </section>
-
-            <section className="wf-of-panel">
-              <div className="wf-of-panel-head">
-                <h2>numbers</h2>
-              </div>
-              <div className="wf-of-panel-body">
-                <dl className="wf-campaign-counts wf-cv-counts">
-                  <div>
-                    <dt>sent</dt>
-                    <dd className="mono">{sent}</dd>
-                  </div>
-                  <div>
-                    <dt>replies</dt>
-                    <dd className="mono">{replies}</dd>
-                  </div>
-                  <div>
-                    <dt>hand-offs</dt>
-                    <dd className="mono">{handoffs}</dd>
-                  </div>
-                  <div>
-                    <dt>prospects</dt>
-                    <dd className="mono">{rows.length}</dd>
-                  </div>
-                </dl>
-              </div>
-            </section>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-end",
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        <div>
+          <Link href="../campaigns" className="wf-hn-back">
+            ← campaigns
+          </Link>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              marginTop: 8,
+            }}
+          >
+            <h2 className="wf-hn-cv-title">{campaign.name}</h2>
+            <span className="wf-hn-stpill" style={stPill(campaign.status)}>
+              {campaign.status}
+            </span>
           </div>
+        </div>
+        <Link href={`./${id}/edit`} className="wf-hn-btn ghost">
+          edit
+        </Link>
+      </div>
 
-          {campaign.assets.length > 0 && (
-            <section className="wf-of-panel">
-              <div className="wf-of-panel-head">
-                <h2>
-                  assets
-                  <span className="wf-of-panel-count">
-                    {campaign.assets.length}
-                  </span>
-                </h2>
+      <div className="wf-hn-cv-grid">
+        <div className="wf-hn-panel">
+          <div className="wf-hn-panel-title">brief</div>
+          {brief.map(([k, v]) => (
+            <div key={k}>
+              <div className="wf-hn-cv-k">{k}</div>
+              <div className={`wf-hn-cv-v${v ? "" : " empty"}`}>{v || "—"}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="wf-hn-panel">
+          <div className="wf-hn-panel-title">rules</div>
+          <div className="wf-hn-camp-chips">
+            {campaign.rules.channels.map((ch) => (
+              <span key={ch} className="wf-chip-mono">
+                {ch}
+              </span>
+            ))}
+          </div>
+          <div className="wf-hn-cv-rules">
+            <span style={{ color: "var(--ink-faint)" }}>daily cap</span>
+            <span>{campaign.rules.daily_cap} messages</span>
+            <span style={{ color: "var(--ink-faint)" }}>follow-ups</span>
+            <span>
+              day {campaign.rules.follow_up_days[0] ?? 3} and day{" "}
+              {campaign.rules.follow_up_days[1] ?? 7}
+            </span>
+          </div>
+          <div className="wf-hn-panel-title" style={{ marginTop: 6 }}>
+            assets
+          </div>
+          {campaign.assets.length === 0 ? (
+            <div className="wf-hn-empty">no assets yet.</div>
+          ) : (
+            campaign.assets.map((a) => (
+              <div
+                key={a.url}
+                style={{ fontSize: 13, display: "flex", gap: 8 }}
+              >
+                <span style={{ color: "var(--ink-faint)" }}>▤</span>
+                <span>{a.title || a.url}</span>
               </div>
-              <div className="wf-of-panel-body">
-                <ul className="wf-cv-assets">
-                  {campaign.assets.map((a, i) => (
-                    <Asset key={`${a.url}-${i}`} asset={a} />
-                  ))}
-                </ul>
-              </div>
-            </section>
+            ))
           )}
+        </div>
 
-          <section className="wf-of-panel">
-            <div className="wf-of-panel-head">
-              <h2>
-                prospects
-                {rows.length > 0 && (
-                  <span className="wf-of-panel-count">{rows.length}</span>
-                )}
-              </h2>
-            </div>
-            <div className="wf-of-panel-body">
-              {rows.length > 0 ? (
-                <PipelineTable rows={rows} dueOf={dueOf} />
-              ) : (
-                <p className="wf-of-mini-empty">
-                  no prospects tagged <span className="mono">{slug}</span> yet.
-                  add some from the editor.
-                </p>
-              )}
-            </div>
-          </section>
-
-          <section className="wf-of-panel">
-            <div className="wf-of-panel-head">
-              <h2>conversations</h2>
-            </div>
-            <div className="wf-of-panel-body">
-              <Conversations threads={threads} handedOff={new Set<string>()} />
-            </div>
-          </section>
+        <div className="wf-hn-panel">
+          <div className="wf-hn-panel-title">numbers</div>
+          <div className="wf-hn-cv-nums">
+            {nums.map(([k, v]) => (
+              <div key={k}>
+                <div className="wf-hn-cv-num-v">{v}</div>
+                <div className="wf-hn-cv-num-k">{k}</div>
+              </div>
+            ))}
+          </div>
+          <div
+            style={{ fontSize: 12, color: "var(--ink-faint)", lineHeight: 1.5 }}
+          >
+            numbers count prospects and messages tagged to this campaign.
+          </div>
         </div>
       </div>
-    </div>
-  );
-}
 
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="wf-cv-field">
-      <dt>{label}</dt>
-      <dd>{value || <span className="wf-of-mini-empty">—</span>}</dd>
+      <div className="wf-hn-panel">
+        <div className="wf-hn-panel-title">prospects</div>
+        {rows.length === 0 ? (
+          <div className="wf-hn-empty">
+            no prospects tagged {slug} yet. add some from the editor.
+          </div>
+        ) : (
+          rows.map((p) => {
+            const d = dueBits(p.next_due);
+            return (
+              <div
+                key={p.company}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "minmax(0,1fr) 100px 90px",
+                  gap: 10,
+                  padding: "9px 0",
+                  borderTop: "1px solid var(--line-soft)",
+                  fontSize: 13,
+                  alignItems: "center",
+                }}
+              >
+                <span>
+                  <span style={{ fontWeight: 600 }}>{p.company}</span>{" "}
+                  {p.contact && (
+                    <span style={{ color: "var(--ink-faint)" }}>
+                      · {p.contact}
+                    </span>
+                  )}
+                </span>
+                <span>
+                  {p.status && (
+                    <span className="wf-hn-stpill" style={prospPill(p.status)}>
+                      {p.status.replace(/[_-]+/g, " ")}
+                    </span>
+                  )}
+                </span>
+                <span className="wf-hn-mono" style={{ color: d.color }}>
+                  {d.label}
+                </span>
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }
