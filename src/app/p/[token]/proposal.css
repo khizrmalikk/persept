@@ -1,0 +1,111 @@
+/* Public proposal page — the site's paper look (tokens come from design-system.css
+   via globals.css / the root layout). Styles the minimal Markdown output directly
+   since the .wf-md rules are dashboard-scoped and don't reach here. */
+.prop-page {
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  padding: clamp(28px, 6vw, 80px) 20px;
+  display: flex;
+  justify-content: center;
+}
+.prop-doc {
+  width: 100%;
+  max-width: 42rem;
+}
+.prop-header {
+  padding-bottom: 20px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+.prop-prepared {
+  margin: 0;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-faint);
+}
+.prop-title {
+  margin: 10px 0 0;
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+}
+
+/* the markdown body (Markdown renders h3/h4/h5, p, ul/li, a, strong inside .wf-md) */
+.prop-body {
+  font-size: 1.02rem;
+  line-height: 1.65;
+  color: var(--ink);
+}
+.prop-body :where(h3) {
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 28px 0 8px;
+}
+.prop-body :where(h4) {
+  font-size: 1.12rem;
+  font-weight: 600;
+  margin: 22px 0 6px;
+}
+.prop-body :where(h5) {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 18px 0 4px;
+}
+.prop-body :where(p) {
+  margin: 0 0 14px;
+}
+.prop-body :where(ul) {
+  margin: 0 0 14px;
+  padding-left: 1.25rem;
+}
+.prop-body :where(li) {
+  margin: 4px 0;
+}
+.prop-body :where(strong) {
+  font-weight: 600;
+}
+.prop-body :where(a) {
+  color: var(--accent, #cf5a34);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prop-footer {
+  margin-top: 40px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 0.85rem;
+  color: var(--ink-faint);
+}
+.prop-mark {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.prop-mail {
+  color: var(--ink-soft);
+}
+.prop-mail:hover {
+  color: var(--ink);
+}
+
+/* print cleanly: no page chrome, comfortable margins */
+@media print {
+  .prop-page {
+    background: #fff;
+    padding: 0;
+  }
+  .prop-footer {
+    color: #444;
+  }
+  @page {
+    margin: 18mm;
+  }
+}

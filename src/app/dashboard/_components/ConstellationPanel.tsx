@@ -1,76 +1,20 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import type { ConstellationWorker } from "@/lib/workforce/types";
-import {
-  AgentConstellation,
-  type ConstellationAgent,
-  type ConstellationSubAgent,
-} from "./AgentConstellation";
-import { CallPanel } from "./CallPanel";
-import { type ChatMessage, ChatPane } from "./ChatPane";
-import { MonitorWave } from "./MonitorWave";
-
-// Thin client wrapper so a server page can render the 3D constellation and still
-// wire node-click navigation (a function can't cross the server→client boundary).
-//
-// `callAgentId` / `callSpeaking` drive the constellation's live-call animation:
-// while a voice call is running the called node pulses (and brightens while the
-// agent is speaking). They are forwarded to <AgentConstellation> which owns the
-// visual treatment.
-export function ConstellationPanel({
-  agents,
-  subAgents,
-  subagents,
-  className,
-  callAgentId,
-  callSpeaking,
-  focusAgentId,
-  onSelectAgent,
-  onCallAgent,
-}: {
-  agents: ConstellationAgent[];
-  subAgents?: ConstellationSubAgent[];
-  subagents?: ConstellationWorker[]; // background workers → satellites
-  className?: string;
-  callAgentId?: string | null; // the agent currently on a call (or null)
-  callSpeaking?: boolean; // true while that agent's audio is playing
-  // the agent to re-centre the 3D view on (null / hub → centred on the hub).
-  // The office passes its selectedId so switching agents in the chat card
-  // re-centres the constellation on that agent.
-  focusAgentId?: string | null;
-  onSelectAgent?: (id: string) => void; // override node-click (office uses this)
-  onCallAgent?: (id: string) => void; // hover-call a node → start a voice call
-}) {
-  const router = useRouter();
-  // The call + focus props are forwarded through; AgentConstellation accepts
-  // them. The spread keeps this forward-compatible without churn.
-  const extraProps = { callAgentId, callSpeaking, focusAgentId } as Record<
-    string,
-    unknown
-  >;
-  return (
-    <AgentConstellation
-      agents={agents}
-      subAgents={subAgents}
-      subagents={subagents}
-      className={className}
-      onSelectAgent={
-        onSelectAgent ?? ((id) => router.push(`/dashboard/agents/${id}`))
-      }
-      onCallAgent={onCallAgent}
-      {...extraProps}
-    />
-  );
-}
+import type { NetworkAgent } from "./AgentNetwork2D";
+import { OFFICE_DESKS, OfficeFloor } from "./OfficeFloor";
+import { HealthStrip } from "./panels/HealthStrip";
 
 // ── Office (main page) view ─────────────────────────────────────────────────
-// The interactive light office: the full-bleed constellation as the centrepiece
-// with a calm light overlay (identity/status, live stats, roster, activity peek)
-// floating over it, plus call-from-this-page. Lives here (an owned client file)
-// so the server page can stay a pure data-fetching server component and hand it
-// fully-serializable props.
+// The office is a full-width command deck in three columns under a thin stats
+// strip. LEFT: the roster (every desk in the building), the sub-agents running
+// right now, and the tasks in progress. CENTER: the illustrated office floor
+// with a live avatar at each agent's desk. RIGHT: the approvals queue, whatever
+// is urgent, and a pulse card. A thin latest-activity strip runs along the
+// bottom. Lives in an owned client file so the server page stays a pure
+// data-fetching component that hands this fully-serializable props.
 
 export type OfficeAgent = {
   id: string;
@@ -78,10 +22,12 @@ export type OfficeAgent = {
   emoji: string | null;
   status: string; // raw agent status label (idle/working/…)
   statusLabel: string; // human label
-  constStatus: ConstellationAgent["status"]; // status for the 3D node
+  netStatus: NetworkAgent["status"]; // clamped status (working|waiting|idle|…)
   isHub: boolean;
   pending: number; // approvals waiting
   workers: number; // running background workers
+  currentTask: string | null;
+  lastActive: string; // preformatted "3m ago"
 };
 
 export type OfficeEvent = {
@@ -90,14 +36,74 @@ export type OfficeEvent = {
   summary: string;
   time: string; // preformatted hh:mm:ss
   isError: boolean;
+  kind: string; // raw event kind — "post" gets a chip + link
+  url: string | null; // published post link, when the event carries one
+};
+
+// A compact pending-approval row for the office embed (top of the queue).
+export type OfficeApproval = {
+  id: number;
+  agentId: string;
+  agentName: string;
+  agentEmoji: string | null;
+  action: string;
+  severity: string; // "high" | "medium" | "low" | "" (parsed from risk)
+  ago: string; // preformatted "3m ago"
+};
+
+// A running background worker (OpenClaw sub-agent) for the left rail.
+export type OfficeSubagent = {
+  id: string;
+  agentId: string;
+  agentName: string;
+  agentEmoji: string | null;
+  label: string;
+  ago: string;
+};
+
+// A task an agent is actively working on (in-progress run).
+export type OfficeTask = {
+  id: string;
+  agentId: string;
+  agentName: string;
+  agentEmoji: string | null;
+  name: string;
+  ago: string;
+};
+
+// Something that wants the owner's eye: a risky approval, an error, or an open
+// hand-off. Built server-side so the rail stays presentational.
+export type OfficeUrgent = {
+  id: string;
+  kind: "approval" | "error" | "handoff";
+  emoji: string | null;
+  text: string;
+  meta: string;
+  severity?: string;
+};
+
+// A compact open-backlog row for the home (read-only; full backlog lives on
+// Chief's page). `dueCls` is the pre-computed due-state class (err/accent/muted).
+export type OfficeBacklog = {
+  id: string;
+  title: string;
+  owner: string;
+  due: string | null;
+  priority: string;
+  dueCls: string;
 };
 
 export type OfficeData = {
   agents: OfficeAgent[];
   workers: ConstellationWorker[];
+  subagents: OfficeSubagent[];
+  tasks: OfficeTask[];
   events: OfficeEvent[];
-  // Recent chat history per agent (chronological), for the office chat card.
-  chatByAgent: Record<string, ChatMessage[]>;
+  approvals: OfficeApproval[];
+  urgent: OfficeUrgent[];
+  backlog: OfficeBacklog[];
+  backlogOpen: number;
+  health: string[]; // Chief's STATE.md health lines ([] = all clear)
   stats: {
     online: number;
     total: number;
@@ -108,40 +114,13 @@ export type OfficeData = {
   bridgeStale: boolean;
 };
 
-// small inline icons (no dep) — decorative, aria-hidden
-function PhoneIcon() {
+function ArrowIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
-        d="M6.5 3.5h3l1.5 4-2 1.5a12 12 0 0 0 5 5l1.5-2 4 1.5v3a2 2 0 0 1-2.2 2A16 16 0 0 1 4.5 5.7 2 2 0 0 1 6.5 3.5Z"
+        d="M5 12h14M13 6l6 6-6 6"
         stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-function OpenIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M9 5h10v10M19 5 8 16M6 8v10a1 1 0 0 0 1 1h10"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-function ChevronIcon({ dir }: { dir: "left" | "right" }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d={dir === "left" ? "M15 5l-7 7 7 7" : "M9 5l7 7-7 7"}
-        stroke="currentColor"
-        strokeWidth="1.9"
+        strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -151,402 +130,488 @@ function ChevronIcon({ dir }: { dir: "left" | "right" }) {
 
 export function OfficeView({
   data,
-  sendAction,
+  approveAction,
+  rejectAction,
 }: {
   data: OfficeData;
-  // The message-send server action, threaded from the server page into the
-  // office chat card's composer (same contract the agent page uses).
-  sendAction: (formData: FormData) => void | Promise<void>;
+  // The approve / reject server actions, threaded from the server page into the
+  // embedded approvals rows (same guarded contract the approvals page uses).
+  approveAction: (formData: FormData) => void | Promise<void>;
+  rejectAction: (formData: FormData) => void | Promise<void>;
 }) {
   const router = useRouter();
-  const { agents, workers, events, chatByAgent, stats, bridgeStale } = data;
+  const { agents, subagents, tasks, events, approvals, urgent, stats } = data;
+  const { backlog, backlogOpen, health } = data;
 
-  // The chat card's currently-selected agent (defaults to the first agent).
-  // Switching agents here is a pure UI change; it does NOT start a call.
-  const [selectedId, setSelectedId] = useState<string>(agents[0]?.id ?? "");
-  const selectedIndex = Math.max(
-    0,
-    agents.findIndex((a) => a.id === selectedId),
-  );
-  const selected = agents[selectedIndex] ?? agents[0] ?? null;
-
-  // Call-from-this-page state. `callAgentId` names the agent on a call (null =
-  // no call); `callSpeaking` = the agent's audio is currently playing. Both are
-  // fed to the constellation to animate the node, and set from CallPanel's
-  // onCallState callback. The call lives INSIDE the chat card for that agent.
-  const [callAgentId, setCallAgentId] = useState<string | null>(null);
-  const [callSpeaking, setCallSpeaking] = useState(false);
-
-  // Select an agent in the chat card AND start a call with them (sphere / roster
-  // call button). autoStart on the CallPanel connects the call on mount.
-  const startCall = useCallback((id: string) => {
-    setSelectedId(id);
-    setCallAgentId(id);
-    setCallSpeaking(false);
-  }, []);
-  // Switch the chat card to an agent WITHOUT calling (switcher tabs / arrows).
-  const selectAgent = useCallback((id: string) => {
-    setSelectedId(id);
-  }, []);
-  const onCallState = useCallback(
-    (s: { active: boolean; speaking: boolean }) => {
-      setCallSpeaking(s.speaking);
-      // The call ending (active → false) clears the animation on the node.
-      if (!s.active) setCallAgentId(null);
-    },
-    [],
+  const open = useCallback(
+    (id: string) => router.push(`/dashboard/agents/${id}`),
+    [router],
   );
 
-  const goPrev = useCallback(() => {
-    if (agents.length === 0) return;
-    const i = (selectedIndex - 1 + agents.length) % agents.length;
-    setSelectedId(agents[i].id);
-  }, [agents, selectedIndex]);
-  const goNext = useCallback(() => {
-    if (agents.length === 0) return;
-    const i = (selectedIndex + 1) % agents.length;
-    setSelectedId(agents[i].id);
-  }, [agents, selectedIndex]);
+  // live agents keyed by id → the floor + roster light up the deployed desks.
+  const liveById = useMemo(() => {
+    const m: Record<string, OfficeAgent | undefined> = {};
+    for (const a of agents) m[a.id] = a;
+    return m;
+  }, [agents]);
 
-  const selectedMessages = useMemo(
-    () => (selected ? (chatByAgent[selected.id] ?? []) : []),
-    [selected, chatByAgent],
-  );
+  const deployed = agents.length;
+  const extraApprovals = Math.max(0, approvals.length - 5);
 
-  const constellationAgents: ConstellationAgent[] = agents.map((a) => ({
-    id: a.id,
-    name: a.name,
-    emoji: a.emoji,
-    status: a.constStatus,
-    isHub: a.isHub,
-  }));
+  // One "running" column: the agents working right now, the tasks in progress and
+  // every background sub-agent, merged newest-signal-first into a single list.
+  const running = useMemo(() => {
+    type Row = {
+      key: string;
+      emoji: string | null;
+      title: string;
+      sub: string;
+      tag: string;
+      agentId?: string;
+    };
+    const rows: Row[] = [];
+    for (const a of agents)
+      if (a.netStatus === "working")
+        rows.push({
+          key: `a-${a.id}`,
+          emoji: a.emoji,
+          title: a.name,
+          sub: a.currentTask ?? "working",
+          tag: "agent",
+          agentId: a.id,
+        });
+    for (const t of tasks)
+      rows.push({
+        key: `t-${t.id}`,
+        emoji: t.agentEmoji,
+        title: t.name,
+        sub: `${t.agentName} · ${t.ago}`,
+        tag: "task",
+        agentId: t.agentId || undefined,
+      });
+    for (const s of subagents)
+      rows.push({
+        key: `s-${s.id}`,
+        emoji: s.agentEmoji,
+        title: s.label,
+        sub: `${s.agentName} · ${s.ago}`,
+        tag: "worker",
+        agentId: s.agentId || undefined,
+      });
+    return rows;
+  }, [agents, tasks, subagents]);
 
   return (
-    <div className="wf-office">
-      {/* full-bleed constellation stage (dark command deck) */}
-      <div className="wf-stage">
-        <ConstellationPanel
-          agents={constellationAgents}
-          subagents={workers}
-          className="wf-canvas-full"
-          callAgentId={callAgentId}
-          callSpeaking={callSpeaking}
-          // re-centre the 3D on the chat card's currently-selected agent.
-          // selectedId defaults to the first agent, so the hub (Chief) stays
-          // centred initially; switching agents in the card re-centres on them.
-          focusAgentId={selectedId}
-          // Clicking a sphere starts a voice call with that agent (the node then
-          // runs its call animation + the call dock opens). Opening the agent's
-          // page is done from the roster card's "open" button on the left, so the
-          // sphere itself is dedicated to the call action — no fiddly hover popover.
-          onSelectAgent={startCall}
+    <div className="wf-of wf-dark">
+      {/* ── thin stats strip: the four numbers, full width ───────────────── */}
+      <section className="wf-of-stats" aria-label="workforce status">
+        <StatCard n={stats.online} label="online" sub={`of ${stats.total}`} />
+        <StatCard n={stats.working} label="working" />
+        <StatCard
+          n={stats.waiting}
+          label="waiting on you"
+          attention={stats.waiting > 0}
         />
+        <StatCard n={stats.doneToday} label="done today" />
+      </section>
 
-        {/* ── rich warm HUD frame (decorative, non-interactive) ───────────── */}
-        <div className="wf-hud" aria-hidden="true">
-          {/* corner brackets */}
-          <span className="wf-hud-bracket tl" />
-          <span className="wf-hud-bracket tr" />
-          <span className="wf-hud-bracket bl" />
-          <span className="wf-hud-bracket br" />
+      <div className="wf-of-body">
+        {/* ── LEFT: everything running now, roster strip pinned at the bottom ─ */}
+        <aside className="wf-of-left" aria-label="running work and roster">
+          <Panel title="running" count={running.length || undefined} grow>
+            {running.length === 0 ? (
+              <p className="wf-of-mini-empty">nothing running right now.</p>
+            ) : (
+              <ul className="wf-of-run">
+                {running.map((r) => {
+                  const inner = (
+                    <>
+                      <span
+                        className={`wf-of-run-mark ${r.tag}`}
+                        aria-hidden="true"
+                      />
+                      <span className="wf-of-run-emoji" aria-hidden="true">
+                        {r.emoji ?? "◆"}
+                      </span>
+                      <span className="wf-of-run-body">
+                        <span className="wf-of-run-title" title={r.title}>
+                          {r.title}
+                        </span>
+                        <span className="wf-of-run-sub" title={r.sub}>
+                          {r.sub}
+                        </span>
+                      </span>
+                      <span className={`wf-of-run-tag ${r.tag}`}>{r.tag}</span>
+                    </>
+                  );
+                  return (
+                    <li key={r.key}>
+                      {r.agentId ? (
+                        <button
+                          type="button"
+                          className="wf-of-run-item"
+                          onClick={() => open(r.agentId as string)}
+                        >
+                          {inner}
+                        </button>
+                      ) : (
+                        <div className="wf-of-run-item is-static">{inner}</div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Panel>
 
-          {/* top readout bar — just a tag + fading rule. No status/counts here:
-              the office card (with its own live pill + stats) sits over this area
-              and it's translucent, so anything behind it bleeds through. */}
-          <div className="wf-hud-readout top">
-            <span className="wf-hud-tag">{"//"} workforce</span>
-            <span className="wf-hud-sep" />
-          </div>
-
-          {/* corner coordinate flavour labels */}
-          <span className="wf-hud-coord tl">{"//"} deck.persept · sec-01</span>
-          <span className="wf-hud-coord br">lat 25.20 · lon 55.27 {"//"}</span>
-
-          {/* bottom readout bar — system health */}
-          <div className="wf-hud-readout bottom">
-            <span className="wf-hud-tag">{"//"} sys</span>
-            <span className={`wf-hud-sys ${bridgeStale ? "bad" : "ok"}`}>
-              {bridgeStale ? "degraded" : "healthy"}
-            </span>
-            <span className="wf-hud-sep" />
-            <span className="wf-hud-metrics">
-              <span>
-                agents{" "}
-                <b>
-                  {stats.online}/{stats.total}
-                </b>
-              </span>
-              <span>
-                done today <b>{stats.doneToday}</b>
-              </span>
-            </span>
-          </div>
-
-          {/* scanline overlay (reduced-motion-safe via CSS) */}
-          <div className="wf-hud-scanlines" />
-        </div>
-      </div>
-
-      {/* calm light overlay */}
-      <div className="wf-overlay">
-        <div className="wf-rail-left">
-          {/* identity / status */}
-          <section className="wf-card wf-ident" aria-label="workforce status">
-            <div className="wf-ident-top">
-              <div>
-                <div className="wf-ident-title">the office</div>
-                <div className="wf-ident-sub">
-                  {stats.total} {stats.total === 1 ? "agent" : "agents"} on the
-                  workforce
-                </div>
-              </div>
-              <span
-                className={`wf-status-pill ${bridgeStale ? "stale" : "live"}`}
-              >
-                <span className={`dot ${bridgeStale ? "stale" : "live"}`} />
-                {bridgeStale ? "standby" : "live"}
-              </span>
-            </div>
-
-            {/* live stats cluster */}
-            <div className="wf-stats">
-              <div className="wf-stat">
-                <span className="wf-stat-n">{stats.online}</span>
-                <span className="wf-stat-l">online</span>
-              </div>
-              <div className="wf-stat">
-                <span className="wf-stat-n">{stats.working}</span>
-                <span className="wf-stat-l">working</span>
-              </div>
-              <div
-                className={`wf-stat ${stats.waiting > 0 ? "attention" : ""}`}
-              >
-                <span className="wf-stat-n">{stats.waiting}</span>
-                <span className="wf-stat-l">waiting</span>
-              </div>
-              <div className="wf-stat">
-                <span className="wf-stat-n">{stats.doneToday}</span>
-                <span className="wf-stat-l">done today</span>
-              </div>
-            </div>
-
-            {/* live monitoring readout — the office is always watching */}
-            <MonitorWave active={!bridgeStale} />
-          </section>
-
-          {stats.waiting > 0 && (
-            <button
-              type="button"
-              className="wf-attention"
-              onClick={() => router.push("/dashboard/approvals")}
-            >
-              <span>
-                {stats.waiting} {stats.waiting === 1 ? "approval" : "approvals"}{" "}
-                waiting for you
-              </span>
-              <span className="act">review</span>
-            </button>
-          )}
-
-          {/* roster */}
-          <section className="wf-card" aria-label="agents">
-            <div className="wf-card-head">
-              <h2>roster</h2>
-            </div>
-            <div className="wf-roster-list">
-              {agents.map((a) => (
-                <div
-                  key={a.id}
-                  className={`wf-roster-item ${callAgentId === a.id ? "on-call" : ""}`}
-                >
-                  <span className="wf-roster-emoji" aria-hidden="true">
-                    {a.emoji ?? "•"}
-                  </span>
-                  <button
-                    type="button"
-                    className="wf-roster-main"
-                    onClick={() => router.push(`/dashboard/agents/${a.id}`)}
-                    style={{
-                      background: "none",
-                      border: 0,
-                      textAlign: "left",
-                      cursor: "pointer",
-                      padding: 0,
-                    }}
-                  >
-                    <span className="wf-roster-name">{a.name}</span>
-                    <span className="wf-roster-meta">
-                      <span className={`dot ${a.status}`} />
-                      {a.statusLabel}
-                      {a.workers > 0
-                        ? ` · ${a.workers} worker${a.workers > 1 ? "s" : ""}`
-                        : ""}
-                    </span>
-                  </button>
-                  {a.pending > 0 && (
-                    <span
-                      className="wf-roster-badge"
-                      title={`${a.pending} waiting`}
-                    >
-                      {a.pending}
-                    </span>
-                  )}
-                  <div className="wf-roster-actions">
-                    <button
-                      type="button"
-                      className="wf-icon-btn call"
-                      onClick={() => startCall(a.id)}
-                      aria-label={`call ${a.name}`}
-                      title={`call ${a.name}`}
-                    >
-                      <PhoneIcon />
-                    </button>
-                    <button
-                      type="button"
-                      className="wf-icon-btn"
-                      onClick={() => router.push(`/dashboard/agents/${a.id}`)}
-                      aria-label={`open ${a.name}`}
-                      title={`open ${a.name}`}
-                    >
-                      <OpenIcon />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* latest activity peek — lives in the left rail so the right rail is
-              dedicated to the (tall) chat card and nothing gets cut off. */}
-          <section className="wf-card" aria-label="latest activity">
-            <div className="wf-card-head">
-              <h2>latest</h2>
+          {/* compact backlog — read-only peek; full backlog on Chief's page */}
+          <Panel
+            title="backlog"
+            count={backlogOpen || undefined}
+            action={
               <button
                 type="button"
-                className="wf-see-all"
-                onClick={() => router.push("/dashboard/activity")}
+                className="wf-of-link"
+                onClick={() => router.push("/dashboard/agents/chief")}
               >
-                see all
+                open <ArrowIcon />
               </button>
-            </div>
-            {events.length === 0 ? (
-              <p className="empty">nothing yet.</p>
+            }
+          >
+            {backlog.length === 0 ? (
+              <p className="wf-of-mini-empty">backlog is clear.</p>
             ) : (
-              <div className="wf-peek-list">
-                {events.map((e) => (
-                  <div key={e.id} className="wf-peek-item">
-                    <div className="wf-peek-top">
-                      <span className="wf-peek-agent">{e.agent}</span>
-                      <span className="wf-peek-time">{e.time}</span>
-                    </div>
+              <ul className="wf-of-bl">
+                {backlog.map((b) => (
+                  <li key={b.id} className="wf-of-bl-row">
                     <span
-                      className={`wf-peek-summary ${e.isError ? "err" : ""}`}
-                    >
-                      {e.summary}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-        </div>
-
-        <div className="wf-center-spacer" aria-hidden="true" />
-
-        <div className="wf-rail-right">
-          {/* ── office chat card: switch between agents + chat inline ──────── */}
-          {selected && (
-            <section className="wf-card wf-chatcard" aria-label="agent chat">
-              {/* agent switcher: prev/next arrows + a scrollable tab row */}
-              <div className="wf-chatcard-switch">
-                <button
-                  type="button"
-                  className="wf-chatcard-arrow"
-                  onClick={goPrev}
-                  disabled={agents.length < 2}
-                  aria-label="previous agent"
-                  title="previous agent"
-                >
-                  <ChevronIcon dir="left" />
-                </button>
-                <div
-                  className="wf-chatcard-tabs"
-                  role="tablist"
-                  aria-label="choose an agent to chat with"
-                >
-                  {agents.map((a) => {
-                    const on = a.id === selected.id;
-                    return (
-                      <button
-                        key={a.id}
-                        type="button"
-                        role="tab"
-                        aria-selected={on}
-                        className={`wf-chatcard-tab ${on ? "on" : ""} ${
-                          callAgentId === a.id ? "on-call" : ""
-                        }`}
-                        onClick={() => selectAgent(a.id)}
-                        title={a.name}
-                      >
-                        <span
-                          className="wf-chatcard-tab-emoji"
-                          aria-hidden="true"
-                        >
-                          {a.emoji ?? "•"}
-                        </span>
-                        <span className="wf-chatcard-tab-name">{a.name}</span>
-                        {a.pending > 0 && (
-                          <span className="wf-chatcard-tab-badge">
-                            {a.pending}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-                <button
-                  type="button"
-                  className="wf-chatcard-arrow"
-                  onClick={goNext}
-                  disabled={agents.length < 2}
-                  aria-label="next agent"
-                  title="next agent"
-                >
-                  <ChevronIcon dir="right" />
-                </button>
-              </div>
-
-              {/* the shared ChatPane for the selected agent — its header holds
-                  the round call button, and an active call renders its own roomy
-                  transcript section inside the pane. A fresh key per agent resets
-                  the pane (and unmounts the previous agent's CallPanel cleanly). */}
-              <div className="wf-chatcard-pane">
-                <ChatPane
-                  key={selected.id}
-                  agentId={selected.id}
-                  agentName={selected.name}
-                  agentEmoji={selected.emoji ?? "◆"}
-                  statusLabel={selected.statusLabel}
-                  statusKey={selected.status}
-                  messages={selectedMessages}
-                  sendAction={sendAction}
-                  scrollMaxHeight={300}
-                  callSlot={
-                    <CallPanel
-                      key={selected.id}
-                      agentId={selected.id}
-                      agentName={selected.name}
-                      emoji={selected.emoji ?? "◆"}
-                      onCallState={onCallState}
-                      autoStart={callAgentId === selected.id}
+                      className={`wf-of-bl-dot is-${b.priority}`}
+                      aria-hidden="true"
                     />
-                  }
-                />
+                    <span className="wf-of-bl-title" title={b.title}>
+                      {b.title}
+                    </span>
+                    {b.due && (
+                      <span className={`wf-of-bl-due ${b.dueCls}`}>
+                        {b.due}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
+
+          {/* roster: all six agents in one clean row */}
+          <section className="wf-of-rosterbar" aria-label="roster">
+            <div className="wf-of-rosterbar-head">
+              <span>roster</span>
+              <span className="wf-of-panel-count">
+                {deployed}/{OFFICE_DESKS.length}
+              </span>
+            </div>
+            <div className="wf-of-rosterbar-row">
+              {OFFICE_DESKS.map((d) => {
+                const a = liveById[d.id];
+                const cls = `wf-of-chip ${a ? `is-live is-${a.netStatus}` : "is-soon"}`;
+                const chip = (
+                  <>
+                    <span className="wf-of-chip-emoji" aria-hidden="true">
+                      {a?.emoji ?? "○"}
+                      {a && (
+                        <span className={`wf-of-chip-dot ${a.netStatus}`} />
+                      )}
+                      {a && a.pending > 0 && (
+                        <span className="wf-of-chip-badge">{a.pending}</span>
+                      )}
+                    </span>
+                    <span className="wf-of-chip-name">
+                      {a?.name ?? d.label}
+                    </span>
+                  </>
+                );
+                return a ? (
+                  <button
+                    key={d.id}
+                    type="button"
+                    className={cls}
+                    onClick={() => open(a.id)}
+                    title={`${a.name} · ${a.statusLabel}`}
+                  >
+                    {chip}
+                  </button>
+                ) : (
+                  <div key={d.id} className={cls} title={`${d.label} · soon`}>
+                    {chip}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* health: the discrepancies Chief's STATE.md can see (or all clear) */}
+          <section className="wf-of-health" aria-label="health">
+            <div className="wf-of-health-head">
+              <span>health</span>
+              {health.length > 0 && (
+                <span className="wf-of-panel-count">{health.length}</span>
+              )}
+            </div>
+            <HealthStrip lines={health} />
+          </section>
+        </aside>
+
+        {/* ── CENTER: the illustrated office ─────────────────────────────── */}
+        <section className="wf-of-center" aria-label="the office">
+          <OfficeFloor
+            live={liveById}
+            subs={subagents.map((s) => ({
+              id: s.id,
+              parentId: s.agentId,
+              label: s.label,
+            }))}
+            onSelect={open}
+          />
+        </section>
+
+        {/* ── RIGHT: approvals · urgent · pulse ──────────────────────────── */}
+        <aside className="wf-of-right" aria-label="approvals and alerts">
+          <Panel
+            title="approvals"
+            count={stats.waiting || undefined}
+            grow
+            action={
+              <button
+                type="button"
+                className="wf-of-link"
+                onClick={() => router.push("/dashboard/approvals")}
+              >
+                open <ArrowIcon />
+              </button>
+            }
+          >
+            {approvals.length === 0 ? (
+              <p className="wf-of-mini-empty">
+                nothing waiting. the agents are working inside their limits.
+              </p>
+            ) : (
+              <ul className="wf-of-appr">
+                {approvals.slice(0, 5).map((ap) => (
+                  <li key={ap.id} className="wf-of-appr-row">
+                    <div className="wf-of-appr-top">
+                      <span className="wf-of-appr-emoji" aria-hidden="true">
+                        {ap.agentEmoji ?? "•"}
+                      </span>
+                      <span className="wf-of-appr-action" title={ap.action}>
+                        {ap.action}
+                      </span>
+                      {ap.severity && (
+                        <span className={`wf-of-risk ${ap.severity}`}>
+                          {ap.severity}
+                        </span>
+                      )}
+                    </div>
+                    <div className="wf-of-appr-meta">
+                      {ap.agentName} · {ap.ago}
+                    </div>
+                    <div className="wf-of-appr-actions">
+                      <form action={approveAction}>
+                        <input type="hidden" name="id" value={ap.id} />
+                        <input type="hidden" name="agent" value={ap.agentId} />
+                        <button className="act tiny" type="submit">
+                          approve
+                        </button>
+                      </form>
+                      <form action={rejectAction}>
+                        <input type="hidden" name="id" value={ap.id} />
+                        <input type="hidden" name="agent" value={ap.agentId} />
+                        <button className="act tiny danger" type="submit">
+                          reject
+                        </button>
+                      </form>
+                      <button
+                        type="button"
+                        className="wf-of-review"
+                        onClick={() => router.push("/dashboard/approvals")}
+                      >
+                        review
+                      </button>
+                    </div>
+                  </li>
+                ))}
+                {extraApprovals > 0 && (
+                  <li className="wf-of-appr-more">
+                    <button
+                      type="button"
+                      onClick={() => router.push("/dashboard/approvals")}
+                    >
+                      +{extraApprovals} more waiting →
+                    </button>
+                  </li>
+                )}
+              </ul>
+            )}
+          </Panel>
+
+          <Panel title="urgent" count={urgent.length || undefined}>
+            {urgent.length === 0 ? (
+              <p className="wf-of-mini-empty">all calm. nothing on fire.</p>
+            ) : (
+              <ul className="wf-of-urgent">
+                {urgent.map((u) => (
+                  <li key={u.id} className={`wf-of-urg is-${u.kind}`}>
+                    <span className="wf-of-urg-emoji" aria-hidden="true">
+                      {u.emoji ?? (u.kind === "error" ? "⚠" : "•")}
+                    </span>
+                    <span className="wf-of-urg-body">
+                      <span className="wf-of-urg-text" title={u.text}>
+                        {u.text}
+                      </span>
+                      <span className="wf-of-urg-meta">{u.meta}</span>
+                    </span>
+                    {u.severity && (
+                      <span className={`wf-of-risk ${u.severity}`}>
+                        {u.severity}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
+
+          <Panel title="pulse">
+            <div className="wf-of-pulse">
+              <div className="wf-of-pulse-row">
+                <span className="wf-of-pulse-l">bridge</span>
+                <span
+                  className={`wf-of-pulse-v ${data.bridgeStale ? "warn" : "ok"}`}
+                >
+                  {data.bridgeStale ? "standby" : "live"}
+                </span>
               </div>
-            </section>
-          )}
-        </div>
+              <div className="wf-of-pulse-row">
+                <span className="wf-of-pulse-l">deployed</span>
+                <span className="wf-of-pulse-v mono">
+                  {deployed}/{OFFICE_DESKS.length}
+                </span>
+              </div>
+              <div className="wf-of-pulse-row">
+                <span className="wf-of-pulse-l">workers</span>
+                <span className="wf-of-pulse-v mono">{subagents.length}</span>
+              </div>
+              <div className="wf-of-pulse-row">
+                <span className="wf-of-pulse-l">done today</span>
+                <span className="wf-of-pulse-v mono">{stats.doneToday}</span>
+              </div>
+            </div>
+          </Panel>
+        </aside>
       </div>
+
+      {/* ── thin bottom strip: latest activity ───────────────────────────── */}
+      <section className="wf-of-activity" aria-label="latest activity">
+        <div className="wf-of-activity-head">
+          <h2>latest</h2>
+          <button
+            type="button"
+            className="wf-of-link"
+            onClick={() => router.push("/dashboard/activity")}
+          >
+            see all <ArrowIcon />
+          </button>
+        </div>
+        {events.length === 0 ? (
+          <p className="wf-of-mini-empty">nothing yet.</p>
+        ) : (
+          <ul className="wf-of-feed">
+            {events.map((e) => (
+              <li key={e.id} className="wf-of-feed-li">
+                <button
+                  type="button"
+                  className="wf-of-feed-item"
+                  onClick={() => router.push(`/dashboard/agents/${e.agent}`)}
+                >
+                  <span className="wf-of-feed-time mono">{e.time}</span>
+                  <span className="wf-of-feed-agent">{e.agent}</span>
+                  {e.kind === "post" && (
+                    <span className="wf-chip sm wf-of-feed-kind">post</span>
+                  )}
+                  <span
+                    className={`wf-of-feed-sum ${e.isError ? "err" : ""}`}
+                    title={e.summary}
+                  >
+                    {e.summary}
+                  </span>
+                </button>
+                {e.url && (
+                  <a
+                    href={e.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="wf-of-feed-link"
+                  >
+                    link →
+                  </a>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
+  );
+}
+
+// ── small building blocks ─────────────────────────────────────────────────
+
+function StatCard({
+  n,
+  label,
+  sub,
+  attention,
+}: {
+  n: number;
+  label: string;
+  sub?: string;
+  attention?: boolean;
+}) {
+  return (
+    <div className={`wf-of-stat ${attention ? "attention" : ""}`}>
+      <span className="wf-of-stat-n">{n}</span>
+      <span className="wf-of-stat-l">
+        {label}
+        {sub && <span className="wf-of-stat-sub"> {sub}</span>}
+      </span>
+    </div>
+  );
+}
+
+function Panel({
+  title,
+  count,
+  action,
+  grow,
+  children,
+}: {
+  title: string;
+  count?: number | string;
+  action?: React.ReactNode;
+  grow?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className={`wf-of-panel${grow ? " is-grow" : ""}`}>
+      <div className="wf-of-panel-head">
+        <h2>
+          {title}
+          {count !== undefined && (
+            <span className="wf-of-panel-count">{count}</span>
+          )}
+        </h2>
+        {action}
+      </div>
+      <div className="wf-of-panel-body">{children}</div>
+    </section>
   );
 }

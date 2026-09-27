@@ -48,30 +48,38 @@ function splitBrief(text: string): Record<string, string> {
   return out;
 }
 
-export function TodaysBrief({ text }: { text: string | null }) {
-  if (!text) {
-    return (
-      <HudPanel title="today's brief">
-        <p className="empty">no brief yet today; next at 08:00</p>
-      </HudPanel>
-    );
-  }
-  const parts = splitBrief(text);
-  const any = SECTIONS.some((s) => parts[s.key]?.trim());
+export function TodaysBrief({
+  text,
+  eveningNote,
+}: {
+  text: string | null;
+  eveningNote?: string | null;
+}) {
+  const parts = text ? splitBrief(text) : {};
+  const any = !!text && SECTIONS.some((s) => parts[s.key]?.trim());
   return (
-    <HudPanel title="today's brief" right="08:00">
-      {!any ? (
-        <pre className="wf-log-pre">{text.trim()}</pre>
-      ) : (
-        <div className="wf-brief">
-          {SECTIONS.map((s) => (
-            <div className="wf-brief-block" key={s.key}>
-              <span className="wf-brief-label">{s.label}</span>
-              <p className="wf-brief-body">{parts[s.key]?.trim() || "—"}</p>
-            </div>
-          ))}
-        </div>
+    <>
+      <HudPanel title="today's brief" right={text ? "08:00" : undefined}>
+        {!text ? (
+          <p className="empty">no brief yet today; next at 08:00</p>
+        ) : !any ? (
+          <pre className="wf-log-pre">{text.trim()}</pre>
+        ) : (
+          <div className="wf-brief">
+            {SECTIONS.map((s) => (
+              <div className="wf-brief-block" key={s.key}>
+                <span className="wf-brief-label">{s.label}</span>
+                <p className="wf-brief-body">{parts[s.key]?.trim() || "—"}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </HudPanel>
+      {eveningNote?.trim() && (
+        <HudPanel title="evening note" right="pm">
+          <p className="wf-brief-evening">{eveningNote.trim()}</p>
+        </HudPanel>
       )}
-    </HudPanel>
+    </>
   );
 }

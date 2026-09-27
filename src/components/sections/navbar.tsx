@@ -7,9 +7,8 @@ import { useEffect, useState } from "react";
 import { Logo } from "@/components/ui/logo";
 
 const LINKS = [
-  { href: "/projects/hotel", label: "Hotel AI" },
-  { href: "/projects/gyst", label: "GYST" },
   { href: "/projects", label: "Work" },
+  { href: "/projects/gyst", label: "GYST" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];
@@ -41,7 +40,7 @@ export function Navbar() {
     <header
       className="fixed inset-x-0 top-0 z-[1200] transition-colors duration-300"
       style={{
-        backgroundColor: scrolled ? "rgba(247,242,234,0.82)" : "transparent",
+        backgroundColor: scrolled ? "var(--nav-bg-scrolled)" : "transparent",
         backdropFilter: scrolled ? "blur(12px)" : "none",
         WebkitBackdropFilter: scrolled ? "blur(12px)" : "none",
         borderBottom: scrolled
@@ -56,7 +55,7 @@ export function Navbar() {
         {/* Wordmark */}
         <Link
           href="/"
-          aria-label="Persept — home"
+          aria-label="Persept home"
           className="group rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--paper)]"
         >
           <Logo lab />
@@ -164,7 +163,7 @@ export function Navbar() {
             }
             className="overflow-hidden md:hidden"
             style={{
-              backgroundColor: "rgba(247,242,234,0.98)",
+              backgroundColor: "var(--nav-sheet-bg)",
               backdropFilter: "blur(12px)",
               WebkitBackdropFilter: "blur(12px)",
               borderBottom: "1px solid var(--line)",

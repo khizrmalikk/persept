@@ -5,26 +5,27 @@ import { Logo } from "@/components/ui/logo";
 
 const COLUMNS = [
   {
-    title: "What we build",
+    title: "what we do",
     links: [
-      { href: "/projects/hotel", label: "Hotel AI Workforce" },
+      { href: "/#what", label: "what it takes over" },
+      { href: "/#proof", label: "persept runs on persept" },
       { href: "/projects/gyst", label: "GYST" },
-      { href: "/projects", label: "All work" },
+      { href: "/projects", label: "all work" },
     ],
   },
   {
-    title: "Company",
+    title: "company",
     links: [
-      { href: "/about", label: "About Persept" },
-      { href: "/about#process", label: "How we build" },
-      { href: "/contact", label: "Start a project" },
+      { href: "/about", label: "about persept" },
+      { href: "/contact", label: "book a 15-minute call" },
+      { href: "/login", label: "client sign in" },
     ],
   },
 ];
 
 const SOCIALS = [
+  { href: "mailto:khizr@persept.ai", label: "khizr@persept.ai" },
   { href: "https://www.linkedin.com/company/persept", label: "LinkedIn" },
-  { href: "https://x.com/persept", label: "X / Twitter" },
 ];
 
 const READOUT = [
@@ -42,7 +43,7 @@ export function Footer() {
       }}
     >
       <div className="shell py-16">
-        {/* Live operational readout — the console echo, mirroring the hero */}
+        {/* Live operational readout: the console echo, mirroring the hero */}
         <dl
           className="flex flex-wrap items-center gap-x-8 gap-y-3 pb-12"
           style={{ borderBottom: "1px solid var(--line)" }}
@@ -71,10 +72,11 @@ export function Footer() {
               className="mt-5 max-w-xs text-[14px] leading-relaxed"
               style={{ color: "var(--ink-soft)" }}
             >
-              An AI workforce studio. We build agent teams that run real
-              operations — and ship our own products alongside them.
+              an ai workforce studio. we set up named agents that take over the
+              repetitive work of a small business, and ship our own products
+              alongside.
             </p>
-            <p className="mono-label mt-6">Dubai · Building since 2024</p>
+            <p className="mono-label mt-6">dubai · building since 2024</p>
           </div>
 
           {/* Link columns */}

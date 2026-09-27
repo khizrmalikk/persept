@@ -24,6 +24,10 @@
   --accent-rgb: 207, 90, 52;
   --accent-ink: #8f3a1f; /* deep clay for small text legibility on paper */
 
+  /* navbar chrome — theme-aware so .theme-dark can flip it to near-black */
+  --nav-bg-scrolled: rgba(247, 242, 234, 0.82);
+  --nav-sheet-bg: rgba(247, 242, 234, 0.98);
+
   /* === SEMANTIC ALIASES (consumed by globals @theme) ==================== */
   --color-bg: var(--paper);
   --color-surface: var(--paper-2);
@@ -770,6 +774,71 @@
   background: var(--accent);
   border-color: var(--accent);
   color: #14140f;
+}
+
+/* ====================================================================== */
+/*  DARK theme scope — the marketing landing adopts the dashboard's own   */
+/*  command-deck palette (near-black + vivid green), applied by wrapping   */
+/*  in `.theme-dark`. Values mirror `.wf-dark` in dashboard/workforce.css  */
+/*  so the site and the product read as one surface.                      */
+/* ====================================================================== */
+
+.theme-dark {
+  --paper: #060609; /* page base — near-black */
+  --paper-2: #101017; /* raised sections / small inset boxes */
+  --paper-3: #191f2b; /* deeper inset / callouts */
+
+  --ink: #f5f6f8;
+  --ink-soft: #a2a7b4;
+  --ink-faint: #5f636e;
+
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --line-faint: rgba(255, 255, 255, 0.05);
+
+  --accent: #4ade80; /* vivid green — pops on black */
+  --accent-rgb: 74, 222, 128;
+  --accent-ink: #86efac; /* lighter green for small text on dark */
+
+  --ap-dot: rgba(255, 255, 255, 0.1);
+
+  --nav-bg-scrolled: rgba(6, 6, 9, 0.82);
+  --nav-sheet-bg: rgba(6, 6, 9, 0.97);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --shadow-md:
+    0 1px 1px rgba(0, 0, 0, 0.4), 0 10px 26px -16px rgba(0, 0, 0, 0.7);
+  --shadow-lg:
+    0 2px 2px rgba(0, 0, 0, 0.4), 0 26px 50px -24px rgba(0, 0, 0, 0.8);
+
+  background-color: var(--paper);
+  color: var(--ink);
+}
+
+/* cards + framed panels sit above any section as an elevated dark surface */
+.theme-dark .card,
+.theme-dark .lab-card,
+.theme-dark .ticked {
+  background: #14141c;
+  border-color: var(--line-strong);
+}
+
+/* primary button = green fill with near-black text (the dashboard's action) */
+.theme-dark .btn {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #06210f;
+}
+.theme-dark .btn:hover {
+  background: var(--accent-ink);
+  border-color: var(--accent-ink);
+  color: #06210f;
+}
+
+/* ghost button hover = a light tint, not the light-theme dark wash */
+.theme-dark .btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--ink);
 }
 
 /* GYST uses a near-black product surface with yellow accents */

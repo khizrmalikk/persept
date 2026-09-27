@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentUser, supabaseAdmin } from "@/lib/supabase/server";
 import { signOut } from "@/lib/workforce/auth-actions";
+import { getOpenHandoffCount } from "@/lib/workforce/outreach";
 import { AutoRefresh } from "./_components/AutoRefresh";
 import { HudClock } from "./_components/HudClock";
 import { NavLinks } from "./_components/NavLinks";
@@ -20,8 +21,13 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { user, email, allowed } = await currentUser();
+  // Dev-only auth bypass (see proxy.ts): inert unless non-production AND
+  // DASHBOARD_AUTH_BYPASS=1. Safe to keep in the repo — never active on Vercel.
+  const devAuthBypass =
+    process.env.NODE_ENV !== "production" &&
+    process.env.DASHBOARD_AUTH_BYPASS === "1";
   // proxy.ts already redirects signed-out visitors; this covers a signed-in but not-allowed address.
-  if (user && !allowed) {
+  if (!devAuthBypass && user && !allowed) {
     return (
       <main className="wf shell py-24">
         <p className="kicker">persept / workforce</p>
@@ -37,21 +43,32 @@ export default async function DashboardLayout({
       </main>
     );
   }
-  if (!user) redirect("/login");
+  if (!devAuthBypass && !user) redirect("/login");
 
   let pending = 0;
   let seen: string | null = null;
+  let agents: { id: string; name: string; emoji: string | null }[] = [];
+  const badges: Record<string, number> = {};
   try {
     const db = supabaseAdmin();
-    const [{ count }, { data: inst }] = await Promise.all([
-      db
-        .from("approvals")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "pending"),
-      db.from("instance").select("last_seen_at").limit(1).maybeSingle(),
-    ]);
+    const [{ count }, { data: inst }, { data: agentRows }, handoffs] =
+      await Promise.all([
+        db
+          .from("approvals")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "pending"),
+        db.from("instance").select("last_seen_at").limit(1).maybeSingle(),
+        db.from("agents").select("id, name, emoji").order("id"),
+        getOpenHandoffCount("hunter"),
+      ]);
     pending = count ?? 0;
     seen = inst?.last_seen_at ?? null;
+    agents = (
+      (agentRows as
+        | { id: string; name: string | null; emoji: string | null }[]
+        | null) ?? []
+    ).map((a) => ({ id: a.id, name: a.name ?? a.id, emoji: a.emoji }));
+    if (handoffs > 0) badges.hunter = handoffs;
   } catch {
     /* still render */
   }
@@ -59,8 +76,8 @@ export default async function DashboardLayout({
 
   return (
     <main
-      className="wf shell"
-      style={{ paddingTop: 56, paddingBottom: 64, minHeight: "100vh" }}
+      className="wf shell wf-dark"
+      style={{ paddingTop: 72, paddingBottom: 24, minHeight: "100vh" }}
     >
       <header className="wf-topbar">
         <div className="tb-left">
@@ -68,7 +85,7 @@ export default async function DashboardLayout({
             Persept <span className="sep">/</span> workforce
           </Link>
           <nav className="tb-tabs" aria-label="dashboard sections">
-            <NavLinks pending={pending} />
+            <NavLinks pending={pending} agents={agents} badges={badges} />
           </nav>
         </div>
 

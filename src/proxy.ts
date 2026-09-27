@@ -22,6 +22,14 @@ export async function proxy(req: NextRequest) {
   const { data } = await supabase.auth.getUser();
   const path = req.nextUrl.pathname;
   const isLogin = path.startsWith("/login");
+
+  // Dev-only auth bypass for local preview work. Inert unless BOTH the build is
+  // non-production AND DASHBOARD_AUTH_BYPASS=1 (set only in .env.local, never in
+  // Vercel) — so this can safely live in the repo instead of being edited in/out.
+  const devAuthBypass =
+    process.env.NODE_ENV !== "production" &&
+    process.env.DASHBOARD_AUTH_BYPASS === "1";
+  if (devAuthBypass) return res;
   if (!data.user && !isLogin) {
     const url = req.nextUrl.clone();
     url.pathname = "/login";

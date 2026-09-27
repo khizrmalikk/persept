@@ -2227,6 +2227,19 @@ export function CallPanel({
             voice call
           </span>
           <span className="cp-head-with">with {agentName}</span>
+          {/* once the call has ended, let the owner dismiss the leftover
+              transcript (active call is ended via the round header button). */}
+          {ended && !active && (
+            <button
+              type="button"
+              className="cp-close"
+              onClick={() => setEnded(false)}
+              aria-label="close transcript"
+              title="close transcript"
+            >
+              ✕
+            </button>
+          )}
         </div>
 
         {/* ── in-call bar: live indicator + status + quick controls ────────── */}

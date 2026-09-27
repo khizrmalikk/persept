@@ -139,7 +139,7 @@ export default async function Insights({
           <span className="lg">
             <span
               className="swatch"
-              style={{ background: "rgba(242,237,228,0.22)" }}
+              style={{ background: "rgba(23,20,15,0.28)" }}
             />
             runs
           </span>

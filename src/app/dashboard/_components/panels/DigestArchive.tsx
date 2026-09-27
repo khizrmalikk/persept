@@ -10,9 +10,11 @@ import type { Digest } from "./digest";
 export function DigestArchive({
   digests,
   museEnabled,
+  leadCompanies,
 }: {
   digests: Digest[];
   museEnabled: boolean;
+  leadCompanies?: string[];
 }) {
   const [active, setActive] = useState<string | null>(null);
   if (!digests.length) {
@@ -36,7 +38,11 @@ export function DigestArchive({
       {shown ? (
         <div className="wf-archive-body">
           {shown.header ? <p className="wf-di-header">{shown.header}</p> : null}
-          <DigestCards digest={shown} museEnabled={museEnabled} />
+          <DigestCards
+            digest={shown}
+            museEnabled={museEnabled}
+            leadCompanies={leadCompanies}
+          />
         </div>
       ) : (
         <p className="wf-archive-hint muted">pick a date to read that digest</p>

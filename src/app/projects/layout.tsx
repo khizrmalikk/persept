@@ -1,21 +1,21 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Work — one AI service, one product",
+  title: "Work — AI agents for business, plus GYST",
   description:
-    "What Persept builds: the Hotel AI Workforce, our flagship AI operations service for property hospitality, and GYST, our live job-search product. Two things, both real.",
+    "What Persept builds: AI agents that take over repetitive small-business work — shown through a holiday-home operator as one worked example — and GYST, our live job-search product. Two things, both real.",
   alternates: { canonical: "/projects" },
   openGraph: {
-    title: "Persept's work — one AI service, one product",
+    title: "Persept's work — AI agents for business, plus GYST",
     description:
-      "The Hotel AI Workforce, our flagship AI operations service, and GYST, our live job-search product. Built in Dubai, run in production.",
+      "AI agents for repetitive small-business work, with a holiday-home operator as one worked example, and GYST, our live product. Built in Dubai, run in production.",
     url: "https://persept.ai/projects",
     type: "website",
   },
   twitter: {
-    title: "Persept's work — one AI service, one product",
+    title: "Persept's work — AI agents for business, plus GYST",
     description:
-      "The Hotel AI Workforce and GYST. Built in Dubai, run in production.",
+      "AI agents for small-business work, a worked example, and GYST. Built in Dubai, run in production.",
   },
 };
 

@@ -46,62 +46,12 @@ export async function listAgentFiles(
 }
 
 // ---------------------------------------------------------------------------
-// Markdown pipe-table parser — tolerant of leading/trailing pipes and the
-// separator row. Column keys are lower-cased so lookups are predictable.
+// Markdown pipe-table parser. Extracted to ./markdown-table (no server imports)
+// so it can be unit-tested in isolation; re-exported here so `@/lib/workforce/files`
+// stays the single import path for the app.
 // ---------------------------------------------------------------------------
 
-export type MarkdownTable = {
-  columns: string[];
-  rows: Record<string, string>[];
-};
-
-function splitCells(line: string): string[] {
-  let s = line.trim();
-  if (s.startsWith("|")) s = s.slice(1);
-  if (s.endsWith("|")) s = s.slice(0, -1);
-  return s.split("|").map((c) => c.trim());
-}
-
-function isSeparatorRow(cells: string[]): boolean {
-  return (
-    cells.length > 0 &&
-    cells.every((c) => /^:?-{1,}:?$/.test(c.replace(/\s+/g, "")))
-  );
-}
-
-export function parseMarkdownTable(
-  md: string | null | undefined,
-): MarkdownTable {
-  const empty: MarkdownTable = { columns: [], rows: [] };
-  if (!md) return empty;
-
-  // Grab the first contiguous block of pipe-bearing lines (skip any prose/heading above it).
-  const block: string[] = [];
-  let started = false;
-  for (const raw of md.split(/\r?\n/)) {
-    const line = raw.trim();
-    if (line.includes("|")) {
-      block.push(line);
-      started = true;
-    } else if (started) {
-      break;
-    }
-  }
-  if (block.length < 2) return empty;
-
-  const columns = splitCells(block[0]).map((c) => c.toLowerCase());
-  const dataStart = isSeparatorRow(splitCells(block[1])) ? 2 : 1;
-
-  const rows: Record<string, string>[] = [];
-  for (let i = dataStart; i < block.length; i++) {
-    const cells = splitCells(block[i]);
-    if (isSeparatorRow(cells)) continue;
-    if (cells.every((c) => c === "")) continue;
-    const row: Record<string, string> = {};
-    columns.forEach((col, idx) => {
-      row[col] = cells[idx] ?? "";
-    });
-    rows.push(row);
-  }
-  return { columns, rows };
-}
+export {
+  type MarkdownTable,
+  parseMarkdownTable,
+} from "./markdown-table";

@@ -528,23 +528,23 @@ function NextAndCTA() {
               Start free trial
               <ArrowUpRight className="h-4 w-4" />
             </a>
-            <Link href="/projects/hotel" className="btn-ghost">
-              See our flagship service
+            <Link href="/projects" className="btn-ghost">
+              See all work
             </Link>
           </div>
         </div>
 
         <Link
-          href="/projects/hotel"
+          href="/projects"
           className="card group mt-8 flex items-center justify-between p-7 sm:p-9"
         >
           <div>
-            <ConsoleLabel className="mb-3">Flagship service</ConsoleLabel>
+            <ConsoleLabel className="mb-3">More from Persept</ConsoleLabel>
             <p
               className="display"
               style={{ fontSize: "clamp(1.4rem,3vw,2rem)" }}
             >
-              Hotel AI Workforce
+              The agent workforce we set up
             </p>
           </div>
           <ArrowRight
