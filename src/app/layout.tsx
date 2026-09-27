@@ -42,9 +42,9 @@ const geistMono = Geist_Mono({
 });
 
 const SITE_URL = "https://persept.ai";
-const DEFAULT_TITLE = "Persept — AI Workforce Studio in Dubai";
+const DEFAULT_TITLE = "Persept · an AI workforce for your business";
 const DEFAULT_DESCRIPTION =
-  "Persept is a Dubai AI workforce studio. We build agent teams that run real operations 24/7 — sold as a staffed outcome, not a tool — and ship our own product, GYST.";
+  "Persept sets up named AI agents that take over the repetitive work of a small business 24/7: outreach, replies, proposals, reports and content. a person approves anything that involves money, access or a customer. plus our own product, GYST.";
 
 export const metadata: Metadata = {
   title: {
@@ -56,10 +56,11 @@ export const metadata: Metadata = {
   applicationName: "Persept",
   keywords: [
     "AI workforce",
-    "AI agents",
+    "AI agents for small business",
+    "business automation",
+    "AI consultancy",
     "Dubai software studio",
-    "hospitality AI",
-    "hotel AI workforce",
+    "AI agents",
     "AI operations",
     "GYST",
     "agent workforce",
@@ -91,7 +92,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: DEFAULT_TITLE,
     description:
-      "A Dubai AI workforce studio. Agent teams that run real operations 24/7, plus our own product, GYST.",
+      "Practical AI agents that take over repetitive small-business work 24/7, plus consultations and our own product, GYST.",
     creator: "@persept",
   },
 };
@@ -127,6 +128,22 @@ const websiteLd = {
   inLanguage: "en",
 };
 
+const serviceLd = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "@id": `${SITE_URL}/#service`,
+  name: "AI workforce for small business",
+  serviceType: "AI agents and automation for small business operations",
+  description:
+    "Persept sets up named AI agents that take over repetitive, message-heavy work for a small business: outreach and follow-ups, customer replies, proposals, daily operations briefs, market watch, marketing content and scheduled jobs. the agents run 24/7 on a private, per-client deployment, and a person approves anything that involves money, access or a customer. Persept also offers a consultation to map where agents help.",
+  url: SITE_URL,
+  provider: { "@id": `${SITE_URL}/#organization` },
+  areaServed: {
+    "@type": "Place",
+    name: "United Arab Emirates and remote",
+  },
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -152,6 +169,11 @@ export default function RootLayout({
           type="application/ld+json"
           // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD is static, server-generated structured data
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteLd) }}
+        />
+        <script
+          type="application/ld+json"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD is static, server-generated structured data
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceLd) }}
         />
         {children}
         <Script

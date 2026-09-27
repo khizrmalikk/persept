@@ -43,11 +43,21 @@ type Props = {
   // that fills the rail; the office chat card wants a shorter, contained one.
   // Defaults to the tall treatment (via the CSS variable) when omitted.
   scrollMaxHeight?: number;
+  // Optional composer placeholder override (e.g. Scribe's "proposal for <company>: …").
+  composerHint?: string;
 };
 
 // Pixel slack: treat "within this many px of the bottom" as "already at the bottom",
 // so the transcript sticks to the newest message but never yanks a reader who scrolled up.
 const STICK_THRESHOLD = 80;
+
+// Markdown drop-in limits. A dropped file is read client-side and inlined into the
+// message text (there is no attachment channel to the bridge), so cap the size.
+const MAX_ATTACH_BYTES = 200 * 1024;
+const isMarkdownFile = (f: File) =>
+  /\.(md|markdown|txt)$/i.test(f.name) ||
+  f.type === "text/markdown" ||
+  f.type === "text/plain";
 
 export function ChatPane({
   agentId,
@@ -59,6 +69,7 @@ export function ChatPane({
   sendAction,
   callSlot,
   scrollMaxHeight,
+  composerHint,
 }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -70,6 +81,10 @@ export function ChatPane({
   // Whether the composer currently has text — drives the send button's enabled/
   // clay state. Purely presentational; the real value is the textarea's own value.
   const [hasText, setHasText] = useState(false);
+  // Markdown drop-in: dragging a .md file over the composer, and any skip notice.
+  const [dragOver, setDragOver] = useState(false);
+  const [attachNote, setAttachNote] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = "auto") => {
     const el = scrollRef.current;
@@ -121,6 +136,64 @@ export function ChatPane({
     setHasText((textRef.current?.value.trim().length ?? 0) > 0);
   };
 
+  // Markdown drop-in. There is no attachment channel to the bridge (a message is
+  // one `actions` row with `text`), so a dropped .md file is read client-side and
+  // its contents are inserted into the composer as a labelled block — the agent
+  // receives the file inline in the message. Accepts .md / .markdown / .txt, caps
+  // each file at 200kb, and notes anything it skipped.
+  const addFiles = useCallback(
+    async (files: FileList | File[]) => {
+      const list = Array.from(files);
+      if (!list.length) return;
+      setAttachNote("");
+      const blocks: string[] = [];
+      const skipped: string[] = [];
+      for (const f of list) {
+        if (!isMarkdownFile(f)) {
+          skipped.push(`${f.name} (not markdown)`);
+          continue;
+        }
+        if (f.size > MAX_ATTACH_BYTES) {
+          skipped.push(`${f.name} (over 200kb)`);
+          continue;
+        }
+        const body = (await f.text()).trim();
+        if (body) blocks.push(`attached: ${f.name}\n\n${body}`);
+      }
+      if (skipped.length) setAttachNote(`skipped ${skipped.join(", ")}`);
+      const ta = textRef.current;
+      if (!ta || !blocks.length) return;
+      const existing = ta.value.trim();
+      ta.value = existing
+        ? `${existing}\n\n${blocks.join("\n\n")}`
+        : blocks.join("\n\n");
+      autosize();
+      setHasText(ta.value.trim().length > 0);
+      ta.focus();
+    },
+    [autosize],
+  );
+
+  const onDrop = (e: React.DragEvent) => {
+    if (!e.dataTransfer?.files?.length) return;
+    e.preventDefault();
+    setDragOver(false);
+    void addFiles(e.dataTransfer.files);
+  };
+  const onDragOver = (e: React.DragEvent) => {
+    if (!Array.from(e.dataTransfer?.types ?? []).includes("Files")) return;
+    e.preventDefault();
+    setDragOver(true);
+  };
+  const onDragLeave = (e: React.DragEvent) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node | null))
+      setDragOver(false);
+  };
+  const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.length) void addFiles(e.target.files);
+    e.target.value = ""; // allow re-picking the same file
+  };
+
   // Enter-to-send progressive enhancement. Enter submits the real form (server action),
   // Shift+Enter inserts a newline. Because this only enhances a genuine <form action>,
   // it degrades to a normal submit if JS is off.
@@ -137,6 +210,7 @@ export function ChatPane({
     atBottomRef.current = true;
     const ta = textRef.current;
     setHasText(false);
+    setAttachNote("");
     requestAnimationFrame(() => {
       if (ta) {
         ta.value = "";
@@ -285,9 +359,43 @@ export function ChatPane({
           ref={formRef}
           action={sendAction}
           onSubmit={onSubmit}
-          className="composer"
+          onDrop={onDrop}
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          className={`composer${dragOver ? " is-drop" : ""}`}
         >
           <input type="hidden" name="agent" value={agentId} />
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".md,.markdown,.txt,text/markdown,text/plain"
+            multiple
+            hidden
+            onChange={onPick}
+          />
+          <button
+            type="button"
+            className="composer-attach"
+            onClick={() => fileRef.current?.click()}
+            aria-label={`attach a markdown file to ${agentName}`}
+            title="attach a markdown file"
+          >
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M21.4 11.05 12.25 20.2a5 5 0 0 1-7.07-7.07l9.19-9.19a3.33 3.33 0 0 1 4.71 4.71l-9.2 9.19a1.67 1.67 0 0 1-2.35-2.36l8.49-8.48"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
           <label className="sr-only" htmlFor={`composer-${agentId}`}>
             message {agentName}
           </label>
@@ -296,10 +404,15 @@ export function ChatPane({
             ref={textRef}
             name="text"
             rows={1}
-            placeholder={`message ${agentName}…`}
+            placeholder={composerHint ?? `message ${agentName}…`}
             onInput={onInput}
             onKeyDown={onKeyDown}
           />
+          {dragOver && (
+            <div className="composer-drop" aria-hidden="true">
+              drop markdown to add it to your message
+            </div>
+          )}
           <button
             className="composer-send"
             type="submit"
@@ -324,7 +437,14 @@ export function ChatPane({
           </button>
         </form>
         <p className="composer-hint">
-          sent through the bridge into {agentName}&apos;s main session.
+          {attachNote ? (
+            <span className="composer-note">{attachNote}</span>
+          ) : (
+            <>
+              sent through the bridge into {agentName}&apos;s main session ·
+              drop or attach a .md file to add it inline
+            </>
+          )}
         </p>
       </div>
     </section>

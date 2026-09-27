@@ -83,10 +83,10 @@ const PRINCIPLES = [
 ];
 
 const FIGURES = [
-  { value: 1, suffix: "", label: "Flagship service: Hotel AI" },
+  { value: 24, suffix: "/7", label: "Agents on the work" },
+  { value: 1, suffix: "", label: "Private setup per client" },
   { value: 1, suffix: "", label: "Live product: GYST" },
-  { value: 24, suffix: "/7", label: "Agents on the operation" },
-  { value: 100, suffix: "%", label: "Problem-led, no filler" },
+  { value: 100, suffix: "%", label: "You approve the calls" },
 ];
 
 /* ── Word-by-word scroll reveal (matches landing manifesto) ────────────── */
@@ -185,10 +185,11 @@ function Hero() {
               className="mt-7 max-w-xl text-[clamp(1.05rem,1.5vw,1.25rem)] leading-relaxed"
               style={{ color: "var(--ink-soft)" }}
             >
-              Persept is an AI workforce studio in Dubai. We build agent teams
-              that take on real operational work — sold as a staffed outcome,
-              not a tool — and ship our own products alongside. Early, focused,
-              and very much in build mode.
+              Persept is an AI workforce studio in Dubai. We set up AI agents
+              that take over the repetitive work small businesses would
+              otherwise hire for, and we consult on where agents help — plus we
+              ship our own products alongside. Early, focused, and very much in
+              build mode.
             </p>
           </FadeUp>
 
@@ -320,13 +321,15 @@ function WhoWeAre() {
                   className="text-[clamp(1.05rem,1.6vw,1.25rem)] leading-relaxed"
                   style={{ color: "var(--ink)" }}
                 >
+                  Any small business with a process an agent can take over is a
+                  fit — a{" "}
                   <span style={{ color: "var(--ink)" }}>
-                    Hotel AI Workforce
+                    holiday-home operator
                   </span>{" "}
-                  — the AI operations team for property hospitality — is the
-                  flagship service we lead with.{" "}
+                  fully staffed by agents is just one worked example.{" "}
                   <span className="accent">GYST</span>, our job-search product,
-                  stands on its own alongside it. Two things, both real.
+                  stands on its own alongside the client work. Real work, real
+                  results.
                 </p>
               </StaggerItem>
             </StaggerContainer>

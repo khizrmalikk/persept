@@ -21,12 +21,21 @@ const TAGS: (DigestTag | "all")[] = [
 function ItemCard({
   item,
   museEnabled,
+  leadCompanies,
 }: {
   item: DigestItem;
   museEnabled: boolean;
+  leadCompanies?: string[];
 }) {
   const [pending, start] = useTransition();
   const thin = !item.title && !item.url;
+  // a sales item that names a company Scout already turned into a lead
+  const inLeads =
+    item.tag === "sales" &&
+    (leadCompanies ?? []).some((c) => {
+      const cc = c.trim().toLowerCase();
+      return cc && `${item.title} ${item.meaning}`.toLowerCase().includes(cc);
+    });
   const toHunter = () =>
     start(
       () =>
@@ -46,23 +55,34 @@ function ItemCard({
 
   if (thin) {
     return (
-      <div className="wf-digest-item raw">
+      <div className="wf-di-card is-raw">
         <pre className="wf-log-pre">{item.raw}</pre>
       </div>
     );
   }
   return (
-    <div className="wf-digest-item">
+    <article className="wf-di-card">
       <div className="wf-di-head">
         <span className="wf-di-n">{item.n}</span>
-        <span className="wf-di-title">{item.title}</span>
+        <h4 className="wf-di-title">{item.title}</h4>
       </div>
       {item.meaning ? <p className="wf-di-meaning">{item.meaning}</p> : null}
-      <div className="wf-di-chips">
-        {item.for ? <span className="kind">for: {item.for}</span> : null}
-        {item.tag ? <span className="kind">tag: {item.tag}</span> : null}
-        {item.source ? <span className="wf-di-src">{item.source}</span> : null}
-      </div>
+      {(item.for || item.tag || item.source || inLeads) && (
+        <div className="wf-di-tags">
+          {item.for ? (
+            <span className="wf-di-tag is-for">{item.for}</span>
+          ) : null}
+          {item.tag ? <span className="wf-di-tag">{item.tag}</span> : null}
+          {inLeads && (
+            <a className="wf-di-inleads" href="#wf-leads-anchor">
+              in leads
+            </a>
+          )}
+          {item.source ? (
+            <span className="wf-di-src">{item.source}</span>
+          ) : null}
+        </div>
+      )}
       <div className="wf-di-foot">
         {item.url ? (
           <a
@@ -74,29 +94,29 @@ function ItemCard({
             open source ↗
           </a>
         ) : (
-          <span className="muted">no link</span>
+          <span className="wf-di-nolink">no link</span>
         )}
         <span className="wf-di-actions">
           <button
             type="button"
-            className="act secondary"
+            className="act sm secondary"
             disabled={pending}
             onClick={toHunter}
           >
-            send to hunter
+            → hunter
           </button>
           <button
             type="button"
-            className="act secondary"
+            className="act sm secondary"
             disabled={!museEnabled || pending}
             onClick={toMuse}
             title={museEnabled ? undefined : "muse is not enabled yet"}
           >
-            send to muse
+            → muse
           </button>
         </span>
       </div>
-    </div>
+    </article>
   );
 }
 
@@ -104,10 +124,12 @@ export function DigestCards({
   digest,
   museEnabled,
   filters = false,
+  leadCompanies,
 }: {
   digest: Digest;
   museEnabled: boolean;
   filters?: boolean;
+  leadCompanies?: string[];
 }) {
   const [forF, setForF] = useState<(typeof FORS)[number]>("all");
   const [tagF, setTagF] = useState<(typeof TAGS)[number]>("all");
@@ -123,24 +145,26 @@ export function DigestCards({
       {digest.lead ? <p className="wf-di-lead">{digest.lead}</p> : null}
       {filters ? (
         <div className="wf-digest-filters">
-          <div className="chips">
+          <div className="wf-di-filter-row">
+            <span className="wf-di-filter-label">for</span>
             {FORS.map((f) => (
               <button
                 type="button"
                 key={f}
-                className={`chip-link${forF === f ? " active" : ""}`}
+                className={`wf-chip${forF === f ? " is-active" : ""}`}
                 onClick={() => setForF(f)}
               >
                 {f}
               </button>
             ))}
           </div>
-          <div className="chips">
+          <div className="wf-di-filter-row">
+            <span className="wf-di-filter-label">tag</span>
             {TAGS.map((t) => (
               <button
                 type="button"
                 key={t}
-                className={`chip-link${tagF === t ? " active" : ""}`}
+                className={`wf-chip${tagF === t ? " is-active" : ""}`}
                 onClick={() => setTagF(t)}
               >
                 {t}
@@ -155,6 +179,7 @@ export function DigestCards({
             key={`${it.n}-${it.title}`}
             item={it}
             museEnabled={museEnabled}
+            leadCompanies={leadCompanies}
           />
         ))
       ) : (

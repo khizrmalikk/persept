@@ -39,11 +39,11 @@ const SOCIALS = [
 
 const PROJECT_TYPES = [
   "Pick one — optional",
+  "Consultation — where can agents help?",
   "AI agents / automation",
-  "Applied ML / data product",
-  "Web / full-stack product",
-  "Prototype / proof of concept",
-  "Not sure yet — let's talk",
+  "Outreach / email / replies",
+  "Reporting / operations analysis",
+  "Something else — let's talk",
 ];
 
 const BUDGETS = [
@@ -184,9 +184,9 @@ export default function ContactPage() {
                 fontWeight: 600,
               }}
             >
-              Let's put a workforce
+              Let's put agents
               <br />
-              on <span className="accent">the problem</span>
+              on <span className="accent">the busywork</span>
             </h1>
           </FadeUp>
 
@@ -195,9 +195,10 @@ export default function ContactPage() {
               className="mt-7 max-w-xl text-[clamp(1rem,1.5vw,1.2rem)] leading-relaxed"
               style={{ color: "var(--ink-soft)" }}
             >
-              Persept is a Dubai-based AI workforce studio. We build agent teams
-              that run real operations. Tell us about the work that's eating
-              your team's day — we'll tell you what we'd deploy.
+              Persept is a Dubai-based AI workforce studio. We set up agents
+              that take over repetitive small-business work. Tell us what's
+              eating your week — or book a consultation and we'll point to where
+              an agent helps.
             </p>
           </FadeUp>
         </div>

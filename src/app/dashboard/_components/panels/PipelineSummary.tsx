@@ -12,6 +12,7 @@ const STATUS_ORDER = [
   "followed_up_2",
   "replied",
   "call_booked",
+  "handed_off",
   "parked",
   "no",
 ] as const;
@@ -23,11 +24,29 @@ function normStatus(s: string): string {
     .replace(/[\s-]+/g, "_");
 }
 
-export function PipelineSummary({ table }: { table: MarkdownTable }) {
+export function PipelineSummary({
+  table,
+  fileContent,
+}: {
+  table: MarkdownTable;
+  // The raw PROSPECTS.md content (null when the file is missing). Lets us tell
+  // "not written yet" apart from "present but unparseable".
+  fileContent?: string | null;
+}) {
   if (!table.rows.length) {
+    // file missing → hasn't been written; file present but 0 rows → parse failed.
+    if (fileContent == null) {
+      return (
+        <HudPanel title="pipeline">
+          <p className="empty">hunter has not written its prospect list yet</p>
+        </HudPanel>
+      );
+    }
+    const firstLines = fileContent.split(/\r?\n/).slice(0, 3).join("\n");
     return (
       <HudPanel title="pipeline">
-        <p className="empty">hunter has not written its prospect list yet</p>
+        <p className="empty">prospect list found but could not be read</p>
+        <pre className="wf-log-pre">{firstLines}</pre>
       </HudPanel>
     );
   }

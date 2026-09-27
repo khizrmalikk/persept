@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, ArrowUpRight, Building2, Compass } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Compass } from "lucide-react";
 import Link from "next/link";
 import { Footer } from "@/components/sections/footer";
 import { Navbar } from "@/components/sections/navbar";
@@ -23,39 +23,19 @@ type Project = {
   tags: string[];
   metrics: { k: string; v: string }[];
   trend: number[];
-  Icon: typeof Building2;
+  Icon: typeof Compass;
   live?: boolean;
 };
 
 const PROJECTS: Project[] = [
   {
-    id: "HOTEL",
-    index: "01",
-    name: "Hotel AI Workforce",
-    tagline: "The AI operations team for property hospitality.",
-    desc: "Guest messaging, housekeeping dispatch and owner reporting — run 24/7 inside WhatsApp. Persept's flagship service, priced against a salary, not a seat.",
-    status: "Flagship service",
-    kind: "the service",
-    href: "/projects/hotel",
-    cta: "Explore the workforce",
-    tags: ["AI Agents", "Hospitality", "Service"],
-    metrics: [
-      { k: "reply time", v: "< 2 min" },
-      { k: "on the clock", v: "24/7" },
-      { k: "per unit", v: "AED 2.5k" },
-    ],
-    trend: [6, 5, 7, 4, 5, 3, 2],
-    Icon: Building2,
-    live: true,
-  },
-  {
     id: "GYST",
-    index: "02",
+    index: "01",
     name: "GYST",
     tagline: "The whole job search, one guided path.",
     desc: "Search every board, tailor a screening-ready CV to each role, and reach real people who can refer you. A standalone Persept product with its own home.",
     status: "Live product",
-    kind: "the product",
+    kind: "our product",
     href: "/projects/gyst",
     cta: "Read the story",
     tags: ["AI", "Careers", "Product"],
@@ -151,67 +131,6 @@ function FlagshipCard({ p }: { p: Project }) {
   );
 }
 
-/* ── Product — a strong, distinct standard card ─────────────────────────── */
-
-function ProductCard({ p }: { p: Project }) {
-  const { Icon } = p;
-  return (
-    <Link href={p.href} className="card group flex h-full flex-col p-8 sm:p-11">
-      <div className="flex items-center justify-between">
-        <span className="icon-tile">
-          <Icon className="h-5 w-5" />
-        </span>
-        {p.live && <LiveTag label={p.status} />}
-      </div>
-
-      <h2
-        className="display mt-7"
-        style={{ fontSize: "clamp(1.7rem,3vw,2.4rem)" }}
-      >
-        {p.name}
-      </h2>
-      <p
-        className="mt-2 text-[clamp(1rem,1.6vw,1.2rem)] leading-snug"
-        style={{ color: "var(--ink)", fontWeight: 500 }}
-      >
-        {p.tagline}
-      </p>
-      <p
-        className="mt-4 max-w-md text-[14px] leading-relaxed"
-        style={{ color: "var(--ink-soft)" }}
-      >
-        {p.desc}
-      </p>
-
-      <dl className="kv mt-7">
-        {p.metrics.map((m) => (
-          <div key={m.k}>
-            <dt>{m.k}</dt>
-            <dd>{m.v}</dd>
-          </div>
-        ))}
-      </dl>
-
-      <div className="mt-auto flex items-center justify-between pt-8">
-        <div className="flex flex-wrap gap-2">
-          {p.tags.map((t) => (
-            <span key={t} className="chip">
-              {t}
-            </span>
-          ))}
-        </div>
-        <span
-          className="inline-flex items-center gap-1.5 text-[14px] font-medium"
-          style={{ color: "var(--ink)" }}
-        >
-          {p.cta}
-          <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-        </span>
-      </div>
-    </Link>
-  );
-}
-
 /* ── Hero ──────────────────────────────────────────────────────────────── */
 
 function Hero() {
@@ -226,7 +145,7 @@ function Hero() {
               className="hidden h-3 w-px sm:block"
               style={{ background: "var(--line-strong)" }}
             />
-            <LiveTag label="Both live in production" />
+            <LiveTag label="Live in production" />
           </div>
         </FadeUp>
 
@@ -235,9 +154,8 @@ function Hero() {
             className="display max-w-4xl"
             style={{ fontSize: "clamp(2.5rem, 7vw, 5.5rem)", fontWeight: 600 }}
           >
-            One service.
-            <br />
-            One <span className="accent">product.</span>
+            Agents for the work.
+            <br />A <span className="accent">product</span> of our own.
           </h1>
         </FadeUp>
 
@@ -246,22 +164,22 @@ function Hero() {
             className="mt-7 max-w-xl text-[clamp(1rem,1.5vw,1.2rem)] leading-relaxed"
             style={{ color: "var(--ink-soft)" }}
           >
-            Persept leads with one thing done properly — an AI workforce for
-            property hospitality — and ships GYST, its own product, alongside
-            it. No sprawl. Two things, both real.
+            We set up AI agents that take over the repetitive work small
+            businesses would otherwise hire for, and we ship GYST, our own
+            product, alongside it. Two things, both real.
           </p>
         </FadeUp>
 
         <FadeUp delay={0.28}>
           <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-3">
             <Link href="/contact" className="btn">
-              Start a project
+              Book a consultation
               <ArrowRight className="h-4 w-4" />
             </Link>
             <dl className="flex flex-wrap items-center gap-x-8 gap-y-3">
               <div className="flex items-baseline gap-2">
-                <dt className="mono-label">Flagship service</dt>
-                <dd className="section-index text-[14px]">01</dd>
+                <dt className="mono-label">Agent workforce</dt>
+                <dd className="section-index text-[14px]">setup</dd>
               </div>
               <div className="flex items-baseline gap-2">
                 <dt className="mono-label">Live product</dt>
@@ -279,7 +197,6 @@ function Hero() {
 
 function Index() {
   const flagship = PROJECTS[0];
-  const product = PROJECTS[1];
 
   return (
     <section className="section">
@@ -291,7 +208,7 @@ function Index() {
               className="display"
               style={{ fontSize: "clamp(2rem,4.5vw,3.25rem)" }}
             >
-              A service and a product
+              Agents, and a product
             </h2>
           </div>
           <p className="mono-label max-w-xs text-right">
@@ -299,40 +216,36 @@ function Index() {
           </p>
         </div>
 
-        {/* Flagship gets the full-width lead slot */}
+        {/* GYST, our own product, gets the full-width lead slot */}
         <FadeUp>
           <FlagshipCard p={flagship} />
         </FadeUp>
 
-        {/* Product sits below, distinct and half-width beside a context note */}
-        <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_0.85fr]">
-          <FadeUp delay={0.08}>
-            <ProductCard p={product} />
-          </FadeUp>
-
-          <FadeUp delay={0.16}>
-            <div className="ticked ticked-corners relative flex h-full flex-col justify-between p-8 sm:p-11">
+        {/* context note: the two sides of the studio */}
+        <div className="mt-5">
+          <FadeUp delay={0.1}>
+            <div className="ticked ticked-corners relative flex flex-col justify-between gap-8 p-8 sm:flex-row sm:items-end sm:p-11">
               <div>
                 <ConsoleLabel className="mb-4">The shape of it</ConsoleLabel>
                 <h3
                   className="display"
                   style={{ fontSize: "clamp(1.5rem,3vw,2.1rem)" }}
                 >
-                  A service we sell.
+                  Agents we set up.
                   <br />A product we own.
                 </h3>
                 <p
-                  className="mt-4 max-w-sm text-[15px] leading-relaxed"
+                  className="mt-4 max-w-lg text-[15px] leading-relaxed"
                   style={{ color: "var(--ink-soft)" }}
                 >
-                  The service is a staffed outcome — agents running an
-                  operation, humans making the calls. The product stands on its
-                  own two feet. Different jobs, same studio, same bar.
+                  The agent work is a staffed outcome: agents running the
+                  repetitive jobs, you making the calls. GYST stands on its own
+                  two feet. Different jobs, same studio, same bar.
                 </p>
               </div>
               <Link
                 href="/about"
-                className="link-underline mt-8 inline-flex w-fit items-center gap-1.5 text-[14px] font-medium"
+                className="link-underline inline-flex w-fit items-center gap-1.5 text-[14px] font-medium"
                 style={{ color: "var(--ink)" }}
               >
                 How we build

@@ -7,9 +7,11 @@ import { HudPanel } from "./HudPanel";
 export function LatestDigest({
   digest,
   museEnabled,
+  leadCompanies,
 }: {
   digest: Digest | null;
   museEnabled: boolean;
+  leadCompanies?: string[];
 }) {
   if (!digest || !digest.items.length) {
     return (
@@ -21,7 +23,12 @@ export function LatestDigest({
   return (
     <HudPanel title="latest digest" right={digest.date}>
       {digest.header ? <p className="wf-di-header">{digest.header}</p> : null}
-      <DigestCards digest={digest} museEnabled={museEnabled} filters />
+      <DigestCards
+        digest={digest}
+        museEnabled={museEnabled}
+        leadCompanies={leadCompanies}
+        filters
+      />
     </HudPanel>
   );
 }

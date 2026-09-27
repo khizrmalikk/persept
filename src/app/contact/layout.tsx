@@ -1,21 +1,21 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Contact — start a project",
+  title: "Contact — book a consultation",
   description:
-    "Tell Persept about the work that's eating your team's day and we'll tell you what we'd deploy. A Dubai AI workforce studio — email us, book a call, or send a brief.",
+    "Tell Persept about the repetitive work eating your week and we'll point to where an agent helps. A Dubai AI workforce studio — book a consultation, email us, or send a brief.",
   alternates: { canonical: "/contact" },
   openGraph: {
-    title: "Contact Persept — start a project",
+    title: "Contact Persept — book a consultation",
     description:
-      "Bring the problem. Persept, a Dubai AI workforce studio, will tell you what we'd deploy. Email, book a call, or send a brief.",
+      "Bring the busywork. Persept, a Dubai AI workforce studio, will point to where agents help. Book a consultation, email, or send a brief.",
     url: "https://persept.ai/contact",
     type: "website",
   },
   twitter: {
-    title: "Contact Persept — start a project",
+    title: "Contact Persept — book a consultation",
     description:
-      "Bring the problem. A Dubai AI workforce studio will tell you what we'd deploy.",
+      "Bring the busywork. A Dubai AI workforce studio will point to where agents help.",
   },
 };
 

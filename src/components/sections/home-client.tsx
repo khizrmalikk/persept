@@ -1,146 +1,135 @@
 "use client";
 
 import {
-  type MotionValue,
   motion,
   useReducedMotion,
   useScroll,
   useTransform,
-  type Variants,
 } from "framer-motion";
 import {
   ArrowDown,
   ArrowRight,
-  ClipboardList,
-  LineChart,
-  MessageSquare,
+  Check,
+  FileText,
+  Gauge,
+  LayoutDashboard,
+  Lock,
+  Megaphone,
+  MessagesSquare,
+  Newspaper,
+  Search,
+  Server,
   ShieldCheck,
+  X,
 } from "lucide-react";
-import Link from "next/link";
 import { useRef } from "react";
 import { ApertureField } from "@/components/ui/aperture-field";
-import { ConsoleLabel, LiveTag, Sparkline } from "@/components/ui/console";
-import { ApertureGlyph, Kicker } from "@/components/ui/editorial";
+import { LiveTag } from "@/components/ui/console";
+import { Kicker } from "@/components/ui/editorial";
 import { FadeUp } from "@/components/ui/scroll-animations";
+
+/* ── Booking + demo (env-driven) ───────────────────────────────────────────
+ * the whole page has one job: book a fifteen-minute call. the primary button
+ * points at the calendar in NEXT_PUBLIC_BOOKING_URL, or falls back to a mailto.
+ */
+const BOOKING =
+  process.env.NEXT_PUBLIC_BOOKING_URL ||
+  "mailto:khizr@persept.ai?subject=15%20minutes";
+const BOOKING_EXTERNAL = /^https?:/i.test(BOOKING);
+const DEMO_VIDEO = process.env.NEXT_PUBLIC_DEMO_VIDEO_URL || "";
+
+function BookButton({
+  label = "book a 15-minute call",
+  className = "btn",
+}: {
+  label?: string;
+  className?: string;
+}) {
+  const extra = BOOKING_EXTERNAL ? { target: "_blank", rel: "noreferrer" } : {};
+  return (
+    <a href={BOOKING} className={className} {...extra}>
+      {label}
+      <ArrowRight className="h-4 w-4" />
+    </a>
+  );
+}
 
 /* ── Data ──────────────────────────────────────────────────────────────── */
 
-const CAPABILITIES = [
+// the six functions the workforce takes over. each is an outcome, with a
+// "you approve" note where a human presses the button.
+const FUNCTIONS: {
+  icon: typeof Search;
+  t: string;
+  d: string;
+  approve?: string;
+}[] = [
   {
-    icon: MessageSquare,
-    t: "Guest & customer comms",
-    d: "Every message answered in minutes, in your voice, around the clock — across WhatsApp and the channels people already use.",
-    metric: "avg. reply",
-    value: "< 2 min",
-    trend: [8, 6, 7, 4, 5, 3, 2],
+    icon: Search,
+    t: "outreach",
+    d: "finds companies that fit, drafts the first message and the follow-ups on day 3 and 7, reads the replies, proposes call times",
+    approve: "you approve every message before it goes",
   },
   {
-    icon: ClipboardList,
-    t: "Operations dispatch",
-    d: "Scheduling, vendor chasing, follow-ups. The agent moves work forward and escalates only what needs a human.",
-    metric: "tasks moved",
-    value: "24/7",
-    trend: [3, 5, 4, 7, 6, 8, 9],
+    icon: FileText,
+    t: "proposals",
+    d: "turns your call notes into a proposal the same day, as a page the prospect can open",
+    approve: "you approve before it is sent",
   },
   {
-    icon: LineChart,
-    t: "Reporting & owner updates",
-    d: "The day's data turned into a clear briefing, plus the monthly statements owners actually read.",
-    metric: "on the 1st",
-    value: "every mo.",
-    trend: [4, 4, 5, 5, 6, 6, 7],
+    icon: MessagesSquare,
+    t: "customer replies",
+    d: "answers guest and customer messages and google reviews in your voice, escalates anything about money or complaints",
+    approve: "you approve the sensitive ones",
   },
   {
-    icon: ShieldCheck,
-    t: "Humans in command",
-    d: "Anything touching money, access or disputes routes to your team for one-tap approval. Agents handle volume; people make the calls.",
-    metric: "approvals",
-    value: "one tap",
-    trend: [2, 3, 2, 4, 3, 5, 4],
+    icon: Gauge,
+    t: "daily operations brief",
+    d: "what happened yesterday, what needs your decision, what is due today, in one message every morning",
+  },
+  {
+    icon: Newspaper,
+    t: "market watch",
+    d: "reads the news, forums and competitors in your niche every morning and tags what matters for sales or content",
+  },
+  {
+    icon: Megaphone,
+    t: "marketing",
+    d: "a weekly content plan and drafts in your voice, and suggestions from your own numbers (for a holiday-home operator: a discount when occupancy dips)",
+    approve: "you approve before anything is published",
   },
 ];
 
-const APPROACH = [
+// how it runs, four steps with mono numbered kickers
+const STEPS: { n: string; icon: typeof Server; d: string }[] = [
   {
     n: "01",
-    t: "Live where the work is",
-    d: "No new software for anyone to learn. Agents plug into the inboxes, tools and channels your team already runs on.",
+    icon: Search,
+    d: "we map where agents help in your business (a consultation you keep whether or not you go ahead)",
   },
   {
     n: "02",
-    t: "One deployment per client",
-    d: "Isolated, permissioned and hardened. Your data stays yours; agents only take allowlisted actions.",
+    icon: Server,
+    d: "we set up your own private deployment (your data stays in your instance, nothing shared with other clients)",
   },
   {
     n: "03",
-    t: "Proven in production",
-    d: "We run our own agent workforce daily. Everything we sell is the operating playbook we already live.",
+    icon: LayoutDashboard,
+    d: "you get a dashboard only you and we can open, with an approvals inbox",
+  },
+  {
+    n: "04",
+    icon: ShieldCheck,
+    d: "the agents run 24/7 and you decide in one tap",
   },
 ];
 
-/* Small live "operational readout" chips under the hero — the console echo. */
-const READOUT = [
-  { k: "workforce", v: "online", live: true },
-  { k: "channels", v: "whatsapp · ota" },
-  { k: "on the clock", v: "24/7" },
+const PROOF_LINES = [
+  "a chief of staff briefs the founder every morning",
+  "an outreach agent drafts every message and the founder presses send",
+  "a proposal agent writes the proposal the day of the call",
+  "a content agent drafts the week's posts",
 ];
-
-/* ── Word-by-word scroll reveal ────────────────────────────────────────── */
-
-function RevealWord({
-  children,
-  progress,
-  range,
-}: {
-  children: string;
-  progress: MotionValue<number>;
-  range: [number, number];
-}) {
-  const opacity = useTransform(progress, range, [0.14, 1]);
-  return (
-    <motion.span style={{ opacity }} className="inline-block">
-      {children}&nbsp;
-    </motion.span>
-  );
-}
-
-function Manifesto() {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start 0.85", "start 0.25"],
-  });
-
-  const text =
-    "Persept builds AI workforces — teams of agents that take on the repetitive operational work a business would otherwise hire for, and run it around the clock.";
-  const tokens = text.split(" ").map((word, i, arr) => ({
-    word,
-    id: i,
-    range: [i / arr.length, (i + 1) / arr.length] as [number, number],
-  }));
-
-  return (
-    <section ref={ref} className="section">
-      <div className="shell">
-        <ConsoleLabel className="mb-6">What we do</ConsoleLabel>
-        <p
-          className="display max-w-5xl"
-          style={{
-            fontSize: "clamp(1.75rem, 4.2vw, 3.4rem)",
-            lineHeight: 1.18,
-            fontWeight: 500,
-          }}
-        >
-          {tokens.map((t) => (
-            <RevealWord key={t.id} progress={scrollYProgress} range={t.range}>
-              {t.word}
-            </RevealWord>
-          ))}
-        </p>
-      </div>
-    </section>
-  );
-}
 
 /* ── Hero ──────────────────────────────────────────────────────────────── */
 
@@ -151,217 +140,235 @@ function Hero() {
     target: ref,
     offset: ["start start", "end start"],
   });
-
   const fieldY = useTransform(scrollYProgress, [0, 1], ["0%", "18%"]);
-  const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
-  const contentOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
 
   return (
     <section
       ref={ref}
-      className="relative grain min-h-[100svh] overflow-hidden"
+      className="relative grain flex min-h-[100svh] flex-col justify-center overflow-hidden pt-20 pb-16"
     >
-      {/* aperture centerpiece */}
       <motion.div
         style={{ y: reduce ? 0 : fieldY }}
         className="absolute inset-0"
       >
         <ApertureField className="h-full w-full" />
       </motion.div>
-
-      {/* paper vignette so text stays legible over the field */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 70% 60% at 50% 44%, rgba(247,242,234,0) 30%, rgba(247,242,234,0.72) 72%, rgba(247,242,234,0.95) 100%)",
+            "radial-gradient(ellipse 72% 60% at 50% 46%, rgba(6,6,9,0) 28%, rgba(6,6,9,0.74) 72%, rgba(6,6,9,0.96) 100%)",
         }}
       />
 
-      {/* Content */}
-      <motion.div
-        style={{
-          y: reduce ? 0 : contentY,
-          opacity: reduce ? 1 : contentOpacity,
-        }}
-        className="relative z-[1] flex min-h-[100svh] flex-col justify-center pt-16"
-      >
-        <div className="shell">
-          <FadeUp>
-            <div className="mb-7 flex flex-wrap items-center gap-x-4 gap-y-2">
-              <Kicker>AI workforce studio · Dubai</Kicker>
-              <span
-                aria-hidden="true"
-                className="hidden h-3 w-px sm:block"
-                style={{ background: "var(--line-strong)" }}
-              />
-              <LiveTag label="Workforce online" />
-            </div>
-          </FadeUp>
+      <div className="shell relative z-[1]">
+        <FadeUp>
+          <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <Kicker>ai workforce studio · dubai</Kicker>
+            <LiveTag label="agents on the clock" />
+          </div>
+        </FadeUp>
 
-          <FadeUp delay={0.08}>
-            <h1
-              className="display max-w-5xl"
-              style={{
-                fontSize: "clamp(2.75rem, 8vw, 6.75rem)",
-                fontWeight: 600,
-              }}
-            >
-              An <span className="accent">AI workforce</span>
-              <br />
-              for <span className="display-light">real operations.</span>
-            </h1>
-          </FadeUp>
+        <FadeUp delay={0.08}>
+          <h1
+            className="display max-w-4xl"
+            style={{ fontSize: "clamp(2rem, 6.4vw, 4.75rem)", fontWeight: 600 }}
+          >
+            an <span className="accent">ai workforce</span> for your business.
+            <br />
+            you stay in charge
+          </h1>
+        </FadeUp>
 
-          <FadeUp delay={0.18}>
-            <p
-              className="mt-7 max-w-xl text-[clamp(1.05rem,1.5vw,1.25rem)] leading-relaxed"
-              style={{ color: "var(--ink-soft)" }}
-            >
-              We build agent teams that run the day-to-day work a business would
-              otherwise hire for. Our flagship: an AI workforce for property
-              hospitality. Our own product: GYST.
-            </p>
-          </FadeUp>
+        <FadeUp delay={0.16}>
+          <p
+            className="mt-6 max-w-[40rem] text-[0.95rem] leading-relaxed sm:text-[1.05rem]"
+            style={{ color: "var(--ink-soft)" }}
+          >
+            named agents that take over the repetitive, message-heavy work of a
+            small company: outreach and follow-ups, customer replies, proposals,
+            reports, content. running 24/7, inside the tools you already use,
+            with a person approving anything that involves money, access or a
+            customer.
+          </p>
+        </FadeUp>
 
-          <FadeUp delay={0.28}>
-            <div className="mt-10 flex flex-wrap items-center gap-3">
-              <Link href="/projects/hotel" className="btn">
-                See the workforce
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link href="/contact" className="btn-ghost">
-                Start a project
-              </Link>
-            </div>
-          </FadeUp>
+        <FadeUp delay={0.24}>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <BookButton />
+            <a href="#proof" className="btn-ghost">
+              see it running
+            </a>
+          </div>
+        </FadeUp>
 
-          {/* Live operational readout — restrained console echo */}
-          <FadeUp delay={0.36}>
-            <dl className="mt-12 flex flex-wrap items-center gap-x-8 gap-y-3">
-              {READOUT.map((r) => (
-                <div key={r.k} className="flex items-center gap-2">
-                  {r.live && <span className="live-dot" aria-hidden="true" />}
-                  <dt
-                    className="font-mono text-[0.6875rem] font-medium uppercase tracking-[0.12em]"
-                    style={{ color: "var(--ink-faint)" }}
-                  >
-                    {r.k}
-                  </dt>
-                  <dd
-                    className="text-[0.8125rem]"
-                    style={{ color: "var(--ink)" }}
-                  >
-                    {r.v}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </FadeUp>
-        </div>
-
-        {/* scroll cue */}
-        <div className="shell absolute inset-x-0 bottom-8">
-          <div
-            className="flex items-center gap-3"
+        <FadeUp delay={0.32}>
+          <p
+            className="mono-label mt-8 flex items-center gap-2"
             style={{ color: "var(--ink-faint)" }}
           >
-            <motion.div
-              animate={reduce ? undefined : { y: [0, 6, 0] }}
-              transition={{
-                duration: 1.8,
-                repeat: Number.POSITIVE_INFINITY,
-                ease: "easeInOut",
-              }}
-            >
-              <ArrowDown className="h-4 w-4" />
-            </motion.div>
-            <span className="mono-label">Scroll to explore</span>
-          </div>
+            <span className="live-dot" aria-hidden="true" />
+            the agents draft and prepare. a human presses send, publish and pay
+          </p>
+        </FadeUp>
+      </div>
+
+      <div className="shell absolute inset-x-0 bottom-6 z-[1]">
+        <div
+          className="flex items-center gap-3"
+          style={{ color: "var(--ink-faint)" }}
+        >
+          <motion.div
+            animate={reduce ? undefined : { y: [0, 6, 0] }}
+            transition={{
+              duration: 1.8,
+              repeat: Number.POSITIVE_INFINITY,
+              ease: "easeInOut",
+            }}
+          >
+            <ArrowDown className="h-4 w-4" />
+          </motion.div>
+          <span className="mono-label">scroll</span>
         </div>
-      </motion.div>
+      </div>
     </section>
   );
 }
 
-/* ── Flagship: Hotel AI Workforce ──────────────────────────────────────── */
+/* ── What it is / what it is not ───────────────────────────────────────── */
 
-const capReveal: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0 },
-};
+const IS = [
+  "a small team of named roles, each with one job",
+  "embedded in your email, whatsapp, calendar and documents",
+  "reporting to you every morning",
+];
+const IS_NOT = [
+  "a chatbot on your website",
+  "a tool you have to operate",
+  "autopilot; nothing goes out without your approval",
+];
 
-function Flagship() {
+function WhatItIs() {
   return (
-    <section className="section" style={{ backgroundColor: "var(--paper-2)" }}>
+    <section
+      id="what"
+      className="section"
+      style={{ backgroundColor: "var(--paper-2)" }}
+    >
       <div className="shell">
-        <div className="mb-14 flex flex-wrap items-end justify-between gap-6">
-          <div className="max-w-2xl">
-            <ConsoleLabel className="mb-5">Flagship — the service</ConsoleLabel>
+        <FadeUp>
+          <h2
+            className="display mb-10"
+            style={{ fontSize: "clamp(1.8rem,4vw,3rem)" }}
+          >
+            what it is, what it is not
+          </h2>
+        </FadeUp>
+        <div className="grid gap-5 md:grid-cols-2">
+          <FadeUp>
+            <div className="card h-full p-7 sm:p-9">
+              <p className="mono-label" style={{ color: "var(--accent-ink)" }}>
+                it is
+              </p>
+              <ul className="mt-5 flex flex-col gap-4">
+                {IS.map((line) => (
+                  <li key={line} className="flex items-start gap-3">
+                    <Check
+                      className="mt-0.5 h-4 w-4 shrink-0"
+                      style={{ color: "var(--accent-ink)" }}
+                    />
+                    <span
+                      className="text-[15px] leading-relaxed"
+                      style={{ color: "var(--ink)" }}
+                    >
+                      {line}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </FadeUp>
+          <FadeUp delay={0.08}>
+            <div className="card h-full p-7 sm:p-9">
+              <p className="mono-label" style={{ color: "var(--ink-faint)" }}>
+                it is not
+              </p>
+              <ul className="mt-5 flex flex-col gap-4">
+                {IS_NOT.map((line) => (
+                  <li key={line} className="flex items-start gap-3">
+                    <X
+                      className="mt-0.5 h-4 w-4 shrink-0"
+                      style={{ color: "var(--ink-faint)" }}
+                    />
+                    <span
+                      className="text-[15px] leading-relaxed"
+                      style={{ color: "var(--ink-soft)" }}
+                    >
+                      {line}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </FadeUp>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── What it takes over ────────────────────────────────────────────────── */
+
+function TakesOver() {
+  return (
+    <section className="section">
+      <div className="shell">
+        <FadeUp>
+          <div className="mb-12 max-w-2xl">
+            <Kicker className="mb-5">what it takes over</Kicker>
             <h2
               className="display"
-              style={{ fontSize: "clamp(2.25rem,5vw,3.75rem)" }}
+              style={{ fontSize: "clamp(1.8rem,4vw,3rem)" }}
             >
-              Hotel AI Workforce
+              specific roles, doing specific jobs
             </h2>
-            <p
-              className="mt-4 text-[clamp(1.1rem,1.8vw,1.4rem)] leading-snug"
-              style={{ color: "var(--ink)", fontWeight: 500 }}
-            >
-              The AI operations team for property hospitality — guest messaging,
-              housekeeping dispatch and owner reporting, run around the clock
-              inside WhatsApp.
-            </p>
           </div>
-          <Link
-            href="/projects/hotel"
-            className="link-underline text-[15px]"
-            style={{ color: "var(--ink)" }}
-          >
-            Explore Hotel AI Workforce →
-          </Link>
-        </div>
+        </FadeUp>
 
-        <div className="grid gap-5 sm:grid-cols-2">
-          {CAPABILITIES.map((c, i) => {
-            const Icon = c.icon;
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {FUNCTIONS.map((f, i) => {
+            const Icon = f.icon;
             return (
-              <FadeUp key={c.t} delay={(i % 2) * 0.08}>
-                <motion.div
-                  variants={capReveal}
-                  className="card group relative flex h-full flex-col p-8 sm:p-9 ticked-corners"
-                >
-                  <div className="flex items-start justify-between">
-                    <span className="icon-tile">
-                      <Icon className="h-5 w-5" />
-                    </span>
-                    {/* live micro-metric — the console echo */}
-                    <div
-                      className="flex flex-col items-end gap-1"
-                      style={{ color: "var(--accent-ink)" }}
-                    >
-                      <Sparkline values={c.trend} />
-                      <span
-                        className="font-mono text-[0.625rem] uppercase tracking-[0.1em]"
-                        style={{ color: "var(--ink-faint)" }}
-                      >
-                        {c.metric} · {c.value}
-                      </span>
-                    </div>
-                  </div>
+              <FadeUp key={f.t} delay={(i % 3) * 0.06}>
+                <div className="card flex h-full flex-col p-6 sm:p-7">
+                  <span className="icon-tile">
+                    <Icon className="h-5 w-5" />
+                  </span>
                   <h3
-                    className="display mt-7"
-                    style={{ fontSize: "1.45rem", fontWeight: 600 }}
+                    className="display mt-6"
+                    style={{ fontSize: "1.2rem", fontWeight: 600 }}
                   >
-                    {c.t}
+                    {f.t}
                   </h3>
                   <p
-                    className="mt-3 max-w-md text-[15px] leading-relaxed"
+                    className="mt-3 text-[14px] leading-relaxed"
                     style={{ color: "var(--ink-soft)" }}
                   >
-                    {c.d}
+                    {f.d}
                   </p>
-                </motion.div>
+                  {f.approve && (
+                    <p
+                      className="mt-auto flex items-center gap-2 pt-5 text-[13px] font-medium"
+                      style={{ color: "var(--ink)" }}
+                    >
+                      <ShieldCheck
+                        className="h-3.5 w-3.5 shrink-0"
+                        style={{ color: "var(--accent-ink)" }}
+                      />
+                      {f.approve}
+                    </p>
+                  )}
+                </div>
               </FadeUp>
             );
           })}
@@ -371,155 +378,277 @@ function Flagship() {
   );
 }
 
-/* ── Product: GYST ─────────────────────────────────────────────────────── */
+/* ── How it runs ───────────────────────────────────────────────────────── */
 
-function Product() {
+function HowItRuns() {
   return (
-    <section className="section">
+    <section className="section" style={{ backgroundColor: "var(--paper-2)" }}>
       <div className="shell">
-        <div className="panel-dark ticked-corners relative overflow-hidden p-8 sm:p-14">
-          <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
-            <div>
-              <span
-                className="kicker mb-5"
-                style={{ color: "rgba(236,231,219,0.72)" }}
-              >
-                <span style={{ color: "#fdc91b", display: "inline-flex" }}>
-                  <ApertureGlyph size={14} />
-                </span>
-                Our product — stands on its own
-              </span>
-              <h2
-                className="display"
-                style={{
-                  fontSize: "clamp(2.5rem,5.5vw,4rem)",
-                  color: "#f4f2ea",
-                }}
-              >
-                GYST
-              </h2>
-              <p
-                className="mt-4 max-w-lg text-[clamp(1.1rem,1.8vw,1.4rem)] leading-snug"
-                style={{ color: "#ece7db", fontWeight: 500 }}
-              >
-                The whole job search, one guided path. Search every board,
-                tailor a screening-ready CV to each role, and reach real people
-                who can refer you.
-              </p>
-              <p
-                className="mt-5 max-w-lg text-[15px] leading-relaxed"
-                style={{ color: "rgba(236,231,219,0.72)" }}
-              >
-                Built for students and early-career professionals in the UK and
-                UAE. A separate Persept product with its own home.
-              </p>
-              <div className="mt-9 flex flex-wrap gap-3">
-                <a
-                  href="https://startgyst.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn"
-                  style={{
-                    background: "#fdc91b",
-                    borderColor: "#fdc91b",
-                    color: "#14140f",
-                  }}
-                >
-                  Visit startgyst.com
-                  <ArrowRight className="h-4 w-4" />
-                </a>
-                <Link
-                  href="/projects/gyst"
-                  className="btn-ghost"
-                  style={{
-                    color: "#ece7db",
-                    borderColor: "rgba(236,231,219,0.3)",
-                  }}
-                >
-                  Read the story
-                </Link>
-              </div>
-            </div>
-
-            {/* mini "board" motif */}
-            <div className="hidden grid-cols-3 gap-3 lg:grid">
-              {[
-                { col: "Saved", cards: ["s1"] },
-                { col: "Applied", cards: ["a1", "a2"] },
-                { col: "Interview", cards: ["i1"] },
-              ].map(({ col, cards }) => (
-                <div key={col} className="flex flex-col gap-3">
-                  <p
-                    className="font-mono text-[0.625rem] uppercase tracking-[0.12em]"
-                    style={{ color: "rgba(236,231,219,0.5)" }}
-                  >
-                    {col}
-                  </p>
-                  {cards.map((cardId) => (
-                    <div
-                      key={cardId}
-                      className="rounded-xl p-3"
-                      style={{
-                        background: "rgba(255,255,255,0.04)",
-                        border: "1px solid rgba(255,255,255,0.08)",
-                      }}
-                    >
-                      <div
-                        className="h-2 w-3/4 rounded-full"
-                        style={{ background: "rgba(253,201,27,0.8)" }}
-                      />
-                      <div
-                        className="mt-2 h-2 w-1/2 rounded-full"
-                        style={{ background: "rgba(236,231,219,0.18)" }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
+        <FadeUp>
+          <div className="mb-12 max-w-2xl">
+            <Kicker className="mb-5">how it runs</Kicker>
+            <h2
+              className="display"
+              style={{ fontSize: "clamp(1.8rem,4vw,3rem)" }}
+            >
+              a private deployment, and your one tap
+            </h2>
           </div>
+        </FadeUp>
+
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {STEPS.map((step, i) => {
+            const Icon = step.icon;
+            return (
+              <FadeUp key={step.n} delay={i * 0.08}>
+                <div className="card flex h-full flex-col p-7">
+                  <div className="flex items-center justify-between">
+                    <span
+                      className="figure-mark"
+                      style={{ fontSize: "2.25rem" }}
+                    >
+                      {step.n}
+                    </span>
+                    <Icon
+                      className="h-4 w-4"
+                      style={{ color: "var(--accent-ink)" }}
+                    />
+                  </div>
+                  <p
+                    className="mt-7 text-[14px] leading-relaxed"
+                    style={{ color: "var(--ink)" }}
+                  >
+                    {step.d}
+                  </p>
+                </div>
+              </FadeUp>
+            );
+          })}
         </div>
+
+        <FadeUp delay={0.1}>
+          <div
+            className="mt-6 flex items-center gap-3 rounded-[var(--radius-md)] p-5"
+            style={{ background: "var(--paper-3)" }}
+          >
+            <Lock
+              className="h-4 w-4 shrink-0"
+              style={{ color: "var(--accent-ink)" }}
+            />
+            <p
+              className="text-[14px] leading-relaxed"
+              style={{ color: "var(--ink-soft)" }}
+            >
+              pdpl-aligned. a person you can call set it up and keeps it running
+            </p>
+          </div>
+        </FadeUp>
       </div>
     </section>
   );
 }
 
-/* ── Approach ──────────────────────────────────────────────────────────── */
+/* ── Proof: persept runs on persept ────────────────────────────────────── */
 
-function Approach() {
+function Proof() {
+  return (
+    <section id="proof" className="section">
+      <div className="shell">
+        <FadeUp>
+          <div className="mb-10 max-w-2xl">
+            <Kicker className="mb-5">proof</Kicker>
+            <h2
+              className="display"
+              style={{ fontSize: "clamp(1.8rem,4vw,3rem)" }}
+            >
+              persept runs on persept
+            </h2>
+          </div>
+        </FadeUp>
+
+        <div className="grid gap-8 lg:grid-cols-[1.4fr_0.85fr] lg:gap-12">
+          <FadeUp>
+            <div className="card overflow-hidden p-2 sm:p-3">
+              {/* biome-ignore lint/performance/noImgElement: static marketing screenshot, next/image adds no value on a full-bleed hero shot */}
+              <img
+                src="/images/dashboard-office.png"
+                alt="the persept dashboard: the office view, agents at their desks with an approvals inbox waiting for the owner"
+                width={1600}
+                height={1000}
+                loading="lazy"
+                className="w-full rounded-[calc(var(--radius-md)-4px)]"
+                style={{ height: "auto", display: "block" }}
+              />
+            </div>
+          </FadeUp>
+
+          <FadeUp delay={0.08}>
+            <ul className="flex h-full flex-col justify-center gap-4">
+              {PROOF_LINES.map((line) => (
+                <li
+                  key={line}
+                  className="flex items-start gap-3 rounded-[var(--radius-md)] p-4"
+                  style={{ background: "var(--paper-2)" }}
+                >
+                  <span className="live-dot mt-1.5" aria-hidden="true" />
+                  <span
+                    className="text-[15px] leading-relaxed"
+                    style={{ color: "var(--ink)" }}
+                  >
+                    {line}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </FadeUp>
+        </div>
+
+        {DEMO_VIDEO && (
+          <FadeUp delay={0.12}>
+            <div
+              className="card mt-6 overflow-hidden"
+              style={{ aspectRatio: "16 / 9" }}
+            >
+              <iframe
+                src={DEMO_VIDEO}
+                title="persept demo"
+                loading="lazy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="h-full w-full"
+                style={{ border: 0 }}
+              />
+            </div>
+          </FadeUp>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/* ── Worked example ────────────────────────────────────────────────────── */
+
+const EXAMPLE = [
+  {
+    k: "the situation",
+    v: "20 to 60 units, messages at all hours",
+  },
+  {
+    k: "what the workforce does",
+    v: "answers guest questions, chases cleaners until they confirm, prepares owner statements, plugs into hostaway and guesty",
+  },
+  {
+    k: "what stays with a person",
+    v: "refunds, door codes, disputes",
+  },
+];
+
+function WorkedExample() {
   return (
     <section className="section" style={{ backgroundColor: "var(--paper-2)" }}>
       <div className="shell">
-        <ConsoleLabel className="mb-5">How we build</ConsoleLabel>
-        <h2
-          className="display mb-14 max-w-2xl"
-          style={{ fontSize: "clamp(2rem,4.5vw,3.25rem)" }}
-        >
-          Sold as a staffed outcome, not a tool
-        </h2>
+        <FadeUp>
+          <div className="ticked ticked-corners relative p-8 sm:p-12">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="icon-tile">
+                <MessagesSquare className="h-5 w-5" />
+              </span>
+              <LiveTag label="worked example" />
+            </div>
+            <h2
+              className="display mt-7 max-w-3xl"
+              style={{ fontSize: "clamp(1.6rem,3.4vw,2.6rem)" }}
+            >
+              example: guest messaging for a holiday-home operator
+            </h2>
+            <dl className="mt-8 grid gap-6 sm:grid-cols-3">
+              {EXAMPLE.map((row) => (
+                <div key={row.k}>
+                  <dt
+                    className="mono-label"
+                    style={{ color: "var(--accent-ink)" }}
+                  >
+                    {row.k}
+                  </dt>
+                  <dd
+                    className="mt-2 text-[15px] leading-relaxed"
+                    style={{ color: "var(--ink)" }}
+                  >
+                    {row.v}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </FadeUp>
+      </div>
+    </section>
+  );
+}
 
-        <div className="grid gap-6 sm:grid-cols-3">
-          {APPROACH.map((step, i) => (
-            <FadeUp key={step.n} delay={i * 0.08}>
-              <div className="flex h-full flex-col">
-                <span className="figure-mark">{step.n}</span>
-                <hr className="rule-soft my-6" />
+/* ── The engagement ────────────────────────────────────────────────────── */
+
+const OPTIONS = [
+  {
+    t: "30-day paid pilot",
+    d: "setup, integration, playbooks, one month live, then monthly",
+  },
+  {
+    t: "consultation",
+    d: "half a day in your business, a written map of where agents would help and what to run first",
+  },
+];
+
+function Engagement() {
+  return (
+    <section className="section">
+      <div className="shell">
+        <FadeUp>
+          <div className="mb-12 max-w-2xl">
+            <Kicker className="mb-5">the engagement</Kicker>
+            <h2
+              className="display"
+              style={{ fontSize: "clamp(1.8rem,4vw,3rem)" }}
+            >
+              two ways to start
+            </h2>
+          </div>
+        </FadeUp>
+
+        <div className="grid gap-5 md:grid-cols-2">
+          {OPTIONS.map((o, i) => (
+            <FadeUp key={o.t} delay={i * 0.08}>
+              <div className="card h-full p-7 sm:p-9">
+                <span className="figure-mark" style={{ fontSize: "1.75rem" }}>
+                  {`0${i + 1}`}
+                </span>
                 <h3
-                  className="display"
-                  style={{ fontSize: "1.4rem", fontWeight: 600 }}
+                  className="display mt-5"
+                  style={{ fontSize: "1.5rem", fontWeight: 600 }}
                 >
-                  {step.t}
+                  {o.t}
                 </h3>
                 <p
                   className="mt-3 text-[15px] leading-relaxed"
                   style={{ color: "var(--ink-soft)" }}
                 >
-                  {step.d}
+                  {o.d}
                 </p>
               </div>
             </FadeUp>
           ))}
         </div>
+
+        <FadeUp delay={0.1}>
+          <p
+            className="mt-7 flex items-center gap-2 text-[15px]"
+            style={{ color: "var(--ink)" }}
+          >
+            <span className="live-dot" aria-hidden="true" />
+            founder rate for the first three clients in exchange for a case
+            study
+          </p>
+        </FadeUp>
       </div>
     </section>
   );
@@ -529,28 +658,27 @@ function Approach() {
 
 function CTA() {
   return (
-    <section className="section grain">
+    <section
+      className="section grain"
+      style={{ backgroundColor: "var(--paper-2)" }}
+    >
       <div className="shell">
         <div className="ticked ticked-corners relative p-10 sm:p-16">
-          <Kicker className="mb-6">
-            Costs less than one hire · works 24/7
-          </Kicker>
           <h2
-            className="display max-w-4xl"
-            style={{ fontSize: "clamp(2.25rem,6vw,4.5rem)" }}
+            className="display max-w-3xl"
+            style={{ fontSize: "clamp(2rem,5.5vw,4rem)" }}
           >
-            Put an AI workforce
-            <br />
-            on the <span className="accent">operation.</span>
+            book a <span className="accent">15-minute call</span>
           </h2>
-          <div className="mt-10 flex flex-wrap gap-3">
-            <Link href="/contact" className="btn">
-              Start a project
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link href="/projects/hotel" className="btn-ghost">
-              See how it works
-            </Link>
+          <p
+            className="mt-6 max-w-xl text-[clamp(1rem,1.4vw,1.15rem)] leading-relaxed"
+            style={{ color: "var(--ink-soft)" }}
+          >
+            fifteen minutes. you tell me where the time goes, i tell you what an
+            agent could take.
+          </p>
+          <div className="mt-9">
+            <BookButton />
           </div>
         </div>
       </div>
@@ -564,10 +692,12 @@ export function HomeClient() {
   return (
     <>
       <Hero />
-      <Manifesto />
-      <Flagship />
-      <Product />
-      <Approach />
+      <WhatItIs />
+      <TakesOver />
+      <HowItRuns />
+      <Proof />
+      <WorkedExample />
+      <Engagement />
       <CTA />
     </>
   );

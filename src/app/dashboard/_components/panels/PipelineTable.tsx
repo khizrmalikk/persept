@@ -38,10 +38,32 @@ export function PipelineTable({
   const [asc, setAsc] = useState(true);
   const [openKey, setOpenKey] = useState<string | null>(null);
   const [replyKey, setReplyKey] = useState<string | null>(null);
+  const [campaign, setCampaign] = useState("");
+  const [search, setSearch] = useState("");
   const [pending, start] = useTransition();
 
+  // Distinct campaign slugs present in the list, for the filter above the table.
+  const campaigns = useMemo(() => {
+    const seen = new Set<string>();
+    for (const r of rows) {
+      const c = (r.campaign ?? "").trim();
+      if (c) seen.add(c);
+    }
+    return [...seen].sort();
+  }, [rows]);
+
   const sorted = useMemo(() => {
-    const copy = rows.map((r, i) => ({ r, i }));
+    const q = search.trim().toLowerCase();
+    const copy = rows
+      .map((r, i) => ({ r, i }))
+      .filter(({ r }) => !campaign || (r.campaign ?? "").trim() === campaign)
+      .filter(({ r }) => {
+        if (!q) return true;
+        // search across the human-readable columns
+        return ["company", "contact", "channel", "angle", "notes", "address"]
+          .map((k) => (r[k] ?? "").toLowerCase())
+          .some((v) => v.includes(q));
+      });
     copy.sort((a, b) => {
       const av = (a.r[sort] ?? "").toLowerCase();
       const bv = (b.r[sort] ?? "").toLowerCase();
@@ -49,7 +71,7 @@ export function PipelineTable({
       return asc ? c : -c;
     });
     return copy.map((x) => x.r);
-  }, [rows, sort, asc]);
+  }, [rows, sort, asc, campaign, search]);
 
   const clickHead = (k: SortKey) => {
     if (sort === k) setAsc((v) => !v);
@@ -77,6 +99,42 @@ export function PipelineTable({
 
   return (
     <div className="wf-pipeline">
+      <div className="wf-pipe-search">
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="search prospects (company, contact, angle…)"
+          aria-label="search prospects"
+        />
+        {search && (
+          <span className="wf-pipe-search-count">
+            {sorted.length} match{sorted.length === 1 ? "" : "es"}
+          </span>
+        )}
+      </div>
+      {campaigns.length > 0 && (
+        <div className="wf-pipe-filter">
+          <span className="wf-pipe-filter-label">campaign</span>
+          <button
+            type="button"
+            className={`wf-chip${campaign === "" ? " is-active" : ""}`}
+            onClick={() => setCampaign("")}
+          >
+            all
+          </button>
+          {campaigns.map((c) => (
+            <button
+              key={c}
+              type="button"
+              className={`wf-chip${campaign === c ? " is-active" : ""}`}
+              onClick={() => setCampaign(c)}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+      )}
       <table className="table wf-pipe-table">
         <thead>
           <tr>
@@ -84,6 +142,7 @@ export function PipelineTable({
             <th>company</th>
             <th>contact</th>
             <th>channel</th>
+            {campaigns.length > 0 && <th>campaign</th>}
             {head("status", "status")}
             {head("next_due", "next due")}
             <th>angle</th>
@@ -118,6 +177,15 @@ export function PipelineTable({
                   <td>{r.company}</td>
                   <td className="muted">{r.contact}</td>
                   <td className="muted">{r.channel}</td>
+                  {campaigns.length > 0 && (
+                    <td>
+                      {r.campaign ? (
+                        <span className="wf-chip sm">{r.campaign}</span>
+                      ) : (
+                        <span className="muted">—</span>
+                      )}
+                    </td>
+                  )}
                   <td>
                     <span className="kind">
                       {normStatus(r.status).replace(/_/g, " ")}
@@ -130,7 +198,7 @@ export function PipelineTable({
                 </tr>
                 {open ? (
                   <tr className="wf-pipe-detail">
-                    <td colSpan={7}>
+                    <td colSpan={campaigns.length > 0 ? 8 : 7}>
                       <dl className="wf-detail-grid">
                         <dt>angle</dt>
                         <dd>{r.angle || "—"}</dd>
@@ -157,6 +225,14 @@ export function PipelineTable({
                           }
                         >
                           log reply
+                        </button>
+                        <button
+                          type="button"
+                          className="act secondary"
+                          disabled={pending}
+                          onClick={() => send(`hand ${r.company} to me`)}
+                        >
+                          hand to me
                         </button>
                         <button
                           type="button"

@@ -156,7 +156,7 @@ export function ThroughputChart({
                 height={padT + ih - y(b.runs)}
                 rx={2}
                 fill="var(--ink)"
-                fillOpacity={0.22}
+                fillOpacity={0.28}
               />
               <rect
                 x={bx + barW + barGap}

@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 // Route segment config
-export const alt = "Persept — AI Workforce Studio in Dubai";
+export const alt = "Persept — An AI Workforce for Your Small Business";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -75,12 +75,12 @@ export default function OpengraphImage() {
             maxWidth: "980px",
           }}
         >
-          The AI workforce that{" "}
-          <span style={{ color: CLAY }}>runs the work.</span>
+          An AI workforce{" "}
+          <span style={{ color: CLAY }}>for your business.</span>
         </span>
         <span style={{ fontSize: "30px", color: INK_SOFT, maxWidth: "900px" }}>
-          A Dubai AI workforce studio. Agent teams that run real operations 24/7
-          — a staffed outcome, not a tool.
+          Practical AI agents that take over the repetitive work small
+          businesses would otherwise hire for — running 24/7.
         </span>
       </div>
 

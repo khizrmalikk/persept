@@ -14,52 +14,52 @@
    ========================================================================== */
 
 .wf {
-  --bg: #17130f; /* warm near-black page */
-  --surface: #211b15; /* dark card */
-  --surface-2: #2a231b; /* well / inset / hover */
-  --ink: #f2ede4; /* primary text (light) */
-  --ink-soft: #c6bdb0; /* secondary */
-  --ink-faint: #8f8578; /* muted labels */
-  --line: rgba(242, 237, 228, 0.1);
-  --line-strong: rgba(242, 237, 228, 0.2);
-  --accent: #d66a40; /* clay, a touch brighter for dark */
-  --accent-rgb: 214, 106, 64;
-  --accent-ink: #ec9268; /* clay TEXT on dark — light enough for AA */
-  --accent-wash: rgba(214, 106, 64, 0.13);
-  --ok: #55c489;
-  --warn: #e0a44a;
-  --err: #e0714f;
+  --bg: #fbfaf8; /* warm near-white page */
+  --surface: #ffffff; /* cards */
+  --surface-2: #f5f4f2; /* well / inset / hover */
+  --ink: #17140f; /* primary text (espresso) */
+  --ink-soft: #57534e; /* secondary */
+  --ink-faint: #8b8680; /* muted labels */
+  --line: rgba(23, 20, 15, 0.09);
+  --line-strong: rgba(23, 20, 15, 0.16);
+  --accent: #cf5a34; /* clay */
+  --accent-rgb: 207, 90, 52;
+  --accent-ink: #8f3a1f; /* clay TEXT on light — dark enough for AA on white */
+  --accent-wash: rgba(207, 90, 52, 0.08);
+  --ok: #2f7a4a;
+  --warn: #b0731a;
+  --err: #b33a2f;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-full: 9999px;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 10px 30px -12px rgba(0, 0, 0, 0.65);
+  --shadow-sm: 0 1px 2px rgba(23, 20, 15, 0.05);
+  --shadow-md: 0 6px 20px -8px rgba(23, 20, 15, 0.14);
 
   color: var(--ink);
   font-family: var(--font-display);
-  color-scheme: dark;
 
-  /* the 3D constellation reads these off the wrapper — DARK values (the office
-     page re-declares its own richer set under `.wf-office`). */
-  --hud-bg: #17130f;
-  --hud-text: #f2ede4;
-  --hud-dim: #8f8578;
-  --hud-err: #e0714f;
-  --hud-node-rgb: 234, 227, 216; /* warm off-white glowing orb */
-  --hud-accent-rgb: 214, 106, 64; /* clay */
+  /* the 3D constellation reads these off the wrapper — LIGHT values so the
+     (soon-to-be-replaced) office isn't dark-on-dark. The office page still
+     re-declares its own set under `.wf-office`. */
+  --hud-bg: #fbfaf8;
+  --hud-text: #17140f;
+  --hud-dim: #8b8680;
+  --hud-err: #b33a2f;
+  --hud-node-rgb: 120, 112, 104; /* matte warm-grey idle orb */
+  --hud-accent-rgb: 207, 90, 52; /* clay */
 
   /* Legacy token aliases referenced by the shared/inner-page classes so they
-     resolve to the dark palette (nothing must fall back to an old light value). */
+     resolve to the light palette (nothing must fall back to an old dark value). */
   --accent-bg: var(--accent-wash);
   --paper: var(--bg);
   --paper-2: var(--surface-2);
   --paper-3: var(--surface-2);
   --ink-soft-2: var(--ink-faint);
   --line-faint: var(--line);
-  --ok-bg: rgba(85, 196, 137, 0.14);
-  --warn-bg: rgba(224, 164, 74, 0.14);
-  --err-bg: rgba(224, 113, 79, 0.14);
+  --ok-bg: rgba(47, 122, 74, 0.1);
+  --warn-bg: rgba(176, 115, 26, 0.1);
+  --err-bg: rgba(179, 58, 47, 0.1);
 
   background: var(--bg);
 }
@@ -115,7 +115,7 @@
   gap: 20px;
   padding: 0 clamp(16px, 3vw, 34px);
   height: 56px;
-  background: rgba(28, 23, 18, 0.82);
+  background: rgba(255, 255, 255, 0.82);
   backdrop-filter: saturate(1.1) blur(12px);
   -webkit-backdrop-filter: saturate(1.1) blur(12px);
   border-bottom: 1px solid var(--line);
@@ -199,10 +199,77 @@
   justify-content: center;
   border-radius: var(--radius-full);
   background: var(--accent);
-  color: #1a130d;
+  color: #ffffff;
   font-size: 11px;
   font-weight: 600;
   line-height: 1;
+}
+
+/* per-agent tab emoji chip */
+.wf .wf-topbar .tb-tabs .tb-agent-emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* "more" dropdown (insights / activity) */
+.wf .wf-topbar .tb-tabs .tb-more {
+  position: relative;
+  display: inline-flex;
+}
+.wf .wf-topbar .tb-tabs .tb-more-btn {
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-family: var(--font-display);
+}
+.wf .wf-topbar .tb-tabs .tb-more-btn.open {
+  color: var(--ink);
+  background: var(--surface-2);
+}
+.wf .wf-topbar .tb-tabs .tb-more-chev {
+  width: 13px;
+  height: 13px;
+  transition: transform 0.15s ease;
+}
+.wf .wf-topbar .tb-tabs .tb-more-btn.open .tb-more-chev {
+  transform: rotate(180deg);
+}
+.wf .wf-topbar .tb-tabs .tb-more-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 50;
+  min-width: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+.wf .wf-topbar .tb-tabs .tb-more-item {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+.wf .wf-topbar .tb-tabs .tb-more-item:hover {
+  color: var(--ink);
+  background: var(--surface-2);
+}
+.wf .wf-topbar .tb-tabs .tb-more-item.active {
+  color: var(--ink);
+  font-weight: 600;
+  background: var(--accent-wash);
 }
 
 .wf .wf-topbar .tb-center {
@@ -417,7 +484,7 @@
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   background: var(--accent);
-  color: #1a130d;
+  color: #ffffff;
   font-family: var(--font-display);
   font-size: 13.5px;
   font-weight: 600;
@@ -431,7 +498,7 @@
     transform 0.15s ease;
 }
 .wf .act:hover {
-  background: #e07d55;
+  background: #b84a28;
 }
 .wf .act:active {
   transform: translateY(1px);
@@ -925,74 +992,954 @@
 }
 
 /* ============================================================================
-   OFFICE (main) PAGE — DARK COMMAND DECK
-   Only this page goes dark. The dark palette + all restyles live in the
-   "OFFICE DARK COMMAND DECK" section further below and are scoped under
-   `.wf-office`, so nothing here can leak to the light `.wf` pages or the topbar.
+   OFFICE (main) PAGE — LIGHT, WEBGL-FREE
+   A clean light layout on the Persept brand: an identity/status strip + live
+   stats across the top, a 2D SVG agent NETWORK as the centrepiece beside the
+   embedded approvals queue, and a latest-activity peek below. Everything scoped
+   under `.wf-office` so nothing leaks to the other `.wf` pages or the topbar.
    ========================================================================== */
 .wf-office {
   position: relative;
   min-height: calc(100vh - 56px);
   background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 28px clamp(16px, 2.5vw, 36px) 48px;
 }
 
-/* Full-bleed constellation stage sits behind the overlay panels. */
-.wf-office .wf-stage {
-  position: fixed;
-  inset: 56px 0 0 0;
-  z-index: 0;
+/* top strip: identity (left) + live stats (right) */
+.wf-office-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
 }
-.wf-office .wf-canvas-full {
+.wf-office-ident {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.wf-office-ident-l {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.wf-office-title {
+  font-size: clamp(22px, 2.4vw, 28px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--ink);
+}
+.wf-office-sub {
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+
+/* live stats cluster in the head — a 4-across row that wraps on narrow */
+.wf-office-head .wf-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(96px, 1fr));
+  gap: 12px;
+  flex: 0 1 480px;
+}
+
+/* main grid: 2D network (fills) + approvals embed rail */
+.wf-office-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 20px;
+  align-items: stretch;
+}
+
+/* the network card fills its column; the SVG grows to fill the card */
+.wf-net-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 520px;
+}
+.wf-net-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+.wf-net-legend .lg {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.wf-net-legend .dot {
+  width: 7px;
+  height: 7px;
+}
+
+/* ── 3D office (R3F centrepiece) ────────────────────────────────────────── */
+/* The Canvas needs a sized parent; this fills the network card and clips the
+   transparent canvas to the card's rounded corners. A subtle warm radial wash
+   sits behind the transparent canvas so the room reads as a lit stage on the
+   light page. The 2D SVG fallback (AgentNetwork2D, .wf-net) renders inside this
+   same box when WebGL is unavailable, so no extra sizing is needed for it. */
+.wf-office3d {
+  position: relative;
+  flex: 1;
+  min-height: 440px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background:
+    radial-gradient(
+      120% 90% at 50% 8%,
+      rgba(var(--accent-rgb), 0.06) 0%,
+      rgba(var(--accent-rgb), 0) 55%
+    ), linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%);
+}
+
+/* ── 2D SVG network ─────────────────────────────────────────────────────── */
+.wf-net {
+  position: relative;
+  flex: 1;
+  min-height: 440px;
+  display: grid;
+  place-items: center;
+  container-type: size;
+}
+/* The SVG + the HTML interaction layer are stacked in the SAME centred aspect
+   box (viewBox ratio), so node coords map 1:1 with no letterbox drift. Sized to
+   fit within BOTH the available width and height (container query units). */
+.wf-net-box {
+  position: relative;
+  /* --net-ar (width/height of the fitted viewBox) is set inline so the box
+     always matches the content's aspect and the % hotspots track exactly. */
+  --net-ar: 1.5625;
+  width: min(100cqw, calc(100cqh * var(--net-ar)));
+  aspect-ratio: var(--net-ar);
+  margin: auto;
+}
+.wf-net-svg {
   width: 100%;
   height: 100%;
+  display: block;
+  overflow: visible;
 }
 
-/* Overlay grid: left identity/stats/roster rail, right activity peek. Cards
-   float over the net; the centre column is left open for the constellation. */
-.wf-office .wf-overlay {
-  position: relative;
-  z-index: 2;
-  display: grid;
-  /* full width: rails hug the left/right edges, the 1fr centre column lets the
-     constellation fill the whole middle of the screen. Slim rails + generous
-     top/bottom insets so the corner HUD text (// workforce, // sys) stays clear
-     of the cards. */
-  grid-template-columns: 300px 1fr 380px;
-  gap: 24px;
-  align-items: start;
-  padding: 44px clamp(20px, 3vw, 40px) 52px;
-  min-height: calc(100vh - 56px);
-  pointer-events: none; /* let clicks fall through to the canvas between cards */
+/* connectors hub → spokes */
+.wf-net-edge {
+  stroke: var(--line-strong);
+  stroke-width: 1.25;
+  transition:
+    stroke 0.2s ease,
+    stroke-width 0.2s ease;
 }
-.wf-office .wf-overlay > * {
-  pointer-events: auto; /* re-enable on the actual cards */
+.wf-net-edge.waiting {
+  stroke: rgba(var(--accent-rgb), 0.35);
 }
-.wf-office .wf-rail-left {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+.wf-net-edge.on {
+  stroke: rgba(var(--accent-rgb), 0.55);
+  stroke-width: 1.75;
 }
-.wf-office .wf-rail-right {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  grid-column: 3;
+
+/* node group — gentle idle float on the inner .wf-net-float wrapper */
+.wf-net-node {
+  cursor: pointer;
 }
-.wf-office .wf-center-spacer {
-  grid-column: 2;
+.wf-net-float {
+  animation: wf-net-float var(--dur, 7s) ease-in-out var(--delay, 0s) infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes wf-net-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* node body: soft halo + white disc + hairline border */
+.wf-net-halo {
+  fill: rgba(23, 20, 15, 0.05);
+}
+.wf-net-disc {
+  fill: var(--surface);
+  stroke: var(--line-strong);
+  stroke-width: 1.25;
+  filter: drop-shadow(0 2px 5px rgba(23, 20, 15, 0.08));
+  transition:
+    stroke 0.2s ease,
+    stroke-width 0.2s ease;
+}
+.wf-net-node.hub .wf-net-disc {
+  stroke: rgba(var(--accent-rgb), 0.4);
+  stroke-width: 1.5;
+}
+.wf-net-node.status-working .wf-net-disc {
+  stroke: rgba(47, 122, 74, 0.5);
+}
+.wf-net-node.status-waiting .wf-net-disc {
+  stroke: rgba(var(--accent-rgb), 0.55);
+}
+.wf-net-node.status-error .wf-net-disc {
+  stroke: rgba(179, 58, 47, 0.55);
+}
+.wf-net-node.active .wf-net-disc {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.wf-net-node.status-offline .wf-net-float {
+  opacity: 0.55;
+}
+
+/* status pulse ring on working / waiting nodes */
+.wf-net-pulse {
+  fill: none;
+  stroke-width: 1.5;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: wf-net-pulse 2.8s ease-out infinite;
+}
+@keyframes wf-net-pulse {
+  0% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.35);
+  }
+}
+
+.wf-net-emoji {
+  user-select: none;
+  pointer-events: none;
+}
+.wf-net-name {
+  fill: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 600;
+  pointer-events: none;
+}
+.wf-net-node.hub .wf-net-name {
+  fill: var(--accent-ink);
+}
+.wf-net-status {
+  fill: var(--ink-faint);
+  font-family: var(--font-display);
+  pointer-events: none;
+}
+.wf-net-status-dot {
   pointer-events: none;
 }
 
-/* dark glass card used across the overlay (office re-styles it richer below) */
+/* satellite workers */
+.wf-net-sat {
+  fill: var(--ink-faint);
+  stroke: var(--surface);
+  stroke-width: 1.5;
+  opacity: 0.8;
+}
+.wf-net-node.status-working .wf-net-sat {
+  fill: var(--ok);
+}
+
+/* pending badge on a node */
+.wf-net-badge circle {
+  fill: var(--accent);
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+.wf-net-badge text {
+  fill: #ffffff;
+  font-family: var(--font-geist-mono);
+  font-weight: 700;
+  pointer-events: none;
+}
+
+/* interaction layer: real HTML buttons mapped 1:1 over the decorative SVG. The
+   layer matches the viewBox aspect ratio and is centred exactly like the SVG
+   under xMidYMid meet, so percentage-positioned hotspots track node coords. */
+.wf-net-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none; /* clicks fall through gaps; hotspots re-enable */
+}
+.wf-net-hotspot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+.wf-net-hit-btn {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+}
+.wf-net-hit-btn:focus-visible {
+  box-shadow:
+    0 0 0 2.5px var(--surface),
+    0 0 0 4.5px var(--accent);
+}
+
+/* node popover (open / call) — anchored to the hotspot, always reachable */
+.wf-net-pop {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  width: 176px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  font-family: var(--font-display);
+}
+.wf-net-pop.above {
+  bottom: calc(50% + 8px);
+}
+.wf-net-pop.below {
+  top: calc(50% + 8px);
+}
+.wf-net-pop-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.wf-net-pop-emoji {
+  font-size: 14px;
+  line-height: 1;
+}
+.wf-net-pop-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.wf-net-pop-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--ink-faint);
+}
+.wf-net-pop-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: none;
+}
+.wf-net-pop-actions {
+  display: flex;
+  gap: 6px;
+}
+.wf-net-pop-btn {
+  flex: 1;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+.wf-net-pop-btn:hover {
+  background: var(--accent-ink);
+  border-color: var(--accent-ink);
+}
+.wf-net-pop-btn.ghost {
+  background: var(--surface);
+  border-color: var(--line-strong);
+  color: var(--ink-soft);
+}
+.wf-net-pop-btn.ghost:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+/* ============================================================================
+   ISOMETRIC OFFICE (AgentOfficeIso) — the WebGL-free centrepiece
+   A stylized top-down iso room: SVG polygons for the floor/walls/desks/agents,
+   a 1:1 HTML button overlay for real, keyboard-accessible interaction. Lives
+   inside the same `.wf-office3d` stage box (sized min-height + lit gradient bg).
+   ========================================================================== */
+.wf-officeiso {
+  position: relative;
+  flex: 1;
+  min-height: 540px;
+  display: grid;
+  place-items: center;
+}
+/* The SVG + the HTML interaction layer stack in the SAME centred aspect box
+   (viewBox ratio), so projected desk coords map 1:1 with no letterbox drift.
+   Aspect-fit within BOTH width and height: drive off height, let the width
+   follow the aspect, and clamp with max-width so a wide-but-short card fits. */
+.wf-officeiso-box {
+  position: relative;
+  aspect-ratio: var(--iso-ar, 1.6);
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  max-height: 100%;
+}
+.wf-officeiso-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+/* text inside the SVG (nameplates, emoji) */
+.wf-officeiso-svg text {
+  font-family: var(--font-display);
+}
+.wf-token-emoji {
+  font-family:
+    "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+}
+
+/* ── grounding shadows soften a touch under the desk ─────────────────────── */
+.wf-desk-shadow {
+  opacity: 0.9;
+}
+
+/* ── status ring on the floor under a working / waiting desk ─────────────── */
+.wf-desk-ring {
+  opacity: 0.5;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: wf-iso-ring var(--dur, 4s) ease-in-out var(--d, 0s) infinite;
+}
+.wf-desk.status-waiting .wf-desk-ring {
+  animation-duration: 2.2s;
+}
+@keyframes wf-iso-ring {
+  0%,
+  100% {
+    opacity: 0.32;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.04);
+  }
+}
+
+/* ── the character token: gentle bob while working ──────────────────────── */
+/* The outer .wf-token <g> carries the projected translate() ATTRIBUTE; we bob
+   a nested .wf-token-bob wrapper so the CSS transform never clobbers the
+   positioning attribute. */
+.wf-token-bob.working {
+  animation: wf-iso-bob var(--dur, 3.6s) ease-in-out var(--d, 0s) infinite;
+}
+@keyframes wf-iso-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2.4px);
+  }
+}
+
+/* ── waiting attention pulse above the head ─────────────────────────────── */
+.wf-attn-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: wf-iso-attn 1.8s ease-out infinite;
+}
+@keyframes wf-iso-attn {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+/* ── monitor screen glow while working ──────────────────────────────────── */
+.wf-monitor-screen {
+  transition: fill 0.4s ease;
+}
+.wf-monitor.working .wf-monitor-screen {
+  animation: wf-iso-screen 2.6s ease-in-out infinite;
+}
+@keyframes wf-iso-screen {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.14);
+  }
+}
+
+/* ── nameplate: lift + emphasize on active/hover ────────────────────────── */
+.wf-nameplate {
+  transition: transform 0.2s ease;
+}
+.wf-nameplate-card {
+  transition:
+    filter 0.2s ease,
+    stroke 0.2s ease;
+  filter: drop-shadow(0 3px 8px rgba(23, 20, 15, 0.1));
+}
+.wf-desk.active .wf-nameplate {
+  transform: translateY(-3px);
+}
+.wf-desk.active .wf-nameplate-card {
+  stroke: var(--accent);
+  filter: drop-shadow(0 6px 16px rgba(207, 90, 52, 0.22));
+}
+/* subtle lift on hover/active — applied to the inner bob wrapper, never the
+   positioned .wf-token group (whose translate attribute must stay intact) */
+.wf-desk {
+  transition: filter 0.2s ease;
+}
+.wf-token-bob {
+  transition: transform 0.2s ease;
+}
+.wf-desk.active .wf-token-bob {
+  transform: translateY(-1.5px);
+}
+
+/* ── subagent workers: pop in + potter ──────────────────────────────────── */
+/* Outer .wf-worker <g> carries the projected translate() attribute. The nested
+   .wf-worker-pop scales/fades IN, and .wf-worker-body pots gently — neither
+   touches the positioning attribute. */
+.wf-worker-pop {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: wf-iso-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.wf-worker-body {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: wf-iso-potter var(--wdur, 2.6s) ease-in-out var(--wd, 0s) infinite;
+}
+@keyframes wf-iso-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  70% {
+    transform: scale(1.14);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes wf-iso-potter {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-2px) rotate(3deg);
+  }
+}
+
+/* ── interaction overlay: real, keyboard-accessible buttons over the SVG ── */
+.wf-officeiso-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+.wf-officeiso-hotspot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+.wf-officeiso-hit {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.wf-officeiso-hit:hover,
+.wf-officeiso-hit.active {
+  background: rgba(207, 90, 52, 0.07);
+}
+.wf-officeiso-hit:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* popover reuses the same look as the 2D network popover */
+.wf-officeiso-pop {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  width: 176px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  font-family: var(--font-display);
+}
+.wf-officeiso-pop.above {
+  bottom: calc(100% + 6px);
+}
+.wf-officeiso-pop.below {
+  top: calc(100% + 6px);
+}
+.wf-officeiso-pop-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.wf-officeiso-pop-emoji {
+  font-size: 14px;
+  line-height: 1;
+}
+.wf-officeiso-pop-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.wf-officeiso-pop-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--ink-faint);
+}
+.wf-officeiso-pop-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: none;
+}
+.wf-officeiso-pop-actions {
+  display: flex;
+  gap: 6px;
+}
+.wf-officeiso-pop-btn {
+  flex: 1;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+.wf-officeiso-pop-btn:hover {
+  background: var(--accent-ink);
+  border-color: var(--accent-ink);
+}
+.wf-officeiso-pop-btn.ghost {
+  background: var(--surface);
+  border-color: var(--line-strong);
+  color: var(--ink-soft);
+}
+.wf-officeiso-pop-btn.ghost:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+/* Reduced motion: freeze every ambient animation but keep the room fully
+   rendered + clickable. Workers appear instantly (no pop), rings/bobs settle. */
+@media (prefers-reduced-motion: reduce) {
+  .wf-officeiso-svg .wf-desk-ring,
+  .wf-officeiso-svg .wf-token-bob,
+  .wf-officeiso-svg .wf-attn-pulse,
+  .wf-officeiso-svg .wf-monitor-screen,
+  .wf-officeiso-svg .wf-worker-pop,
+  .wf-officeiso-svg .wf-worker-body {
+    animation: none !important;
+  }
+  /* workers must remain fully visible even though the pop animation (which
+     ends at opacity:1) is disabled */
+  .wf-officeiso-svg .wf-worker-pop {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* Small screens: the container-query sizing already scales the whole scene to
+   fit; nothing to reflow. Give the stage a touch less min-height so it doesn't
+   dominate a phone viewport. */
+@media (max-width: 560px) {
+  .wf-officeiso,
+  .wf-officeiso .wf-officeiso-box {
+    min-height: 300px;
+  }
+}
+
+/* ── embedded approvals rail ────────────────────────────────────────────── */
+.wf-approvals-embed {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.wf-approvals-embed .wf-card-head h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.wf-embed-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  color: #ffffff;
+  font-family: var(--font-geist-mono);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+.wf-open-approvals {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent-ink);
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.wf-open-approvals:hover {
+  text-decoration: underline;
+}
+.wf-open-approvals svg {
+  width: 14px;
+  height: 14px;
+}
+.wf-embed-empty {
+  font-size: 13px;
+  color: var(--ink-faint);
+  line-height: 1.5;
+}
+.wf-embed-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.wf-embed-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+}
+.wf-embed-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.wf-embed-emoji {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-size: 13px;
+}
+.wf-embed-action {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wf-embed-risk {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-geist-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1px solid var(--line-strong);
+  color: var(--ink-soft);
+}
+.wf-embed-risk.high {
+  border-color: rgba(179, 58, 47, 0.35);
+  background: rgba(179, 58, 47, 0.1);
+  color: var(--err);
+}
+.wf-embed-risk.medium {
+  border-color: rgba(176, 115, 26, 0.35);
+  background: rgba(176, 115, 26, 0.1);
+  color: var(--warn);
+}
+.wf-embed-risk.low {
+  border-color: rgba(47, 122, 74, 0.3);
+  background: rgba(47, 122, 74, 0.08);
+  color: var(--ok);
+}
+.wf-embed-meta {
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+.wf-embed-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+.wf-embed-actions form {
+  display: contents;
+}
+.wf .act.tiny {
+  min-height: 30px;
+  padding: 5px 12px;
+  font-size: 12.5px;
+}
+.wf-embed-review {
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent-ink);
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.wf-embed-review:hover {
+  text-decoration: underline;
+}
+.wf-embed-more {
+  padding-top: 2px;
+}
+.wf-embed-more button {
+  width: 100%;
+  padding: 8px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--ink-soft);
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+.wf-embed-more button:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+/* ── latest activity card ───────────────────────────────────────────────── */
+.wf-activity-card .wf-peek-item {
+  position: relative;
+  padding-right: 40px;
+}
+.wf-peek-open {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: none;
+  color: var(--ink-faint);
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+.wf-peek-open svg {
+  width: 15px;
+  height: 15px;
+}
+.wf-peek-item:hover .wf-peek-open,
+.wf-peek-item:focus-within .wf-peek-open {
+  opacity: 1;
+}
+.wf-peek-open:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+
+/* office cards on the flat light page: plain surface, no blur/heavy lift */
+.wf-office .wf-card {
+  background: var(--surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+  padding: 16px 18px;
+}
+
+/* light glass card used across the overlay (office re-styles it below) */
 .wf-card {
-  background: rgba(28, 23, 18, 0.92);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: saturate(1.05) blur(10px);
   -webkit-backdrop-filter: saturate(1.05) blur(10px);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   color: var(--ink);
   /* floats over the 3D net — a soft lift keeps it legible without looking heavy */
-  box-shadow: 0 10px 30px -14px rgba(0, 0, 0, 0.7);
+  box-shadow: var(--shadow-md);
   padding: 15px 16px;
 }
 .wf-card-head {
@@ -1172,7 +2119,7 @@
   justify-content: center;
   border-radius: var(--radius-full);
   background: var(--accent);
-  color: #1a130d;
+  color: #ffffff;
   font-size: 11px;
   font-weight: 600;
   line-height: 1;
@@ -1210,7 +2157,7 @@
 }
 .wf-icon-btn.call:hover {
   background: var(--accent);
-  color: #1a130d;
+  color: #ffffff;
   border-color: var(--accent);
 }
 .wf-icon-btn svg {
@@ -1331,7 +2278,7 @@
 .wf-call-scrim {
   position: fixed;
   inset: 0;
-  background: rgba(8, 6, 4, 0.5);
+  background: rgba(23, 20, 15, 0.28);
   backdrop-filter: blur(1px);
   -webkit-backdrop-filter: blur(1px);
   pointer-events: auto;
@@ -1345,7 +2292,7 @@
   background: var(--surface);
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-lg);
-  box-shadow: 0 22px 55px -14px rgba(0, 0, 0, 0.75);
+  box-shadow: 0 22px 55px -18px rgba(23, 20, 15, 0.28);
   animation: wf-rise 0.2s ease;
 }
 .wf-call-dock-head {
@@ -1421,7 +2368,7 @@
 
 /* ============================================================================
    CHAT + VOICE CALL — one cohesive product chat panel (header · messages ·
-   composer), with the voice call living in the header. Warm-dark theme.
+   composer), with the voice call living in the header. Warm-light theme.
    ========================================================================== */
 
 .wf .sr-only {
@@ -1556,8 +2503,8 @@
   box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.14);
 }
 .wf .cp-call-btn.on:hover {
-  background: rgba(224, 113, 79, 0.22);
-  border-color: rgba(224, 113, 79, 0.6);
+  background: rgba(179, 58, 47, 0.1);
+  border-color: rgba(179, 58, 47, 0.5);
   color: var(--err);
 }
 
@@ -1755,6 +2702,52 @@
   border-color: rgba(var(--accent-rgb), 0.5);
   box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.14);
 }
+/* while a file is dragged over the composer */
+.wf .composer {
+  position: relative;
+}
+.wf .composer.is-drop {
+  border-color: rgba(var(--accent-rgb), 0.7);
+  border-style: dashed;
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.16);
+}
+.wf .composer-drop {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+  color: var(--accent-ink, var(--accent));
+  font-size: 12.5px;
+  font-weight: 600;
+  pointer-events: none;
+}
+/* paperclip attach button — quieter sibling of the send button */
+.wf .composer-attach {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-full);
+  border: none;
+  background: transparent;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+.wf .composer-attach:hover {
+  background: var(--surface);
+  color: var(--ink);
+}
+.wf .composer-note {
+  color: var(--warn);
+}
 .wf .composer textarea {
   flex: 1;
   min-width: 0;
@@ -1783,7 +2776,7 @@
   border-radius: var(--radius-full);
   border: none;
   background: var(--accent);
-  color: #1a130d;
+  color: #ffffff;
   cursor: pointer;
   transition:
     background-color 0.15s ease,
@@ -1791,7 +2784,7 @@
     transform 0.12s ease;
 }
 .wf .composer-send:hover:not(:disabled) {
-  background: #e07d55;
+  background: #b84a28;
 }
 .wf .composer-send:active:not(:disabled) {
   transform: scale(0.92);
@@ -1880,13 +2873,13 @@
 }
 @keyframes cp-pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(214, 106, 64, 0.5);
+    box-shadow: 0 0 0 0 rgba(207, 90, 52, 0.5);
   }
   70% {
-    box-shadow: 0 0 0 7px rgba(214, 106, 64, 0);
+    box-shadow: 0 0 0 7px rgba(207, 90, 52, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(214, 106, 64, 0);
+    box-shadow: 0 0 0 0 rgba(207, 90, 52, 0);
   }
 }
 .wf .cp-state {
@@ -1927,11 +2920,11 @@
 }
 .wf .cp-interrupt {
   color: var(--err);
-  border-color: rgba(224, 113, 79, 0.4);
+  border-color: rgba(179, 58, 47, 0.35);
 }
 .wf .cp-interrupt:hover {
-  background: rgba(224, 113, 79, 0.1);
-  border-color: rgba(224, 113, 79, 0.55);
+  background: rgba(179, 58, 47, 0.08);
+  border-color: rgba(179, 58, 47, 0.5);
   color: var(--err);
 }
 
@@ -2059,72 +3052,406 @@
 .wf .wf-agent {
   padding-top: 6px;
 }
-/* full-width identity header */
-.wf .wf-agent-head {
-  padding: 16px 18px;
-  margin-bottom: 14px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  box-shadow: none;
+
+/* ============================================================================
+   AGENT WORKSPACE — a big chat centerpiece + a collapsible info sidebar.
+   Fills the viewport height under the topbar so the chat feels like a real
+   AI-agent surface. The sidebar docks on the right on desktop (open by default,
+   collapse to give the chat full width) and becomes a slide-over sheet on mobile.
+   ========================================================================== */
+.wf .wf-ws {
+  position: relative;
+  display: grid;
+  /* two columns on desktop: chat fills, sidebar is a fixed rail. When collapsed
+     the rail width goes to 0 and the chat expands to the whole width. */
+  grid-template-columns: minmax(0, 1fr) var(--wf-side-w, 380px);
+  gap: 14px;
+  /* fill the space under the sticky topbar; layout reserves 56/64px pad. */
+  height: calc(100vh - 56px - 64px - 6px);
+  min-height: 480px;
+  transition: grid-template-columns 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.wf .wf-agent-head h1 {
+.wf .wf-ws.sb-closed {
+  --wf-side-w: 0px;
+  gap: 0;
+}
+
+/* ── Chat column: the dominant surface, fills the workspace box. ─────────────── */
+.wf .wf-ws-chat {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+}
+.wf .wf-ws-chat > .chat-panel {
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+}
+/* Inside the workspace the chat fills its column: the scroll region absolutely
+   fills the flex space instead of using the office card's --chat-scroll-max cap. */
+.wf .wf-ws-chat .chat-scroll {
+  position: absolute;
+  inset: 0;
+  max-height: none;
+}
+
+/* ── Sidebar toggle button — floats over the chat's top-right corner. ────────── */
+.wf .wf-ws-toggle {
+  position: absolute;
+  top: 12px;
+  /* sits just left of the round call button that lives in the chat header */
+  right: calc(var(--wf-side-w, 380px) + 14px + 62px);
+  z-index: 4;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
+  height: 34px;
+  min-height: 34px;
+  padding: 0 11px 0 9px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition:
+    right 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease;
 }
-.wf .wf-agent-head .statusline {
+.wf .wf-ws.sb-closed .wf-ws-toggle {
+  right: calc(14px + 62px);
+}
+.wf .wf-ws-toggle:hover {
+  background: var(--accent-wash);
+  border-color: rgba(var(--accent-rgb), 0.4);
+  color: var(--accent-ink);
+}
+.wf .wf-ws-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.wf .wf-ws-toggle svg {
+  flex: none;
+}
+
+/* ── Backdrop — only interactive on mobile when the sheet is open. ───────────── */
+.wf .wf-ws-backdrop {
+  display: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+/* ── The info sidebar ────────────────────────────────────────────────────────── */
+.wf .wf-ws-side {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+.wf .wf-ws.sb-closed .wf-ws-side {
+  opacity: 0;
+  pointer-events: none;
+  border-width: 0;
+}
+.wf .wf-ws-side-head {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 10px;
+  justify-content: space-between;
+  padding: 12px 12px 12px 16px;
+  border-bottom: 1px solid var(--line);
+  flex: none;
 }
-.wf .wf-agent-task {
-  margin-top: 12px;
+.wf .wf-ws-side-title {
+  font-family: var(--font-geist-mono);
+  font-size: 12px;
+  letter-spacing: 0.02em;
   color: var(--ink-soft);
-  font-size: 14px;
-  line-height: 1.5;
 }
-/* body: content area fills, chat/call rides a fixed rail on the right */
-.wf .wf-agent-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 380px;
-  gap: 14px;
-  align-items: start;
+.wf .wf-ws-side-title .sep {
+  color: var(--ink-faint);
+  margin-right: 4px;
 }
-.wf .wf-agent-main {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+.wf .wf-ws-side-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  border: 0;
+  background: transparent;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease;
 }
-.wf .wf-agent-approvals {
+.wf .wf-ws-side-close:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.wf .wf-ws-side-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
-.wf .wf-agent-rail {
-  position: sticky;
-  top: 72px;
+/* children keep their natural height so the column overflows and SCROLLS —
+   without this, flex-shrink:1 compresses the sections to fit and nothing
+   scrolls (content just clips / spills). */
+.wf .wf-ws-side-scroll > * {
+  flex: 0 0 auto;
 }
-.wf .wf-agent-rail,
-.wf .chat-col {
+
+/* ── Identity card ───────────────────────────────────────────────────────────── */
+.wf .wf-ws-identity {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.wf .wf-ws-identity-emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-size: 22px;
+  line-height: 1;
+}
+.wf .wf-ws-identity-body {
+  min-width: 0;
+  flex: 1;
+}
+.wf .wf-ws-identity-name {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--ink);
+}
+.wf .wf-ws-identity-status {
+  margin-top: 7px;
+}
+.wf .wf-ws-meta {
+  margin: 11px 0 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 7px;
 }
-/* the agent-specific panels tile in a responsive bento grid instead of stacking */
+.wf .wf-ws-meta-row {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+.wf .wf-ws-meta-row dt {
+  flex: none;
+  width: 84px;
+  font-family: var(--font-geist-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.wf .wf-ws-meta-row dd {
+  margin: 0;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+.wf .wf-ws-meta-row dd.mono {
+  font-family: var(--font-geist-mono);
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+/* ── Collapsible sidebar sections ────────────────────────────────────────────── */
+.wf .wf-ws-block {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  overflow: hidden;
+}
+.wf .wf-ws-block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 12px;
+  cursor: pointer;
+  list-style: none;
+  min-height: 44px;
+}
+.wf .wf-ws-block-head::-webkit-details-marker {
+  display: none;
+}
+.wf .wf-ws-block-title {
+  font-family: var(--font-geist-mono);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+}
+.wf .wf-ws-block-title .sep {
+  color: var(--ink-faint);
+  margin-right: 4px;
+}
+.wf .wf-ws-block-count {
+  font-family: var(--font-geist-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+/* the chevron affordance on every section head */
+.wf .wf-ws-block-head::after {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  flex: none;
+  margin-left: 2px;
+  border-right: 1.5px solid var(--ink-faint);
+  border-bottom: 1.5px solid var(--ink-faint);
+  transform: rotate(45deg) translateY(-1px);
+  transition: transform 0.15s ease;
+}
+.wf .wf-ws-block[open] .wf-ws-block-head::after {
+  transform: rotate(-135deg) translateY(1px);
+}
+.wf .wf-ws-block-body {
+  padding: 0 12px 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+.wf .wf-ws-approvals {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+/* Inside the sidebar the agent-specific panels stack in one narrow column (the
+   bento tiling belonged to the old wide main area). Wide/narrow cells collapse
+   to a single column here so nothing overflows the sidebar. */
 .wf .wf-panels {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 12px;
   align-content: start;
 }
-.wf .wf-cell {
-  min-width: 0;
+
+/* ── backlog checklist (agent panel) — readable list; the reassign control is
+   compact and revealed on hover/focus so the text stays clean ─────────────── */
+.wf .wf-backlog {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
 }
+.wf .wf-backlog-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.wf .wf-backlog-row:last-child {
+  border-bottom: 0;
+}
+.wf .wf-backlog-mark {
+  flex: none;
+  margin-top: 1px;
+  color: var(--ink-faint);
+  font-size: 13px;
+}
+.wf .wf-backlog-text {
+  flex: 1;
+  min-width: 0;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.wf .wf-backlog-row.is-done .wf-backlog-text {
+  color: var(--ink-faint);
+  text-decoration: line-through;
+}
+.wf .wf-backlog-done {
+  flex: none;
+  font-family: var(--font-geist-mono);
+  font-size: 11px;
+  color: var(--accent-ink);
+  white-space: nowrap;
+}
+/* compact reassign control — hidden until the row is hovered/focused (always
+   shown on touch devices where there is no hover) */
+.wf .wf-backlog-hand {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.wf .wf-backlog-row:hover .wf-backlog-hand,
+.wf .wf-backlog-row:focus-within .wf-backlog-hand {
+  opacity: 1;
+}
+@media (hover: none) {
+  .wf .wf-backlog-hand {
+    opacity: 1;
+  }
+}
+.wf .wf-backlog-hand select {
+  max-width: 92px;
+  padding: 2px 4px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+}
+.wf .wf-backlog-hand-btn {
+  padding: 3px 9px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.wf .wf-backlog-hand-btn:hover {
+  background: #b84a28;
+}
+.wf .wf-backlog-hand-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.wf .wf-cell,
 .wf .wf-cell-wide {
-  grid-column: 1 / -1;
+  min-width: 0;
 }
 
 /* ---- agent-panel internals: compact, content-sized, tight empty states ----
@@ -2290,12 +3617,61 @@
 .wf .wf-collapse[open] .wf-collapse-hint::after {
   transform: rotate(-135deg) translateY(-1px);
 }
-@media (max-width: 1100px) {
-  .wf .wf-agent-body {
-    grid-template-columns: 1fr;
+/* ── Mobile / tablet (<1024px): sidebar becomes a slide-over sheet ──────────────
+   The chat takes the full width; the info sidebar overlays from the right as a
+   sheet, toggled by the same button, dismissed by a tap on the backdrop. */
+@media (max-width: 1023.98px) {
+  .wf .wf-ws {
+    display: block;
+    height: calc(100vh - 56px - 64px - 6px);
+    grid-template-columns: none;
   }
-  .wf .wf-agent-rail {
-    position: static;
+  .wf .wf-ws-chat {
+    height: 100%;
+  }
+  /* the toggle floats at a fixed spot regardless of sidebar state on mobile */
+  .wf .wf-ws-toggle,
+  .wf .wf-ws.sb-closed .wf-ws-toggle {
+    right: calc(14px + 62px);
+  }
+  /* backdrop covers the chat while the sheet is open */
+  .wf .wf-ws-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: rgba(23, 20, 15, 0.32);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.24s ease;
+    cursor: pointer;
+  }
+  .wf .wf-ws.sb-open .wf-ws-backdrop {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  /* the sheet itself: fixed, slides in from the right */
+  .wf .wf-ws-side {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    width: min(360px, 90vw);
+    border-radius: 0;
+    border-width: 0;
+    border-left: 1px solid var(--line);
+    box-shadow: -8px 0 32px rgba(23, 20, 15, 0.12);
+    transform: translateX(100%);
+    opacity: 1;
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .wf .wf-ws.sb-open .wf-ws-side {
+    transform: translateX(0);
+  }
+  .wf .wf-ws.sb-closed .wf-ws-side {
+    opacity: 1;
+    border-left-width: 1px;
   }
 }
 .wf .wf-detail-grid,
@@ -2417,68 +3793,42 @@
 }
 
 /* ============================================================================
-   RESPONSIVE — office overlay collapses to a single readable column
+   RESPONSIVE — office grid collapses to a single readable column
    ========================================================================== */
-@media (max-width: 1180px) {
-  .wf-office .wf-overlay {
-    grid-template-columns: 320px minmax(0, 1fr);
-    justify-content: stretch;
+@media (max-width: 1100px) {
+  /* approvals rail drops below the network */
+  .wf-office-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
-  .wf-office .wf-rail-right {
-    grid-column: 1 / -1;
-    grid-row: 2;
+  .wf-net-card {
+    min-height: 460px;
   }
 }
 
-@media (max-width: 760px) {
-  /* On small screens the net becomes a calm, non-interactive backdrop and the
-     roster + call take over. Stack everything in one column. */
-  .wf-office .wf-stage {
-    position: fixed;
-    inset: 56px 0 auto 0;
-    height: 30vh;
-    opacity: 0.6;
-    z-index: 0;
+@media (max-width: 720px) {
+  .wf-office {
+    padding: 20px 16px 40px;
+    gap: 16px;
   }
-  .wf-office .wf-stage::after {
-    background: linear-gradient(to bottom, transparent 40%, var(--bg) 100%);
+  .wf-office-head {
+    gap: 16px;
   }
-  .wf-office .wf-overlay {
-    grid-template-columns: 1fr;
-    gap: 14px;
-    padding: calc(30vh - 8px) 16px 32px;
+  .wf-office-head .wf-stats {
+    flex-basis: 100%;
+    grid-template-columns: repeat(2, 1fr);
   }
-  .wf-office .wf-rail-left,
-  .wf-office .wf-rail-right {
-    grid-column: 1;
+  .wf-net-card {
+    min-height: 380px;
   }
-  .wf-office .wf-center-spacer {
+  .wf-net {
+    min-height: 340px;
+  }
+  .wf-net-legend {
     display: none;
   }
-  .wf-card {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    background: var(--surface);
-  }
-  /* touch targets ≥44px on mobile */
-  .wf-roster-item {
-    padding: 11px 8px;
-  }
-  .wf-icon-btn {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-  }
-  .wf-call-dock {
-    width: 100%;
-  }
-  .wf-call-overlay {
-    place-items: end center;
-    padding: 0;
-  }
-  .wf-call-dock {
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    border-bottom: 0;
+  /* embed action buttons stay ≥44px-friendly on touch */
+  .wf .act.tiny {
+    min-height: 40px;
   }
 }
 
@@ -3065,704 +4415,3963 @@
   }
 }
 
-/* ============================================================================
-   OFFICE DARK COMMAND DECK
-   ----------------------------------------------------------------------------
-   The office (main) page becomes a warm near-black "command deck" that makes the
-   3D constellation glow, framed with a rich-but-tasteful warm HUD. EVERYTHING in
-   this section is scoped under `.wf-office` — it CANNOT reach the light `.wf`
-   pages (insights / agents / approvals / activity), the topbar, or the global
-   `.wf` tokens. The constellation reads --hud-* off this wrapper, so overriding
-   them here (and only here) flips the 3D scene to glow-on-dark for this page.
+/* ==========================================================================
+   Hunter's outreach workspace — campaigns, pipeline, conversations, sends,
+   hand-offs. Scoped under .wf; warm-light tokens only. Lowercase copy.
    ========================================================================== */
 
-.wf-office {
-  /* --- shared palette contract (the constellation reads these) --- */
-  --hud-bg: #191510; /* warm near-black stage */
-  --hud-panel: rgba(28, 23, 18, 0.72); /* dark glass panel */
-  --hud-line: rgba(242, 237, 228, 0.14); /* hairline on dark */
-  --hud-line-strong: rgba(242, 237, 228, 0.26);
-  --hud-node-rgb: 234, 227, 216; /* warm off-white */
-  --hud-accent-rgb: 214, 106, 64; /* clay (brighter for dark) */
-  --hud-text: #f2ede4;
-  --hud-dim: #8f8578;
-  --hud-err: #e0714f;
-
-  /* the page itself is the warm-black stage */
-  background: var(--hud-bg);
-  color-scheme: dark;
+/* shared little pieces ---------------------------------------------------- */
+.wf .wf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  cursor: default;
+  white-space: nowrap;
+}
+.wf button.wf-chip {
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.wf button.wf-chip:hover {
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+.wf .wf-chip.is-active {
+  border-color: var(--accent);
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+}
+.wf .wf-chip.sm {
+  padding: 0.08rem 0.45rem;
+  font-size: 0.7rem;
+}
+.wf .wf-chip.ghost {
+  background: transparent;
+  color: var(--ink-faint);
 }
 
-/* Dark lit-deck stage: a slightly-lighter warm centre falling to darker edges so
-   the constellation feels like it sits on a lit deck, not flat black. */
-.wf-office .wf-stage {
-  background:
-    radial-gradient(
-      ellipse 78% 66% at 50% 40%,
-      rgba(58, 47, 36, 0.9) 0%,
-      rgba(37, 30, 23, 0.72) 42%,
-      var(--hud-bg) 78%
-    ), var(--hud-bg);
+.wf .wf-out-h {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink);
 }
-/* soft DARK vignette (replaces the removed light paper vignette) — keeps the
-   floating panels legible over the centre of the net. */
-.wf-office .wf-stage::after {
-  content: "";
+
+.wf .act.sm {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+  min-height: 0;
+}
+
+/* tabs -------------------------------------------------------------------- */
+.wf-agent-hunter {
+  display: block;
+}
+.wf-hunter {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.wf-hunter-tabs {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  align-self: flex-start;
+}
+.wf-hunter-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 1.1rem;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.wf-hunter-tab:hover {
+  color: var(--ink);
+}
+.wf-hunter-tab.is-active {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+}
+.wf-hunter-tab-badge {
+  min-width: 1.1rem;
+  padding: 0 0.35rem;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.7rem;
+  line-height: 1.1rem;
+  text-align: center;
+}
+.wf-hunter-pane-chat {
+  height: min(75vh, 720px);
+}
+
+/* outreach layout --------------------------------------------------------- */
+.wf-out {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.wf-out-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 22rem);
+  gap: 1.5rem;
+  align-items: start;
+}
+.wf-out-main,
+.wf-out-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+.wf-out-section {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 1.1rem 1.25rem;
+}
+.wf-out-approvals {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+@media (max-width: 960px) {
+  .wf-out-cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* campaigns --------------------------------------------------------------- */
+.wf-campaigns-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.wf-campaigns-head .wf-out-h {
+  margin: 0;
+}
+.wf-campaign-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1rem;
+}
+.wf-campaign-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.wf-campaign-card:hover {
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-md);
+}
+.wf-campaign-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.wf-campaign-name {
+  font-weight: 600;
+  color: var(--ink);
+}
+.wf-campaign-status {
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--radius-full);
+  font-size: 0.7rem;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+.wf-campaign-status.is-active {
+  background: var(--ok-bg);
+  color: var(--ok);
+  border-color: transparent;
+}
+.wf-campaign-status.is-paused {
+  background: var(--warn-bg);
+  color: var(--warn);
+  border-color: transparent;
+}
+.wf-campaign-status.is-archived {
+  color: var(--ink-faint);
+}
+.wf-campaign-goal {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.wf-campaign-counts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.4rem;
+  margin: 0;
+}
+.wf-campaign-counts div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.wf-campaign-counts dt {
+  font-size: 0.65rem;
+  color: var(--ink-faint);
+  text-transform: lowercase;
+}
+.wf-campaign-counts dd {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+.wf-campaign-assets-hint {
+  font-size: 0.7rem;
+  color: var(--ink-faint);
+}
+
+/* pipeline filter --------------------------------------------------------- */
+.wf-pipe-filter {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+.wf-pipe-filter-label {
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+  margin-right: 0.15rem;
+}
+
+/* conversations ----------------------------------------------------------- */
+.wf-convos-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+.wf-convo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.wf-thread {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  background: var(--bg);
+}
+.wf-thread-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+.wf-thread-co {
+  font-weight: 600;
+  color: var(--ink);
+}
+.wf-thread-contact {
+  font-size: 0.8rem;
+  color: var(--ink-faint);
+}
+.wf-thread-handed {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: var(--accent-ink);
+  background: var(--accent-wash);
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--radius-full);
+}
+.wf-thread-msgs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.wf-msg {
+  max-width: 85%;
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.wf-msg.is-out {
+  align-self: flex-end;
+  background: var(--accent-wash);
+  border-color: transparent;
+}
+.wf-msg.is-in {
+  align-self: flex-start;
+}
+.wf-msg-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.35rem;
+}
+.wf-msg-ts {
+  margin-left: auto;
+  font-size: 0.68rem;
+  color: var(--ink-faint);
+}
+.wf-msg-subject {
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-bottom: 0.2rem;
+  color: var(--ink);
+}
+.wf-msg-body {
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  white-space: pre-wrap;
+}
+.wf-msg-foot {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+.wf-msg-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+}
+.wf-msg-status.muted {
+  color: var(--ink-faint);
+}
+.wf-msg-copy,
+.wf-msg-reply {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--accent-ink);
+  border-radius: var(--radius-sm);
+  padding: 0.12rem 0.5rem;
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+.wf-msg-reply {
+  margin-left: auto;
+}
+.wf-msg-copy:hover,
+.wf-msg-reply:hover {
+  border-color: var(--accent);
+}
+
+/* compose + shared fields ------------------------------------------------- */
+.wf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+.wf-field > span {
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+  text-transform: lowercase;
+}
+.wf-field input,
+.wf-field select,
+.wf-field textarea,
+.wf-asset-add input,
+.wf-asset-add select,
+.wf-ce-prospects textarea {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.85rem;
+}
+.wf-field textarea,
+.wf-ce-prospects textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+.wf-field input:focus,
+.wf-field select:focus,
+.wf-field textarea:focus,
+.wf-asset-add input:focus,
+.wf-ce-prospects textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+.wf-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+.wf-compose-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.wf-compose-note {
+  margin: 0;
+  font-size: 0.72rem;
+}
+.wf-compose-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.7rem;
+}
+.wf-compose-ok {
+  font-size: 0.78rem;
+  color: var(--ok);
+}
+
+/* hand-offs --------------------------------------------------------------- */
+.wf-handoff-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.wf-handoff {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 0.85rem;
+  background: var(--surface);
+}
+.wf-handoff-top {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.wf-handoff-co {
+  font-weight: 600;
+  color: var(--ink);
+}
+.wf-handoff-contact {
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+}
+.wf-handoff-age {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: var(--ink-faint);
+}
+.wf-handoff-why {
+  margin: 0.4rem 0 0;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+.wf-handoff-next {
+  margin: 0.3rem 0 0;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+.wf-handoff-next-label {
+  color: var(--ink-faint);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-right: 0.25rem;
+}
+.wf-handoff-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+.wf-home-handoffs {
+  max-width: 40rem;
+  margin: 1.5rem auto 0;
+}
+
+/* outbound approval ------------------------------------------------------- */
+.approval.is-outbound .wf-outbound-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.25rem;
+  margin: 0.5rem 0;
+}
+.approval.is-outbound .wf-outbound-head div {
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+}
+.approval.is-outbound .wf-outbound-head dt {
+  font-size: 0.7rem;
+  color: var(--ink-faint);
+  text-transform: lowercase;
+}
+.approval.is-outbound .wf-outbound-head dd {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--ink);
+}
+.wf-outbound-held {
+  font-size: 0.75rem;
+  color: var(--warn);
+  background: var(--warn-bg);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.4rem;
+}
+.wf-outbound-edit {
+  margin-top: 0.5rem;
+}
+.wf-outbound-edit summary {
+  cursor: pointer;
+  font-size: 0.78rem;
+  color: var(--accent-ink);
+}
+.wf-outbound-editbox {
+  width: 100%;
+  margin: 0.5rem 0;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+/* campaign editor --------------------------------------------------------- */
+.wf-campaign-editor-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.wf-back {
+  font-size: 0.85rem;
+  color: var(--accent-ink);
+}
+.wf-back:hover {
+  text-decoration: underline;
+}
+.wf-campaign-editor-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.wf-ce {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 52rem;
+}
+.wf-ce-form,
+.wf-ce-assets,
+.wf-ce-prospects {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.wf-ce-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem;
+}
+.wf-ce-span {
+  grid-column: 1 / -1;
+}
+.wf-ce-rules {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 0.9rem 1rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.wf-ce-rules legend {
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+  padding: 0 0.4rem;
+}
+.wf-ce-channels {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem;
+}
+.wf-ce-rules-label {
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+}
+.wf-ce-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.wf-ce-rule-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+}
+.wf-field-sm {
+  max-width: 9rem;
+}
+.wf-ce-save {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.wf-ce-save-note {
+  font-size: 0.75rem;
+}
+
+/* assets */
+.wf-asset-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.wf-asset {
+  display: grid;
+  grid-template-columns: 12rem 1fr auto;
+  gap: 0.85rem;
+  align-items: start;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+}
+.wf-asset-embed {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: #000;
+}
+.wf-asset-thumb {
+  width: 100%;
+  max-height: 8rem;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+.wf-asset-link {
+  font-size: 0.8rem;
+  color: var(--accent-ink);
+  word-break: break-all;
+}
+.wf-asset-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+.wf-asset-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.wf-asset-title {
+  font-weight: 500;
+  font-size: 0.88rem;
+  color: var(--ink);
+}
+.wf-asset-use {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+.wf-asset-actions {
+  display: flex;
+  gap: 0.3rem;
+}
+.wf-icon-btn {
+  width: 1.75rem;
+  height: 1.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.wf-icon-btn:hover:not(:disabled) {
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+.wf-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.wf-icon-btn.danger:hover:not(:disabled) {
+  border-color: var(--err);
+  color: var(--err);
+}
+.wf-asset-add {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.wf-asset-add-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+.wf-asset-add-row input {
+  flex: 1;
+}
+.wf-asset-add-row select {
+  width: auto;
+  min-width: 6rem;
+}
+.wf-asset-upload {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+.wf-upload-btn {
+  cursor: pointer;
+}
+.wf-upload-note {
+  font-size: 0.72rem;
+}
+.wf-ce-prospects-help {
+  margin: 0;
+  font-size: 0.75rem;
+}
+.wf-ce-prospects-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.7rem;
+}
+@media (max-width: 640px) {
+  .wf-ce-grid,
+  .wf-field-row {
+    grid-template-columns: 1fr;
+  }
+  .wf-asset {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================================
+   THE OFFICE — full-width command deck (redesign)
+   Thin stats strip on top, three columns (roster · illustrated office · alerts),
+   thin latest-activity strip along the bottom. Namespaced `wf-of-*`.
+   ========================================================================== */
+.wf .wf-of {
+  display: grid;
+  /* pin the single column to the container width so the inner 3-col grid can't
+     size itself to max-content and overflow the viewport. */
+  grid-template-columns: minmax(0, 1fr);
+  /* fixed height: stats + body(fills) + activity, all on one screen, no scroll.
+     100vh minus the layout's 72px top + 24px bottom padding. */
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  height: calc(100vh - 96px);
+  overflow: hidden;
+}
+
+/* ── thin stats strip ─────────────────────────────────────────────────────*/
+.wf .wf-of-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.wf .wf-of-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+.wf .wf-of-stat-n {
+  font-size: 1.5rem;
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+.wf .wf-of-stat-l {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+.wf .wf-of-stat-sub {
+  color: var(--ink-faint);
+}
+.wf .wf-of-stat.attention {
+  border-color: rgba(var(--accent-rgb), 0.45);
+  background: var(--accent-wash);
+}
+.wf .wf-of-stat.attention .wf-of-stat-n {
+  color: var(--accent-ink);
+}
+
+/* ── three-column body ────────────────────────────────────────────────────*/
+/* The office (centre) sizes to its height-derived width; the two rails are 1fr
+   and expand to absorb ALL the leftover horizontal space, so there's no dead gap
+   around the floor. Right gets a touch more room for the approvals text. */
+.wf .wf-of-body {
+  display: grid;
+  grid-template-columns: minmax(250px, 1fr) auto minmax(310px, 1.12fr);
+  gap: 10px;
+  align-items: stretch;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+.wf .wf-of-left,
+.wf .wf-of-right {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.wf .wf-of-center {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── generic panel (used across both rails) ───────────────────────────────*/
+.wf .wf-of-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.wf .wf-of-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.wf .wf-of-panel-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+}
+.wf .wf-of-panel-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  color: var(--ink-soft);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.wf .wf-of-panel-body {
+  padding: 8px;
+}
+.wf .wf-of-mini-empty {
+  padding: 10px 8px;
+  margin: 0;
+  color: var(--ink-faint);
+  font-size: 0.82rem;
+}
+.wf .wf-of-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--accent-ink);
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.wf .wf-of-link svg {
+  width: 13px;
+  height: 13px;
+}
+.wf .wf-of-link:hover {
+  text-decoration: underline;
+}
+
+/* ── LEFT: roster ─────────────────────────────────────────────────────────*/
+.wf .wf-of-roster {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.wf .wf-of-rost {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 7px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.wf button.wf-of-rost:hover {
+  background: var(--surface-2);
+  border-color: var(--line);
+}
+.wf .wf-of-rost.is-soon {
+  cursor: default;
+  opacity: 0.55;
+}
+.wf .wf-of-rost-emoji {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-size: 0.95rem;
+}
+.wf .wf-of-rost-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.wf .wf-of-rost-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wf .wf-of-rost-role {
+  font-size: 0.74rem;
+  color: var(--ink-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wf .wf-of-rost-side {
+  margin-left: auto;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.wf .wf-of-rost-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+}
+.wf .wf-of-rost-tag {
+  margin-left: auto;
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+}
+.wf .wf-of-rost-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+
+/* status dots (shared) */
+.wf .wf-of-rost-dot.working,
+.wf .dot-working {
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.18);
+}
+.wf .wf-of-rost-dot.waiting {
+  background: var(--warn);
+  box-shadow: 0 0 0 3px rgba(176, 115, 26, 0.18);
+}
+.wf .wf-of-rost-dot.error {
+  background: var(--err);
+}
+.wf .wf-of-rost-dot.offline {
+  background: var(--ink-faint);
+  opacity: 0.5;
+}
+
+/* ── LEFT: sub-agents ─────────────────────────────────────────────────────*/
+.wf .wf-of-subs,
+.wf .wf-of-tasks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.wf .wf-of-sub {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+}
+.wf .wf-of-sub-spin {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid rgba(var(--accent-rgb), 0.25);
+  border-top-color: var(--accent);
+  animation: wf-of-spin 0.9s linear infinite;
+}
+@keyframes wf-of-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.wf .wf-of-sub-body,
+.wf .wf-of-task-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.wf .wf-of-sub-label,
+.wf .wf-of-task-name {
+  font-size: 0.83rem;
+  font-weight: 550;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wf .wf-of-sub-meta,
+.wf .wf-of-task-meta {
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── LEFT: tasks ──────────────────────────────────────────────────────────*/
+.wf .wf-of-task {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+.wf .wf-of-task:hover {
+  background: var(--surface-2);
+}
+.wf .wf-of-task-emoji {
+  flex: none;
+  font-size: 0.95rem;
+}
+
+/* ── RIGHT: approvals embed ───────────────────────────────────────────────*/
+.wf .wf-of-appr {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.wf .wf-of-appr-row {
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.wf .wf-of-appr-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.wf .wf-of-appr-emoji {
+  flex: none;
+}
+.wf .wf-of-appr-action {
+  min-width: 0;
+  flex: 1;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wf .wf-of-appr-meta {
+  margin: 2px 0 7px;
+  font-size: 0.74rem;
+  color: var(--ink-faint);
+}
+.wf .wf-of-appr-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.wf .wf-of-appr-actions form {
+  display: contents;
+}
+.wf .wf-of-review {
+  margin-left: auto;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.74rem;
+  cursor: pointer;
+}
+.wf .wf-of-review:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+.wf .wf-of-appr-more button {
+  width: 100%;
+  padding: 6px;
+  background: none;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-sm);
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.wf .wf-of-appr-more button:hover {
+  background: var(--surface-2);
+}
+
+/* risk chips (approvals + urgent) */
+.wf .wf-of-risk {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.wf .wf-of-risk.high,
+.wf .wf-of-risk.critical {
+  background: var(--err-bg);
+  color: var(--err);
+}
+.wf .wf-of-risk.medium {
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+.wf .wf-of-risk.low {
+  background: var(--surface-2);
+  color: var(--ink-soft);
+}
+
+/* ── RIGHT: urgent ────────────────────────────────────────────────────────*/
+.wf .wf-of-urgent {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.wf .wf-of-urg {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 8px;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--line-strong);
+  background: var(--surface-2);
+}
+.wf .wf-of-urg.is-error {
+  border-left-color: var(--err);
+}
+.wf .wf-of-urg.is-approval {
+  border-left-color: var(--accent);
+}
+.wf .wf-of-urg.is-handoff {
+  border-left-color: var(--warn);
+}
+.wf .wf-of-urg-emoji {
+  flex: none;
+}
+.wf .wf-of-urg-body {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.wf .wf-of-urg-text {
+  font-size: 0.83rem;
+  font-weight: 550;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wf .wf-of-urg-meta {
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── RIGHT: pulse ─────────────────────────────────────────────────────────*/
+.wf .wf-of-pulse {
+  display: flex;
+  flex-direction: column;
+}
+.wf .wf-of-pulse-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 6px;
+  font-size: 0.82rem;
+}
+.wf .wf-of-pulse-row + .wf-of-pulse-row {
+  border-top: 1px solid var(--line);
+}
+.wf .wf-of-pulse-l {
+  color: var(--ink-soft);
+}
+.wf .wf-of-pulse-v {
+  font-weight: 600;
+}
+.wf .wf-of-pulse-v.ok {
+  color: var(--ok);
+}
+.wf .wf-of-pulse-v.warn {
+  color: var(--warn);
+}
+
+/* ── CENTER: the illustrated office floor ─────────────────────────────────*/
+.wf .wf-of-floor {
+  position: relative;
+  /* The pixel office is 680×616 (≈1.104:1). Its width is height-derived (body
+     height × 680/616) so it fills the vertical space; the centre grid track is
+     `auto` and shrinks to it, letting the two rails expand into the rest. The
+     second term caps the width by the viewport minus the rails' minimums + gaps,
+     so it never forces overflow on a narrow screen. 238px ≈ top/bottom padding +
+     the stats and activity strips + the row gaps. */
+  width: min(calc((100vh - 238px) * 632 / 576), calc(100vw - 660px));
+  max-height: 100%;
+  aspect-ratio: 632 / 576;
+  margin: auto;
+  /* sharp: no border, no rounding, no shadow — the SVG has its own dark edge */
+  border-radius: 0;
+  overflow: hidden;
+  border: 0;
+  background: #0a0a0e;
+}
+.wf .wf-of-floor-img {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* a desk marker: absolutely pinned by % over the floor image */
+.wf .wf-of-desk {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  /* the walk: left/top are retargeted from JS, duration is set inline per hop */
+  transition-property: left, top;
+  transition-timing-function: linear;
+  will-change: left, top;
+}
+.wf .wf-of-desk.is-soon {
+  cursor: default;
+}
+.wf .wf-of-avatar-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 24 / 26;
+  display: grid;
+  place-items: center;
+}
+/* a soft ground shadow so the character reads as standing on the floor */
+.wf .wf-of-avatar-wrap::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 62%;
+  height: 14%;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.45), transparent 70%);
   pointer-events: none;
-  background: radial-gradient(
-    ellipse 66% 60% at 50% 42%,
-    transparent 52%,
-    rgba(12, 9, 6, 0.55) 100%
-  );
+}
+.wf .wf-of-avatar {
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.wf .wf-of-avatar.face-left {
+  transform: scaleX(-1);
+}
+/* pixel walk bob — hops the sprite (not the shadow) while it moves */
+.wf .wf-of-avatar-wrap:has(.wf-of-avatar.is-walking) > .wf-of-avatar {
+  animation: wf-walk-bob 0.42s steps(2, end) infinite;
+}
+.wf .wf-of-avatar.is-walking.face-left {
+  animation-name: wf-walk-bob-l;
+}
+@keyframes wf-walk-bob {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8%);
+  }
+}
+@keyframes wf-walk-bob-l {
+  0%, 100% {
+    transform: scaleX(-1) translateY(0);
+  }
+  50% {
+    transform: scaleX(-1) translateY(-8%);
+  }
+}
+.wf button.wf-of-desk:hover .wf-of-avatar-wrap {
+  transform: scale(1.14);
+}
+.wf .wf-of-desk.is-soon .wf-of-avatar {
+  filter: grayscale(1) brightness(0.8);
+  opacity: 0.45;
+}
+/* sub-agents: little robots that pop in and wander their parent's room */
+.wf .wf-of-subagent {
+  animation: wf-of-spawn 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+@keyframes wf-of-spawn {
+  from {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
 }
 
-/* --- dark-glass panels: every office card becomes translucent dark glass ---- */
-.wf-office .wf-card {
-  background: var(--hud-panel);
-  backdrop-filter: saturate(1.05) blur(14px);
-  -webkit-backdrop-filter: saturate(1.05) blur(14px);
-  border: 1px solid var(--hud-line);
+/* status GLOW — a coloured drop-shadow that hugs the sprite's pixels (the SVGs
+   are transparent, so the glow traces the character outline). Working pulses;
+   waiting/error hold steady. The filter lives on the avatar wrap so the walk-bob
+   (a transform on the img) and the glow don't fight over the same property. */
+.wf .wf-of-desk.is-working .wf-of-avatar-wrap {
+  animation: wf-of-glow 1.7s ease-in-out infinite;
+}
+.wf .wf-of-desk.is-waiting .wf-of-avatar-wrap {
+  filter: drop-shadow(0 0 2px rgba(255, 194, 61, 0.95))
+    drop-shadow(0 0 7px rgba(255, 194, 61, 0.55));
+}
+.wf .wf-of-desk.is-error .wf-of-avatar-wrap {
+  filter: drop-shadow(0 0 2px rgba(255, 59, 92, 0.95))
+    drop-shadow(0 0 8px rgba(255, 59, 92, 0.6));
+}
+@keyframes wf-of-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 2px rgba(var(--accent-rgb), 0.85))
+      drop-shadow(0 0 6px rgba(var(--accent-rgb), 0.45));
+  }
+  50% {
+    filter: drop-shadow(0 0 4px rgba(var(--accent-rgb), 1))
+      drop-shadow(0 0 13px rgba(var(--accent-rgb), 0.7));
+  }
+}
+/* sub-agents glow softly too, so a running worker reads as "active" */
+.wf .wf-of-subagent .wf-of-avatar-wrap {
+  filter: drop-shadow(0 0 2px rgba(120, 200, 230, 0.8))
+    drop-shadow(0 0 7px rgba(120, 200, 230, 0.45));
+}
+
+/* speech bubble — when an agent needs the owner's input it "speaks up": a white
+   bubble with black text floating above the avatar, with a tail pointing down at
+   its head. Sits above the sprite and tracks it as it wanders. */
+.wf .wf-of-speech {
+  position: absolute;
+  bottom: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  min-width: 16px;
+  padding: 2px 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: #fff;
+  color: #111;
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: nowrap;
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.5);
+  animation: wf-of-speech-pop 0.25s ease-out;
+}
+/* the tail: a small white triangle pointing down toward the avatar's head */
+.wf .wf-of-speech::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid #fff;
+}
+@keyframes wf-of-speech-pop {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(3px) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+.wf .wf-of-workers {
+  position: absolute;
+  bottom: 2px;
+  right: 2%;
+  padding: 0 5px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-full);
+  background: rgba(27, 36, 54, 0.9);
+  color: #cfe;
+  font-size: 0.64rem;
+  font-weight: 700;
+  font-family: var(--font-geist-mono);
+}
+
+/* nameplate under the avatar */
+.wf .wf-of-plate {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: none;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  background: rgba(11, 14, 20, 0.82);
+  backdrop-filter: blur(2px);
+  white-space: nowrap;
+}
+.wf .wf-of-plate-name {
+  font-size: 0.6rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+.wf .wf-of-plate-status {
+  font-size: 0.52rem;
+  color: rgba(255, 255, 255, 0.58);
+  text-transform: lowercase;
+}
+.wf .wf-of-desk.is-working .wf-of-plate-status {
+  color: #ffb59b;
+}
+.wf .wf-of-desk.is-waiting .wf-of-plate-status {
+  color: #ffd58a;
+}
+
+/* hover tooltip */
+.wf .wf-of-tip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 120px;
+  max-width: 220px;
+  padding: 7px 9px;
+  border-radius: var(--radius-sm);
+  background: #10151f;
+  color: #fff;
+  font-size: 0.74rem;
+  line-height: 1.3;
+  text-align: left;
+  white-space: normal;
+  box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+.wf .wf-of-tip em {
+  font-style: normal;
+  color: rgba(255, 255, 255, 0.65);
+}
+.wf button.wf-of-desk:hover .wf-of-tip,
+.wf button.wf-of-desk:focus-visible .wf-of-tip {
+  opacity: 1;
+}
+
+/* ── bottom: latest-activity strip ────────────────────────────────────────*/
+.wf .wf-of-activity {
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  color: var(--hud-text);
-  /* soft outer lift on dark + a faint warm inner glow so panels feel lit */
-  box-shadow:
-    0 18px 44px -22px rgba(0, 0, 0, 0.8),
-    inset 0 1px 0 rgba(242, 237, 228, 0.05);
+  box-shadow: var(--shadow-sm);
+  padding: 8px 12px;
 }
-.wf-office .wf-card-head h2 {
-  color: var(--hud-text);
+.wf .wf-of-activity-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
 }
-.wf-office .wf-card-head .wf-see-all,
-.wf-office .wf-see-all {
-  color: rgb(var(--hud-accent-rgb));
+.wf .wf-of-activity-head h2 {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+}
+.wf .wf-of-feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.wf .wf-of-feed > li {
+  flex: 0 0 auto;
+}
+.wf .wf-of-feed-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 380px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.wf .wf-of-feed-item:hover {
+  border-color: var(--line-strong);
+}
+.wf .wf-of-feed-time {
+  flex: none;
+  font-size: 0.7rem;
+  color: var(--ink-faint);
+}
+.wf .wf-of-feed-agent {
+  flex: none;
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+.wf .wf-of-feed-sum {
+  min-width: 0;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wf .wf-of-feed-sum.err {
+  color: var(--err);
 }
 
-/* identity / status header */
-.wf-office .wf-ident-title {
-  color: var(--hud-text);
+/* ── responsive: collapse the three columns ───────────────────────────────*/
+@media (max-width: 1180px) {
+  /* stacked: drop the one-screen constraint and let the page scroll */
+  .wf .wf-of {
+    height: auto;
+    overflow: visible;
+    grid-template-rows: auto auto auto;
+  }
+  .wf .wf-of-body {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  .wf .wf-of-left,
+  .wf .wf-of-right {
+    overflow: visible;
+  }
+  .wf .wf-of-center {
+    order: -1;
+  }
+  .wf .wf-of-floor {
+    width: 100%;
+  }
 }
-.wf-office .wf-ident-sub {
-  color: var(--hud-dim);
-}
-.wf-office .wf-status-pill {
-  border: 1px solid var(--hud-line-strong);
-  background: rgba(242, 237, 228, 0.04);
-  color: var(--hud-dim);
-}
-.wf-office .wf-status-pill.live {
-  border-color: rgba(var(--hud-accent-rgb), 0.4);
-  background: rgba(var(--hud-accent-rgb), 0.12);
-  color: rgb(var(--hud-accent-rgb));
-}
-.wf-office .wf-status-pill.stale {
-  border-color: rgba(224, 113, 79, 0.34);
-  background: rgba(224, 113, 79, 0.12);
-  color: var(--hud-err);
-}
-.wf-office .wf-status-pill .dot.live {
-  background: rgb(var(--hud-accent-rgb));
-  box-shadow: 0 0 8px rgba(var(--hud-accent-rgb), 0.7);
-}
-.wf-office .wf-status-pill .dot.stale {
-  background: var(--hud-err);
+@media (max-width: 640px) {
+  .wf .wf-of-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
-/* live stats cluster — numbers glow warm off-white */
-.wf-office .wf-stat {
-  background: rgba(242, 237, 228, 0.04);
-  border: 1px solid var(--hud-line);
+/* ============================================================================
+   THE OFFICE — dark, boxier redesign (v2)
+   Scoped to the office page only via :has(.wf-of), so the other (still light)
+   dashboard pages are untouched until they get their own pass.
+   ========================================================================== */
+.wf.shell.wf-dark {
+  /* "Blackout Green" — near-black base, vivid green primary. /color-palette. */
+  --bg: #060609; /* page — near-black */
+  --surface: #101016; /* cards */
+  --surface-2: #191921; /* inset / hover */
+  --surface-3: #23232d; /* deeper hover / active */
+  --ink: #f5f6f8;
+  --ink-soft: #a2a7b4;
+  --ink-faint: #5f636e;
+  --line: rgba(255, 255, 255, 0.07);
+  --line-strong: rgba(255, 255, 255, 0.15);
+  --accent: #4ade80; /* vivid green — pops on black */
+  --accent-rgb: 74, 222, 128;
+  --accent-ink: #86efac; /* lighter green for text on dark */
+  --accent-wash: rgba(74, 222, 128, 0.14);
+  --ok: #22d3ee; /* cyan — "live" (kept distinct from the green accent) */
+  --warn: #ffc23d; /* amber */
+  --err: #ff4d6a; /* hot red */
+  --ok-bg: rgba(34, 211, 238, 0.13);
+  --warn-bg: rgba(255, 194, 61, 0.15);
+  --err-bg: rgba(255, 77, 106, 0.15);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.6);
+  --shadow-md: 0 14px 36px -16px rgba(0, 0, 0, 0.85);
+  /* boxier: tighter corners */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  background: var(--bg);
+}
+/* dark top bar across the themed dashboard */
+.wf.shell.wf-dark .wf-topbar {
+  background: rgba(6, 6, 9, 0.94);
+  border-bottom-color: var(--line);
+}
+
+/* grow panels: fill the rail and scroll their body, so siblings below (roster,
+   urgent, pulse) always stay visible. */
+.wf .wf-of-panel.is-grow {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.wf .wf-of-panel.is-grow .wf-of-panel-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+/* non-grow siblings (urgent, pulse, roster) must NOT shrink below their content,
+   or the last section (urgent) gets clipped by the grow panel above it. */
+.wf .wf-of-left .wf-of-panel:not(.is-grow),
+.wf .wf-of-left .wf-of-rosterbar,
+.wf .wf-of-right .wf-of-panel:not(.is-grow) {
+  flex: none;
+}
+
+/* ── LEFT: the merged "running" list ──────────────────────────────────────*/
+.wf .wf-of-run {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.wf .wf-of-run-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 7px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.wf button.wf-of-run-item:hover {
+  background: var(--surface-2);
+}
+.wf .wf-of-run-item.is-static {
+  cursor: default;
+}
+.wf .wf-of-run-mark {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+}
+.wf .wf-of-run-mark.agent {
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.18);
+}
+.wf .wf-of-run-mark.task {
+  background: var(--warn);
+}
+.wf .wf-of-run-mark.worker {
+  width: 12px;
+  height: 12px;
+  background: none;
+  border: 2px solid rgba(var(--accent-rgb), 0.3);
+  border-top-color: var(--accent);
+  animation: wf-of-spin 0.9s linear infinite;
+}
+.wf .wf-of-run-emoji {
+  flex: none;
+  width: 20px;
+  text-align: center;
+  font-size: 0.95rem;
+}
+.wf .wf-of-run-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.wf .wf-of-run-title {
+  font-size: 0.83rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wf .wf-of-run-sub {
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wf .wf-of-run-tag {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  color: var(--ink-faint);
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.wf .wf-of-run-tag.agent {
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+}
+
+/* ── LEFT: roster strip (all six agents in one row) ───────────────────────*/
+.wf .wf-of-rosterbar {
+  flex: none;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 8px;
+}
+.wf .wf-of-rosterbar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 0.7rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+}
+.wf .wf-of-rosterbar-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+}
+.wf .wf-of-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  padding: 6px 2px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.wf button.wf-of-chip:hover {
+  border-color: var(--line-strong);
+}
+.wf .wf-of-chip.is-soon {
+  opacity: 0.42;
+  cursor: default;
+}
+.wf .wf-of-chip-emoji {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--surface);
+  font-size: 0.95rem;
+}
+.wf .wf-of-chip-dot {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid var(--surface);
+  background: var(--ink-faint);
+}
+.wf .wf-of-chip-dot.working {
+  background: var(--accent);
+}
+.wf .wf-of-chip-dot.waiting {
+  background: var(--warn);
+}
+.wf .wf-of-chip-dot.error {
+  background: var(--err);
+}
+.wf .wf-of-chip-badge {
+  position: absolute;
+  right: -4px;
+  top: -4px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.58rem;
+  font-weight: 700;
+}
+.wf .wf-of-chip-name {
+  max-width: 100%;
+  font-size: 0.64rem;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── RIGHT: keep urgent inside a bounded, always-visible box ───────────────*/
+.wf .wf-of-urgent {
+  max-height: 24vh;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+/* boxier stat cards: flat, bordered, less padding */
+.wf .wf-of-stat {
+  padding: 9px 14px;
   border-radius: var(--radius-md);
 }
-.wf-office .wf-stat-n {
-  color: var(--hud-text);
-  text-shadow: 0 0 14px rgba(var(--hud-node-rgb), 0.25);
+
+/* ============================================================================
+   HUNTER PAGES — chat workspace + campaigns board (dark, office-style)
+   ========================================================================== */
+.wf .wf-hub {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: calc(100vh - 96px);
+  min-height: 0;
 }
-.wf-office .wf-stat.attention {
-  border-color: rgba(var(--hud-accent-rgb), 0.34);
-  background: rgba(var(--hud-accent-rgb), 0.08);
+.wf .wf-hub-head {
+  flex: none;
 }
-.wf-office .wf-stat.attention .wf-stat-n {
-  color: rgb(var(--hud-accent-rgb));
-  text-shadow: 0 0 16px rgba(var(--hud-accent-rgb), 0.4);
+.wf .wf-hub-stats {
+  flex: none;
 }
-.wf-office .wf-stat-l {
-  color: var(--hud-dim);
+/* single-column hub pages (campaigns board, campaign view, editor) */
+.wf .wf-hub-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding-right: 4px;
 }
 
-/* attention banner (approvals waiting) */
-.wf-office .wf-attention {
-  border: 1px solid rgba(var(--hud-accent-rgb), 0.4);
-  background: rgba(var(--hud-accent-rgb), 0.12);
-  color: rgb(var(--hud-accent-rgb));
+/* segmented chat / campaigns control */
+.wf .wf-hub-tabs {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
 }
-.wf-office .wf-attention .act {
-  border: 1px solid rgba(var(--hud-accent-rgb), 0.5);
-  background: rgba(var(--hud-accent-rgb), 0.16);
-  color: var(--hud-text);
+.wf .wf-hub-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink-soft);
 }
-.wf-office .wf-attention .act:hover {
-  background: rgba(var(--hud-accent-rgb), 0.28);
+.wf .wf-hub-tab:hover {
+  color: var(--ink);
+  background: var(--surface-2);
 }
-
-/* roster — light-on-dark rows */
-.wf-office .wf-roster-item:hover {
-  background: rgba(242, 237, 228, 0.05);
+.wf .wf-hub-tab.is-active {
+  background: var(--accent-wash);
+  color: var(--accent-ink);
 }
-.wf-office .wf-roster-item.on-call {
-  background: rgba(var(--hud-accent-rgb), 0.12);
-}
-.wf-office .wf-roster-emoji {
-  background: rgba(242, 237, 228, 0.05);
-  border: 1px solid var(--hud-line);
-}
-.wf-office .wf-roster-item.on-call .wf-roster-emoji {
-  border-color: rgba(var(--hud-accent-rgb), 0.5);
-  background: rgba(var(--hud-accent-rgb), 0.14);
-}
-.wf-office .wf-roster-name {
-  color: var(--hud-text);
-}
-.wf-office .wf-roster-meta {
-  color: var(--hud-dim);
-}
-.wf-office .wf-roster-meta .dot.idle {
-  background: var(--hud-dim);
-}
-.wf-office .wf-roster-meta .dot.working,
-.wf-office .wf-roster-meta .dot.online {
-  background: rgb(var(--hud-accent-rgb));
-  box-shadow: 0 0 6px rgba(var(--hud-accent-rgb), 0.6);
-}
-.wf-office .wf-roster-badge {
-  background: rgb(var(--hud-accent-rgb));
-  color: #1a130d;
-}
-.wf-office .wf-icon-btn {
-  border: 1px solid var(--hud-line-strong);
-  background: rgba(242, 237, 228, 0.04);
-  color: var(--hud-text);
-}
-.wf-office .wf-icon-btn:hover {
-  background: rgba(242, 237, 228, 0.1);
-  color: var(--hud-text);
-  border-color: var(--hud-line-strong);
-}
-.wf-office .wf-icon-btn.call {
-  border-color: rgba(var(--hud-accent-rgb), 0.45);
-  color: rgb(var(--hud-accent-rgb));
-}
-.wf-office .wf-icon-btn.call:hover {
-  background: rgb(var(--hud-accent-rgb));
-  color: #1a130d;
-  border-color: rgb(var(--hud-accent-rgb));
+.wf .wf-hub-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
 }
 
-/* latest activity peek */
-.wf-office .wf-peek-item {
-  border-bottom: 1px solid var(--hud-line);
+/* chat page: 3 columns, chat in the middle */
+.wf .wf-hub-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(0, 1.75fr) minmax(300px, 1.1fr);
+  gap: 8px;
 }
-.wf-office .wf-peek-agent {
-  color: var(--hud-text);
+.wf .wf-hub-col {
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding-right: 3px;
 }
-.wf-office .wf-peek-time {
-  color: var(--hud-dim);
+.wf .wf-hub-center {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  overflow: hidden;
 }
-.wf-office .wf-peek-summary {
-  color: rgba(242, 237, 228, 0.78);
+.wf .wf-hub-center > * {
+  flex: 1;
+  min-height: 0;
 }
-.wf-office .wf-peek-summary.err {
-  color: var(--hud-err);
-}
-.wf-office .empty {
-  color: var(--hud-dim);
+@media (max-width: 1180px) {
+  .wf .wf-hub {
+    height: auto;
+  }
+  .wf .wf-hub-body {
+    grid-template-columns: 1fr;
+  }
+  .wf .wf-hub-col {
+    overflow: visible;
+  }
+  .wf .wf-hub-center {
+    order: -1;
+    min-height: 62vh;
+  }
 }
 
-/* ── office chat card (right rail): agent switcher + inline ChatPane ────────── */
-.wf-office .wf-chatcard {
+/* campaigns board title + card hit-area / edit pencil */
+.wf .wf-campaigns-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+.wf .wf-campaign-card {
+  position: relative;
+}
+.wf .wf-campaign-card-hit {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+}
+.wf .wf-campaign-card-top,
+.wf .wf-campaign-goal,
+.wf .wf-campaign-counts,
+.wf .wf-campaign-assets-hint {
+  position: relative;
+  pointer-events: none;
+}
+.wf .wf-campaign-card .wf-campaign-card-top {
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+  padding-right: 34px;
+}
+.wf .wf-campaign-card-edit {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 2;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  color: var(--ink-soft);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.wf .wf-campaign-card-edit:hover {
+  color: var(--accent-ink);
+  border-color: var(--line-strong);
+}
+.wf .wf-campaign-card-edit svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* ── campaign VIEW page ────────────────────────────────────────────────────*/
+.wf .wf-cv {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 12px;
+  max-width: 1120px;
+  margin: 0 auto;
 }
-/* switcher: prev/next arrows flanking a horizontally-scrollable tab row */
-.wf-office .wf-chatcard-switch {
+.wf .wf-cv-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.wf .wf-cv-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.wf .wf-cv-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 680;
+  letter-spacing: -0.01em;
+}
+.wf .wf-cv-edit {
+  margin-left: auto;
+}
+.wf .wf-cv-goal {
+  margin: 2px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.wf .wf-cv-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.wf .wf-cv-brief,
+.wf .wf-cv-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.wf .wf-cv-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.wf .wf-cv-field dt {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+}
+.wf .wf-cv-field dd {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.wf .wf-cv-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.wf .wf-cv-assets {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+}
+.wf .wf-cv-asset {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.wf .wf-cv-asset-embed {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: #000;
+}
+.wf .wf-cv-asset-img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+}
+.wf .wf-cv-asset-link {
+  font-size: 0.8rem;
+  color: var(--accent-ink);
+  word-break: break-all;
+}
+.wf .wf-cv-asset-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.wf .wf-cv-asset-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.wf .wf-cv-asset-use {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+}
+@media (max-width: 900px) {
+  .wf .wf-cv-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.wf .wf-hub-pipeline {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── generic AGENT page (Chief, Scout, …): identity bar + 3-col grid ────────*/
+.wf .wf-agent-identity {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+.wf .wf-agent-identity-emoji {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-size: 1.4rem;
+}
+.wf .wf-agent-identity-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.wf .wf-agent-identity-name {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 680;
+  letter-spacing: -0.01em;
+}
+.wf .wf-agent-identity-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px;
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+.wf .wf-agent-identity-meta {
+  margin-left: auto;
+  display: flex;
+  gap: 22px;
+}
+.wf .wf-agent-identity-meta div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.wf .wf-agent-identity-meta dt {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+}
+.wf .wf-agent-identity-meta dd {
+  margin: 0;
+  font-size: 0.8rem;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* work column wider (AgentPanels bento); approvals + runs on the right */
+.wf .wf-agent-body {
+  grid-template-columns: minmax(300px, 1.35fr) minmax(0, 1.7fr) minmax(280px, 1fr);
+}
+@media (max-width: 1180px) {
+  .wf .wf-agent-identity-meta {
+    display: none;
+  }
+}
+
+/* ── clearer approval + conversation cards inside the hub rails ─────────────*/
+/* approval cards: lift them off the panel with a lighter surface + firm border
+   so each card is obviously its own block, and space them out more. */
+.wf .wf-out-approvals {
+  gap: 12px;
+}
+.wf .wf-out-approvals .approval {
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  box-shadow: var(--shadow-sm);
+}
+/* the drafted message — a real, readable block (body font, not code) */
+.wf .approval-msg {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-3);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 320px;
+  overflow: auto;
+}
+
+/* conversation threads: each thread is a distinct card with a divided header;
+   inbound/outbound bubbles keep good contrast against it. */
+.wf .wf-convo-list {
+  gap: 12px;
+}
+.wf .wf-thread {
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 0;
+  overflow: hidden;
+}
+.wf .wf-thread-head {
+  margin: 0;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-3);
+}
+.wf .wf-thread-msgs {
+  padding: 10px 12px;
+}
+.wf .wf-msg.is-in {
+  background: var(--surface-3);
+  border-color: var(--line);
+}
+.wf .wf-msg-body {
+  color: var(--ink);
+}
+
+/* Hunter right rail: split approvals and conversations into two independently
+   scrolling panels so conversations is always visible, not buried below a long
+   approvals list. (Scoped to Hunter — the generic agent rail stays stacked.) */
+.wf .wf-hub:not(.wf-agentview) .wf-of-right > .wf-of-panel {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.wf .wf-hub:not(.wf-agentview) .wf-of-right > .wf-of-panel > .wf-of-panel-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+/* ============================================================================
+   SCOUT DIGEST — clean cards (was unstyled, ran together)
+   ========================================================================== */
+.wf .wf-digest {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.wf .wf-di-header {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 650;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+.wf .wf-di-lead {
+  margin: 0;
+  font-size: 0.83rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+/* filter bar */
+.wf .wf-digest-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.wf .wf-di-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+.wf .wf-di-filter-label {
+  width: 26px;
+  flex: none;
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+}
+
+/* item card */
+.wf .wf-di-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-sm);
+}
+.wf .wf-di-card.is-raw {
+  gap: 0;
+}
+.wf .wf-di-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+.wf .wf-di-n {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+  font-family: var(--font-geist-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+.wf .wf-di-title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ink);
+}
+.wf .wf-di-meaning {
+  margin: 0;
+  padding-left: 29px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.wf .wf-di-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding-left: 29px;
+}
+.wf .wf-di-tag {
+  padding: 1px 8px;
+  border-radius: var(--radius-full);
+  background: var(--surface-3);
+  border: 1px solid var(--line);
+  font-size: 0.66rem;
+  color: var(--ink-soft);
+  text-transform: lowercase;
+}
+.wf .wf-di-tag.is-for {
+  background: var(--accent-wash);
+  border-color: transparent;
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+.wf .wf-di-src {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: var(--ink-faint);
+}
+.wf .wf-di-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+.wf .wf-di-link {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent-ink);
+}
+.wf .wf-di-link:hover {
+  text-decoration: underline;
+}
+.wf .wf-di-nolink {
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+}
+.wf .wf-di-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* ── digest archive: a clean row of date tabs + the selected digest ─────────*/
+.wf .wf-archive {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.wf .wf-archive-dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.wf .wf-archive-date {
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink-soft);
+  font-family: var(--font-geist-mono);
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
+}
+.wf .wf-archive-date:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+.wf .wf-archive-date.active {
+  background: var(--accent-wash);
+  border-color: transparent;
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+.wf .wf-archive-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.wf .wf-archive-hint {
+  margin: 0;
+  padding: 4px 0;
+  font-size: 0.8rem;
+  color: var(--ink-faint);
+}
+
+/* hide scrollbars across the dashboard — scrolling still works, the track/thumb
+   just aren't painted (they read as clutter in the dark UI). */
+.wf ::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+.wf .wf-of-left,
+.wf .wf-of-right,
+.wf .wf-hub-col,
+.wf .wf-hub-scroll,
+.wf .wf-of-panel-body,
+.wf .wf-of-feed,
+.wf .wf-of-urgent,
+.wf .wf-convos {
+  scrollbar-width: none;
+}
+
+/* ── chat inside the office-style hub centre: fill the flex space (don't use the
+   62vh scroll cap) so the header + voice-call panel + messages + composer all fit
+   without clipping, exactly like the old workspace did. ────────────────────────*/
+.wf .wf-hub-center > .chat-panel {
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+}
+.wf .wf-hub-center .chat-scroll {
+  position: absolute;
+  inset: 0;
+  max-height: none;
+}
+/* keep the live-call transcript compact here so the chat below stays usable */
+.wf .wf-hub-center .cp-transcript {
+  max-height: 190px;
+}
+
+/* close (✕) for a finished call — dismiss the leftover transcript */
+.wf .cp-close {
+  margin-left: auto;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+.wf .cp-close:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+
+/* ============================================================================
+   CHIEF — backlog panel + live state view
+   ========================================================================== */
+.wf .wf-bl {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.wf .wf-bl-top {
+  display: flex;
+  justify-content: flex-end;
+}
+/* add / edit form */
+.wf .wf-bl-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+.wf .wf-bl-add {
+  margin-bottom: 2px;
+}
+.wf .wf-bl-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.wf .wf-bl-span {
+  grid-column: 1 / -1;
+}
+.wf .wf-bl-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* priority groups */
+.wf .wf-bl-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.wf .wf-bl-group-head {
   display: flex;
   align-items: center;
   gap: 8px;
 }
-.wf-office .wf-chatcard-arrow {
-  flex: none;
-  width: 32px;
-  height: 32px;
-  display: grid;
-  place-items: center;
+.wf .wf-bl-prio {
+  padding: 1px 8px;
   border-radius: var(--radius-full);
-  border: 1px solid var(--hud-line-strong);
-  background: rgba(242, 237, 228, 0.04);
-  color: var(--hud-text);
-  cursor: pointer;
-  transition:
-    background-color 0.15s ease,
-    color 0.15s ease,
-    border-color 0.15s ease;
-}
-.wf-office .wf-chatcard-arrow:hover:not(:disabled) {
-  background: rgba(242, 237, 228, 0.1);
-  border-color: rgba(var(--hud-accent-rgb), 0.5);
-  color: rgb(var(--hud-accent-rgb));
-}
-.wf-office .wf-chatcard-arrow:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-.wf-office .wf-chatcard-arrow svg {
-  width: 16px;
-  height: 16px;
-}
-.wf-office .wf-chatcard-tabs {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 2px;
-  scroll-snap-type: x proximity;
-}
-.wf-office .wf-chatcard-tabs::-webkit-scrollbar {
-  display: none;
-}
-.wf-office .wf-chatcard-tab {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 11px 6px 8px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--hud-line);
-  background: rgba(242, 237, 228, 0.03);
-  color: var(--hud-dim);
-  font-family: var(--font-display);
-  font-size: 12.5px;
-  font-weight: 500;
-  cursor: pointer;
-  scroll-snap-align: start;
-  transition:
-    background-color 0.15s ease,
-    color 0.15s ease,
-    border-color 0.15s ease;
-}
-.wf-office .wf-chatcard-tab:hover {
-  color: var(--hud-text);
-  border-color: var(--hud-line-strong);
-}
-.wf-office .wf-chatcard-tab.on {
-  background: rgba(var(--hud-accent-rgb), 0.14);
-  border-color: rgba(var(--hud-accent-rgb), 0.5);
-  color: rgb(var(--hud-accent-rgb));
-}
-/* a call running on a tab that isn't the current one → clay ring cue */
-.wf-office .wf-chatcard-tab.on-call:not(.on) {
-  border-color: rgba(var(--hud-accent-rgb), 0.45);
-  color: rgb(var(--hud-accent-rgb));
-}
-.wf-office .wf-chatcard-tab-emoji {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  flex: none;
-  border-radius: var(--radius-full);
-  background: rgba(242, 237, 228, 0.05);
-  font-size: 12px;
-  line-height: 1;
-}
-.wf-office .wf-chatcard-tab-name {
-  white-space: nowrap;
-}
-.wf-office .wf-chatcard-tab-badge {
-  display: inline-grid;
-  place-items: center;
-  min-width: 17px;
-  height: 17px;
-  padding: 0 5px;
-  border-radius: var(--radius-full);
-  background: rgb(var(--hud-accent-rgb));
-  color: #1a130d;
-  font-family: var(--font-geist-mono);
-  font-size: 10px;
+  font-size: 0.64rem;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
-/* the ChatPane sits in its own solid-surface pane inside the glass card */
-.wf-office .wf-chatcard-pane {
-  min-width: 0;
+.wf .wf-bl-prio.is-high {
+  background: var(--err-bg);
+  color: var(--err);
 }
-.wf-office .wf-chatcard-pane .chat-panel {
-  box-shadow: none;
+.wf .wf-bl-prio.is-normal {
+  background: var(--surface-3);
+  color: var(--ink-soft);
 }
-
-/* MonitorWave — clay waveform on dark */
-.wf-office .wf-monitor {
-  border-top: 1px solid var(--hud-line);
+.wf .wf-bl-prio.is-low {
+  background: var(--surface-2);
+  color: var(--ink-faint);
 }
-.wf-office .wf-monitor-label {
-  color: var(--hud-dim);
-}
-.wf-office .wf-monitor-label .dot {
-  background: rgb(var(--hud-accent-rgb));
-  box-shadow: 0 0 8px rgba(var(--hud-accent-rgb), 0.6);
-}
-.wf-office .wf-wave i {
-  background: rgba(var(--hud-accent-rgb), 0.7);
-}
-.wf-office .wf-monitor.degraded .wf-monitor-label {
-  color: var(--hud-err);
-}
-.wf-office .wf-monitor.degraded .wf-monitor-label .dot {
-  background: var(--hud-err);
-  box-shadow: none;
-}
-.wf-office .wf-monitor.degraded .wf-wave i {
-  background: var(--hud-line-strong);
+.wf .wf-bl-group-n {
+  font-size: 0.7rem;
+  color: var(--ink-faint);
 }
 
-/* office empty state text */
-.wf-office .wf-office-empty {
-  color: var(--hud-dim);
+/* item rows */
+.wf .wf-bl-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
-
-/* ---------------------------------------------------------------------------
-   RICH HUD FRAMING — corner brackets, readout bars, reticle, scanline, coords.
-   All decorative & pointer-events:none so they never block OrbitControls, and
-   all aria-hidden in the markup. Everything sits in the fixed stage layer.
-   --------------------------------------------------------------------------- */
-
-/* the HUD frame is a fixed overlay clipped to the stage area (below topbar) */
-.wf-office .wf-hud {
-  position: fixed;
-  inset: 56px 0 0 0;
-  z-index: 1; /* above canvas (0), below overlay cards (2) */
-  pointer-events: none;
-  font-family: var(--font-geist-mono);
-  color: var(--hud-dim);
+.wf .wf-bl-item {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
 }
-
-/* corner brackets at the four stage corners (clay/off-white hairlines) */
-.wf-office .wf-hud-bracket {
-  position: absolute;
-  width: 26px;
-  height: 26px;
-  border: 0 solid rgba(var(--hud-accent-rgb), 0.55);
+.wf .wf-bl-item.is-open {
+  border-color: var(--line-strong);
 }
-.wf-office .wf-hud-bracket::after {
-  /* faint off-white inner tick for a two-tone bracket */
-  content: "";
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  border: 0 solid var(--hud-line-strong);
-}
-.wf-office .wf-hud-bracket.tl {
-  top: 18px;
-  left: 18px;
-  border-top-width: 1.5px;
-  border-left-width: 1.5px;
-}
-.wf-office .wf-hud-bracket.tl::after {
-  top: 4px;
-  left: 4px;
-  border-top-width: 1px;
-  border-left-width: 1px;
-}
-.wf-office .wf-hud-bracket.tr {
-  top: 18px;
-  right: 18px;
-  border-top-width: 1.5px;
-  border-right-width: 1.5px;
-}
-.wf-office .wf-hud-bracket.tr::after {
-  top: 4px;
-  right: 4px;
-  border-top-width: 1px;
-  border-right-width: 1px;
-}
-.wf-office .wf-hud-bracket.bl {
-  bottom: 18px;
-  left: 18px;
-  border-bottom-width: 1.5px;
-  border-left-width: 1.5px;
-}
-.wf-office .wf-hud-bracket.bl::after {
-  bottom: 4px;
-  left: 4px;
-  border-bottom-width: 1px;
-  border-left-width: 1px;
-}
-.wf-office .wf-hud-bracket.br {
-  bottom: 18px;
-  right: 18px;
-  border-bottom-width: 1.5px;
-  border-right-width: 1.5px;
-}
-.wf-office .wf-hud-bracket.br::after {
-  bottom: 4px;
-  right: 4px;
-  border-bottom-width: 1px;
-  border-right-width: 1px;
-}
-
-/* top & bottom mono readout bars */
-.wf-office .wf-hud-readout {
-  position: absolute;
-  left: 0;
-  right: 0;
+.wf .wf-bl-row {
   display: flex;
   align-items: center;
-  gap: 18px;
-  padding: 0 clamp(52px, 6vw, 76px);
-  font-size: 10.5px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  overflow: hidden;
+  gap: 8px;
+  padding: 8px 10px;
 }
-.wf-office .wf-hud-readout.top {
-  top: 24px;
-}
-.wf-office .wf-hud-readout.bottom {
-  bottom: 24px;
-}
-.wf-office .wf-hud-tag {
-  color: rgba(var(--hud-accent-rgb), 0.85);
-}
-/* Top rule stays short in the left margin so it never runs under the
-   translucent office card (which would show it bleeding through the glass). */
-.wf-office .wf-hud-readout.top .wf-hud-sep {
-  flex: 0 0 clamp(20px, 3vw, 48px);
-}
-.wf-office .wf-hud-sep {
+.wf .wf-bl-title {
   flex: 1;
-  height: 1px;
-  min-width: 20px;
-  background: linear-gradient(to right, var(--hud-line) 0%, transparent 100%);
+  min-width: 0;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 550;
+  color: var(--ink);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.wf-office .wf-hud-metrics {
+.wf .wf-bl-title:hover {
+  color: var(--accent-ink);
+}
+.wf .wf-bl-meta {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.wf .wf-bl-owner {
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  background: var(--surface-3);
+  border: 1px solid var(--line);
+  font-size: 0.66rem;
+  color: var(--ink-soft);
+}
+.wf .wf-bl-due {
+  font-size: 0.7rem;
+}
+.wf .wf-bl-due.err {
+  color: var(--err);
+}
+.wf .wf-bl-due.accent {
+  color: var(--accent-ink);
+}
+.wf .wf-bl-due.muted {
+  color: var(--ink-faint);
+}
+.wf .wf-bl-age {
+  font-size: 0.68rem;
+  color: var(--ink-faint);
+}
+.wf .wf-bl-detail {
+  padding: 0 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+.wf .wf-bl-detail-text {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.wf .wf-bl-src {
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--ink-faint);
+}
+.wf .wf-bl-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.wf .wf-bl-hand {
   display: inline-flex;
   align-items: center;
-  gap: 14px;
-  color: var(--hud-dim);
+  gap: 4px;
+  margin-left: auto;
 }
-.wf-office .wf-hud-metrics b {
-  color: var(--hud-text);
+.wf .wf-bl-hand select {
+  font-size: 0.75rem;
+  padding: 3px 6px;
+}
+
+/* done section */
+.wf .wf-bl-donesec {
+  margin-top: 2px;
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+.wf .wf-bl-done-toggle {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.wf .wf-bl-done-toggle:hover {
+  color: var(--ink);
+}
+.wf .wf-bl-donelist {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.wf .wf-bl-doneitem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+}
+.wf .wf-bl-done-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8rem;
+  color: var(--ink-faint);
+  text-decoration: line-through;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wf .wf-bl-done-when {
+  font-size: 0.68rem;
+  color: var(--ink-faint);
+}
+.wf .wf-bl-reopen {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 0.72rem;
+  color: var(--accent-ink);
+  cursor: pointer;
+}
+.wf .wf-bl-reopen:hover {
+  text-decoration: underline;
+}
+
+/* ── STATE panel ───────────────────────────────────────────────────────────*/
+.wf .wf-st {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.wf .wf-st-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.wf .wf-st-asof {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+.wf .wf-st-stale {
+  font-size: 0.72rem;
+  color: var(--warn);
+}
+.wf .wf-st-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.wf .wf-st-title {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+}
+.wf .wf-st-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.wf .wf-st-list li {
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  padding-left: 12px;
+  position: relative;
+}
+.wf .wf-st-list li::before {
+  content: "·";
+  position: absolute;
+  left: 2px;
+  color: var(--ink-faint);
+}
+.wf .wf-st-empty {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ink-faint);
+}
+.wf .wf-st-link {
+  color: var(--accent-ink);
   font-weight: 600;
 }
-.wf-office .wf-hud-live {
+.wf .wf-st-link:hover {
+  text-decoration: underline;
+}
+
+/* evening note (chief's brief) */
+.wf .wf-brief-evening {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  white-space: pre-wrap;
+}
+
+/* ── home compact backlog ──────────────────────────────────────────────────*/
+.wf .wf-of-bl {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.wf .wf-of-bl-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+}
+.wf .wf-of-bl-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+}
+.wf .wf-of-bl-dot.is-high {
+  background: var(--err);
+}
+.wf .wf-of-bl-dot.is-normal {
+  background: var(--accent);
+}
+.wf .wf-of-bl-dot.is-low {
+  background: var(--ink-faint);
+}
+.wf .wf-of-bl-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wf .wf-of-bl-due {
+  flex: none;
+  font-size: 0.7rem;
+}
+.wf .wf-of-bl-due.err {
+  color: var(--err);
+}
+.wf .wf-of-bl-due.accent {
+  color: var(--accent-ink);
+}
+.wf .wf-of-bl-due.muted {
+  color: var(--ink-faint);
+}
+
+/* ── compact top-3 prospects (Hunter chat page) + prospects page ───────────*/
+.wf .wf-prosp-mini {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.wf .wf-prosp-mini-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: var(--radius-sm);
+}
+.wf .wf-prosp-mini-row:hover {
+  background: var(--surface-2);
+}
+.wf .wf-prosp-mini-co {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.84rem;
+  font-weight: 550;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wf .wf-prosp-mini-due {
+  flex: none;
+  font-size: 0.7rem;
+}
+.wf .wf-prosp-mini-due.err {
+  color: var(--err);
+}
+.wf .wf-prosp-mini-due.accent {
+  color: var(--accent-ink);
+}
+.wf .wf-prosp-mini-due.muted {
+  color: var(--ink-faint);
+}
+.wf .wf-prospects {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+/* ── prospects search box + conversations board ────────────────────────────*/
+.wf .wf-pipe-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.wf .wf-pipe-search input {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 11px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong);
+  background: var(--surface-2);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.85rem;
+}
+.wf .wf-pipe-search input::placeholder {
+  color: var(--ink-faint);
+}
+.wf .wf-pipe-search input:focus {
+  outline: none;
+  border-color: rgba(var(--accent-rgb), 0.5);
+}
+.wf .wf-pipe-search-count {
+  flex: none;
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+}
+.wf .wf-conv-board {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ============================================================================
+   SCOUT LEADS — panel (Scout page) + compact strip (Hunter page)
+   ========================================================================== */
+.wf .wf-leads {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.wf .wf-leads-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.wf .wf-lead-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.wf .wf-lead {
+  display: flex;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-sm);
+}
+.wf .wf-lead-check {
+  flex: none;
+  margin-top: 3px;
+  accent-color: var(--accent);
+}
+.wf .wf-lead-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.wf .wf-lead-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.wf .wf-lead-co {
+  font-size: 0.9rem;
+  font-weight: 650;
+  color: var(--ink);
+}
+a.wf-lead-co:hover {
+  color: var(--accent-ink);
+  text-decoration: underline;
+}
+.wf .wf-lead-size {
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+}
+.wf .wf-lead-age {
+  margin-left: auto;
+  font-size: 0.68rem;
+  color: var(--ink-faint);
+}
+.wf .wf-lead-contact {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+.wf .wf-lead-angle {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.wf .wf-lead-evidence {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: var(--ink-faint);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: baseline;
+}
+.wf .wf-lead-src {
+  color: var(--accent-ink);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.wf .wf-lead-src:hover {
+  text-decoration: underline;
+}
+.wf .wf-lead-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+}
+.wf .wf-leads-note {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+}
+.wf .wf-leads-handled {
+  margin-top: 2px;
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+.wf .wf-leads-handledlist {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.wf .wf-leads-handleditem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+}
+.wf .wf-leads-handled-co {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wf .wf-leads-handled-status {
+  flex: none;
+  font-size: 0.7rem;
+}
+.wf .wf-leads-handled-status.ok {
+  color: var(--ok);
+}
+.wf .wf-leads-handled-status.muted {
+  color: var(--ink-faint);
+}
+
+/* Hunter page: compact new-leads strip */
+.wf .wf-leads-mini {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.wf .wf-leads-mini-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 6px;
+}
+.wf .wf-leads-mini-co {
+  flex: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.wf .wf-leads-mini-angle {
+  min-width: 0;
+  font-size: 0.76rem;
+  color: var(--ink-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* digest "in leads" chip */
+.wf .wf-di-inleads {
+  padding: 1px 8px;
+  border-radius: var(--radius-full);
+  background: var(--ok-bg);
+  color: var(--ok);
+  font-size: 0.66rem;
+  font-weight: 600;
+}
+.wf .wf-di-inleads:hover {
+  text-decoration: underline;
+}
+
+/* ============================================================================
+   SCRIBE PROPOSALS — list on Scribe's page
+   ========================================================================== */
+.wf .wf-props {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.wf .wf-prop {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-sm);
+}
+.wf .wf-prop-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.wf .wf-prop-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9rem;
+  font-weight: 650;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wf .wf-prop-status {
+  flex: none;
+  padding: 1px 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.64rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--surface-3);
+  color: var(--ink-soft);
+}
+.wf .wf-prop-status.is-draft {
+  color: var(--ink-faint);
+}
+.wf .wf-prop-status.is-approved,
+.wf .wf-prop-status.is-sent {
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+}
+.wf .wf-prop-status.is-viewed {
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+.wf .wf-prop-status.is-accepted {
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+.wf .wf-prop-status.is-declined {
+  background: var(--err-bg);
+  color: var(--err);
+}
+.wf .wf-prop-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+.wf .wf-prop-co {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.wf .wf-prop-contact {
+  font-size: 0.76rem;
+  color: var(--ink-faint);
+}
+.wf .wf-prop-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 0;
+}
+.wf .wf-prop-facts div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.wf .wf-prop-facts dt {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+}
+.wf .wf-prop-facts dd {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+.wf .wf-prop-lastview {
+  color: var(--ink-faint);
+}
+.wf .wf-prop-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+}
+.wf .wf-prop-send {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.wf .wf-prop-send input {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 9px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.8rem;
+}
+.wf .wf-prop-preview {
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+/* ============================================================================
+   MUSE — marketing/content: this week, drafts, published + activity feed link
+   ========================================================================== */
+
+/* channel chips (shared by plan rows, draft cards, published rows) */
+.wf .wf-chip.is-linkedin {
+  background: rgba(56, 132, 255, 0.14);
+  color: #7fb2ff;
+}
+.wf .wf-chip.is-instagram {
+  background: rgba(214, 84, 168, 0.16);
+  color: #f19ad2;
+}
+
+/* — this week (plan) — */
+.wf .wf-muse-week {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.wf .wf-muse-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wf .wf-muse-plan-row {
+  display: grid;
+  grid-template-columns: 3.4rem auto 1fr;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--line);
+}
+.wf .wf-muse-plan-row:last-child {
+  border-bottom: 0;
+}
+.wf .wf-muse-plan-day {
+  font-size: 0.72rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+}
+.wf .wf-muse-plan-angle {
+  font-size: 0.84rem;
+  color: var(--ink);
+}
+.wf .wf-muse-plan-source {
+  grid-column: 3;
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+}
+.wf .wf-muse-editplan > summary,
+.wf .wf-muse-draft-edit > summary,
+.wf .wf-muse-stats > summary {
+  cursor: pointer;
+  font-size: 0.76rem;
+  color: var(--ink-soft);
+  list-style: none;
+  padding: 4px 0;
+}
+.wf .wf-muse-editplan > summary:hover,
+.wf .wf-muse-draft-edit > summary:hover,
+.wf .wf-muse-stats > summary:hover {
+  color: var(--ink);
+}
+.wf .wf-muse-editbox,
+.wf .wf-muse-draft-edit .wf-outbound-editbox {
+  width: 100%;
+  margin: 6px 0;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.82rem;
+  resize: vertical;
+}
+
+/* — drafts (post cards) — */
+.wf .wf-muse-drafts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.wf .wf-muse-draft {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-sm);
+}
+.wf .wf-muse-draft-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.wf .wf-muse-draft-when {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+}
+.wf .wf-muse-draft-text {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--ink);
+  white-space: pre-wrap;
+}
+.wf .wf-muse-draft-comment {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--ink-faint);
+}
+.wf .wf-muse-draft-img {
+  max-width: 100%;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+}
+.wf .wf-muse-draft-actions {
+  display: flex;
+  gap: 6px;
+}
+.wf .wf-muse-draft-actions form {
+  display: inline;
+}
+
+/* needs-an-image */
+.wf .wf-muse-needsimg {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.wf .wf-muse-brief {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.wf .wf-muse-brief-tag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--warn);
+}
+.wf .wf-muse-brief-text {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+.wf .wf-muse-brief-done {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--ok);
+}
+.wf .wf-muse-brief-err {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--err);
+}
+
+/* — published — */
+.wf .wf-muse-published {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wf .wf-muse-pub-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--line);
+}
+.wf .wf-muse-pub-row:last-child {
+  border-bottom: 0;
+}
+.wf .wf-muse-pub-main {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.wf .wf-muse-pub-line {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.84rem;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wf .wf-muse-pub-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.wf .wf-muse-pub-meta form {
+  display: inline;
+}
+.wf .wf-muse-pub-date {
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+}
+.wf .wf-muse-pub-status {
+  font-size: 0.68rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+}
+.wf .wf-muse-pub-status.is-published {
+  color: var(--ok);
+}
+.wf .wf-muse-pub-status.is-approved_manual {
+  color: var(--warn);
+}
+.wf .wf-muse-pub-status.is-posted_by_owner {
+  color: var(--accent-ink, var(--accent));
+}
+.wf .wf-muse-stats-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}
+.wf .wf-muse-stats-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-faint);
+}
+.wf .wf-muse-stats-field input {
+  width: 5.5rem;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.8rem;
+}
+
+/* — activity feed: post chip + link — */
+.wf .wf-of-feed-li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.wf .wf-of-feed-li .wf-of-feed-item {
+  flex: 1;
+  min-width: 0;
+}
+.wf .wf-of-feed-kind {
+  flex: none;
+}
+.wf .wf-of-feed-link {
+  flex: none;
+  font-size: 0.74rem;
+  color: var(--accent-ink, var(--accent));
+  white-space: nowrap;
+}
+.wf .wf-of-feed-link:hover {
+  text-decoration: underline;
+}
+
+/* — muse setup help: button + modal — */
+.wf .wf-muse-head-right {
   display: inline-flex;
   align-items: center;
+  gap: 8px;
+}
+.wf .wf-help-btn {
+  cursor: pointer;
+}
+/* the native <dialog> — centred card over a dimmed backdrop */
+.wf-help-modal {
+  margin: auto;
+  width: min(560px, calc(100vw - 32px));
+  max-height: min(80vh, 720px);
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg, 14px);
+  background: var(--surface-2, #1e2634);
+  color: var(--ink);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+.wf-help-modal::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+}
+.wf-help-inner {
+  display: flex;
+  flex-direction: column;
+  max-height: min(80vh, 720px);
+  overflow-y: auto;
+  padding: 18px 20px 20px;
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+.wf-help-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.wf-help-head h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 650;
+  color: var(--ink);
+}
+.wf-help-x {
+  border: 0;
+  background: transparent;
+  color: var(--ink-faint);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+.wf-help-x:hover {
+  color: var(--ink);
+}
+.wf-help-lede {
+  margin: 8px 0 4px;
+  color: var(--ink-soft);
+}
+.wf-help-sec {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.wf-help-sec h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 0.92rem;
+  font-weight: 650;
+  color: var(--ink);
+}
+.wf-help-sec p {
+  margin: 6px 0;
+  color: var(--ink-soft);
+}
+.wf-help-sec ol {
+  margin: 6px 0;
+  padding-left: 1.2rem;
+  color: var(--ink-soft);
+}
+.wf-help-sec li {
+  margin: 4px 0;
+}
+.wf-help-sec a {
+  color: var(--accent-ink, var(--accent));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.wf-help-sec code {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.8em;
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+.wf-help-note {
+  font-size: 0.8rem;
+  color: var(--ink-faint);
+}
+.wf-help-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
+/* ============================================================================
+   CHIEF — health strip + weekly review
+   ========================================================================== */
+
+/* health: compact discrepancy list with a warning dot; "all clear" when empty */
+.wf .wf-health-clear {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--ink-faint);
+}
+.wf .wf-health-list {
+  display: flex;
+  flex-direction: column;
   gap: 6px;
-  color: rgb(var(--hud-accent-rgb));
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
-.wf-office .wf-hud-live::before {
-  content: "";
-  width: 5px;
-  height: 5px;
+.wf .wf-health-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.84rem;
+  color: var(--ink);
+}
+.wf .wf-health-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  margin-top: 5px;
   border-radius: 50%;
-  background: rgb(var(--hud-accent-rgb));
-  box-shadow: 0 0 8px rgba(var(--hud-accent-rgb), 0.8);
-  animation: wf-hud-blink 2.2s ease-in-out infinite;
+  background: var(--warn);
+  box-shadow: 0 0 0 3px var(--warn-bg);
 }
-.wf-office .wf-hud-sys.ok {
-  color: rgba(var(--hud-node-rgb), 0.8);
-}
-.wf-office .wf-hud-sys.bad {
-  color: var(--hud-err);
+.wf .wf-health-text {
+  min-width: 0;
 }
 
-/* faint reticle / target frame around the central constellation area */
-.wf-office .wf-hud-reticle {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: clamp(280px, 42vmin, 520px);
-  height: clamp(280px, 42vmin, 520px);
-  transform: translate(-50%, -50%);
-  border: 1px dashed var(--hud-line);
-  border-radius: 50%;
-  opacity: 0.7;
+/* home: the health section under the roster in the left rail */
+.wf .wf-of-health {
+  padding: 10px 12px;
+  border-top: 1px solid var(--line);
 }
-.wf-office .wf-hud-reticle::before {
-  /* inner ring */
-  content: "";
-  position: absolute;
-  inset: 14%;
-  border: 1px solid var(--hud-line);
-  border-radius: 50%;
-}
-/* crosshair ticks at N/E/S/W of the reticle */
-.wf-office .wf-hud-tick {
-  position: absolute;
-  background: var(--hud-line-strong);
-}
-.wf-office .wf-hud-tick.v {
-  width: 1px;
-  height: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-.wf-office .wf-hud-tick.h {
-  width: 12px;
-  height: 1px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-.wf-office .wf-hud-tick.n {
-  top: -6px;
-}
-.wf-office .wf-hud-tick.s {
-  bottom: -6px;
-}
-.wf-office .wf-hud-tick.w {
-  left: -6px;
-}
-.wf-office .wf-hud-tick.e {
-  right: -6px;
+.wf .wf-of-health-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 0.7rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
 }
 
-/* small mono corner coordinate labels (flavour) */
-.wf-office .wf-hud-coord {
-  position: absolute;
-  font-size: 9.5px;
-  letter-spacing: 0.12em;
-  color: rgba(var(--hud-node-rgb), 0.34);
+/* weekly review */
+.wf .wf-review {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
-.wf-office .wf-hud-coord.tl {
-  top: 52px;
-  left: 22px;
+.wf .wf-review-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
-.wf-office .wf-hud-coord.br {
-  bottom: 52px;
-  right: 22px;
-  text-align: right;
+.wf .wf-review-pick select {
+  padding: 5px 9px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.8rem;
 }
-
-/* very-low-opacity scanline overlay across the whole stage */
-.wf-office .wf-hud-scanlines {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    to bottom,
-    rgba(242, 237, 228, 0.028) 0px,
-    rgba(242, 237, 228, 0.028) 1px,
-    transparent 1px,
-    transparent 3px
-  );
-  mix-blend-mode: screen;
-  opacity: 0.6;
-  animation: wf-hud-scan 8s linear infinite;
+.wf .wf-review-top .act {
+  margin-left: auto;
 }
-
-@keyframes wf-hud-blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
+.wf .wf-review-ran {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ok);
 }
-@keyframes wf-hud-scan {
-  from {
-    background-position-y: 0;
-  }
-  to {
-    background-position-y: 3px;
-  }
+.wf .wf-review-body {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  max-height: 420px;
+  overflow-y: auto;
 }
-
-/* --- dark call dock (hosts the existing CallPanel over the deck) ----------- */
-.wf-office .wf-call-scrim {
-  background: rgba(8, 6, 4, 0.5);
+.wf .wf-review-props {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
 }
-.wf-office .wf-call-dock {
-  background: var(--hud-panel);
-  backdrop-filter: saturate(1.05) blur(16px);
-  -webkit-backdrop-filter: saturate(1.05) blur(16px);
-  border: 1px solid var(--hud-line-strong);
-  box-shadow:
-    0 26px 60px -18px rgba(0, 0, 0, 0.85),
-    inset 0 1px 0 rgba(242, 237, 228, 0.06);
-  color: var(--hud-text);
+.wf .wf-review-props-head {
+  margin: 0 0 8px;
+  font-size: 0.7rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
 }
-.wf-office .wf-call-dock-head {
-  border-bottom: 1px solid var(--hud-line);
+.wf .wf-review-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
-.wf-office .wf-call-dock-title {
-  color: var(--hud-text);
+.wf .wf-review-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
 }
-.wf-office .wf-call-dock-close {
-  border: 1px solid var(--hud-line-strong);
-  background: rgba(242, 237, 228, 0.04);
-  color: var(--hud-dim);
+.wf .wf-review-check-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.84rem;
+  color: var(--ink);
 }
-.wf-office .wf-call-dock-close:hover {
-  background: rgba(242, 237, 228, 0.1);
-  color: var(--hud-text);
+.wf .wf-review-check-actions {
+  display: flex;
+  gap: 6px;
+  flex: none;
 }
-
-/* --- reduced motion: freeze scanline / blink / decorative pulses ----------- */
-@media (prefers-reduced-motion: reduce) {
-  .wf-office .wf-hud-scanlines {
-    animation: none;
-  }
-  .wf-office .wf-hud-live::before {
-    animation: none;
-  }
-}
-
-/* --- mobile: the deck collapses to a shorter backdrop, HUD simplifies ------ */
-@media (max-width: 760px) {
-  /* keep the stage a warm-dark backdrop (override the light-fade mobile rule) */
-  .wf-office .wf-stage::after {
-    background: linear-gradient(to bottom, transparent 36%, var(--hud-bg) 100%);
-  }
-  .wf-office .wf-card {
-    /* solid dark glass so stacked cards stay legible without heavy blur */
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    background: rgba(28, 23, 18, 0.94);
-  }
-  /* simplify the HUD frame on small screens: drop the reticle + coords, keep
-     brackets + readout bars but pull them tight to the edges */
-  .wf-office .wf-hud-reticle,
-  .wf-office .wf-hud-coord {
-    display: none;
-  }
-  .wf-office .wf-hud-readout {
-    padding: 0 20px;
-    font-size: 9.5px;
-    gap: 10px;
-  }
-  .wf-office .wf-hud-readout.bottom {
-    bottom: 14px;
-  }
-  .wf-office .wf-hud-bracket {
-    width: 18px;
-    height: 18px;
-  }
-  .wf-office .wf-hud-bracket.tl,
-  .wf-office .wf-hud-bracket.tr {
-    top: 12px;
-  }
-  .wf-office .wf-hud-bracket.tl,
-  .wf-office .wf-hud-bracket.bl {
-    left: 12px;
-  }
-  .wf-office .wf-hud-bracket.tr,
-  .wf-office .wf-hud-bracket.br {
-    right: 12px;
-  }
+.wf .wf-review-check-actions form {
+  display: inline;
 }
