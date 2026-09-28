@@ -1,24 +1,23 @@
 import Link from "next/link";
 import { PerseptMark } from "@/components/ui/logo";
-import { sendMagicLink } from "@/lib/workforce/auth-actions";
+import { signInWithPassword } from "@/lib/workforce/auth-actions";
 import "@/components/sections/landing.css";
 import "./login.css";
 
 const MESSAGES: Record<string, string> = {
   denied: "that address is not on the list",
-  send: "could not send the link, try again in a minute",
-  link: "that link has expired, request a new one",
-  email: "that doesn’t look like an email address",
+  missing: "enter your email and password",
+  invalid: "wrong email or password",
 };
 
-// Public magic-link sign-in — OUTSIDE /dashboard. Dark cinematic look; the
-// server action `sendMagicLink` and the ?sent / ?error / ?next flow are kept.
+// Public sign-in — OUTSIDE /dashboard. Dark cinematic look. Email + password via
+// Supabase (`signInWithPassword`); the ?error / ?next flow is kept.
 export default async function Login({
   searchParams,
 }: {
-  searchParams: Promise<{ sent?: string; error?: string; next?: string }>;
+  searchParams: Promise<{ error?: string; next?: string }>;
 }) {
-  const { sent, error, next } = await searchParams;
+  const { error, next } = await searchParams;
 
   return (
     <main className="pl">
@@ -33,46 +32,49 @@ export default async function Login({
           </Link>
 
           <div className="login-card">
-            {sent ? (
-              <>
-                <div className="login-badge">✓</div>
-                <h1 className="login-h1 sm">check your inbox</h1>
+            <form action={signInWithPassword} className="login-form">
+              <div>
+                <h1 className="login-h1">sign in</h1>
                 <p className="login-sub">
-                  if that address is on the list, a sign-in link is on its way.
-                  it works once and expires in 15 minutes.
+                  enter your email and password to open the dashboard.
                 </p>
-                <Link href="/login" className="login-reset">
-                  use a different email
-                </Link>
-              </>
-            ) : (
-              <form action={sendMagicLink} className="login-form">
-                <div>
-                  <h1 className="login-h1">sign in</h1>
-                  <p className="login-sub">
-                    we’ll email you a one-time link. no password.
-                  </p>
-                </div>
-                <input type="hidden" name="next" value={next ?? "/dashboard"} />
-                <input
-                  type="email"
-                  name="email"
-                  required
-                  // biome-ignore lint/a11y/noAutofocus: single-field sign-in; focusing the email is expected
-                  autoFocus
-                  placeholder="you@persept.ai"
-                  className={`login-input${error ? " is-error" : ""}`}
-                />
-                {error && (
-                  <p className="login-err">
-                    {MESSAGES[error] ?? "something went wrong"}
-                  </p>
-                )}
-                <button className="login-btn" type="submit">
-                  send me a link
-                </button>
-              </form>
-            )}
+              </div>
+              <input type="hidden" name="next" value={next ?? "/dashboard"} />
+              <div className="login-fields">
+                <label className="login-field">
+                  <span className="login-label">email</span>
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    autoComplete="username"
+                    // biome-ignore lint/a11y/noAutofocus: focusing the email on the sign-in screen is expected
+                    autoFocus
+                    placeholder="you@persept.ai"
+                    className={`login-input${error ? " is-error" : ""}`}
+                  />
+                </label>
+                <label className="login-field">
+                  <span className="login-label">password</span>
+                  <input
+                    type="password"
+                    name="password"
+                    required
+                    autoComplete="current-password"
+                    placeholder="••••••••"
+                    className={`login-input${error ? " is-error" : ""}`}
+                  />
+                </label>
+              </div>
+              {error && (
+                <p className="login-err">
+                  {MESSAGES[error] ?? "something went wrong"}
+                </p>
+              )}
+              <button className="login-btn" type="submit">
+                sign in
+              </button>
+            </form>
           </div>
 
           <div className="login-foot">

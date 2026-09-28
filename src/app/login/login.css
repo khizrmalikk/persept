@@ -157,3 +157,22 @@
 .login-foot a:hover {
   color: var(--amber-hi);
 }
+
+/* email + password fields (labelled) */
+.login-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.login-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mut2);
+}
