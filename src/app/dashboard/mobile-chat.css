@@ -1,0 +1,187 @@
+/* Mobile chat screen (< 768px). Root `.wf-mchat` is a `.wf-only-mobile` element,
+   so the mobile.css media query already makes it flex:1 / min-height:0 / column.
+   Scoped under `.wf`. */
+
+.wf .wf-mchat {
+  background: var(--chat);
+}
+@media (max-width: 767px) {
+  /* chip strip */
+  .wf .wf-mchat-chips {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+    flex: none;
+    scrollbar-width: none;
+  }
+  .wf .wf-mchat-chips::-webkit-scrollbar {
+    display: none;
+  }
+  .wf .wf-mchat-chip {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 40px;
+    padding: 0 13px 0 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--panel);
+    color: var(--ink);
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .wf .wf-mchat-chip-av {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+  .wf .wf-mchat-chip-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  /* header */
+  .wf .wf-mchat-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--line-soft);
+    flex: none;
+  }
+  .wf .wf-mchat-head-av {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+  }
+  .wf .wf-mchat-head-id {
+    flex: 1;
+    min-width: 0;
+  }
+  .wf .wf-mchat-head-name {
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .wf .wf-mchat-head-sub {
+    font-size: 12px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* messages */
+  .wf .wf-mchat-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .wf .wf-mchat-empty {
+    margin: auto;
+    max-width: 22ch;
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ink-faint);
+  }
+  .wf .wf-mchat-row {
+    display: flex;
+  }
+  .wf .wf-mchat-row.mine {
+    justify-content: flex-end;
+  }
+  .wf .wf-mchat-row.theirs {
+    justify-content: flex-start;
+  }
+  .wf .wf-mchat-bubble {
+    max-width: 82%;
+    padding: 10px 13px;
+    font-size: 15px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    border: 1px solid transparent;
+  }
+  .wf .wf-mchat-row.mine .wf-mchat-bubble {
+    background: oklch(0.8 0.14 70 / 0.16);
+    border-color: oklch(0.8 0.14 70 / 0.3);
+    border-radius: 16px 16px 4px 16px;
+  }
+  .wf .wf-mchat-row.theirs .wf-mchat-bubble {
+    background: var(--surface-2);
+    border-color: rgba(255, 255, 255, 0.07);
+    border-radius: 16px 16px 16px 4px;
+  }
+  .wf .wf-mchat-typing {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+
+  /* composer */
+  .wf .wf-mchat-composer {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    background: var(--bg);
+    flex: none;
+  }
+  .wf .wf-mchat-input {
+    flex: 1;
+    resize: none;
+    min-height: 44px;
+    max-height: 120px;
+    padding: 11px 14px;
+    border-radius: 22px;
+    border: 1px solid var(--line-strong);
+    background: var(--panel);
+    color: var(--ink);
+    font: inherit;
+    font-size: 15px;
+    line-height: 1.4;
+    outline: none;
+  }
+  .wf .wf-mchat-input::placeholder {
+    color: var(--ink-faint);
+  }
+  .wf .wf-mchat-send {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border: none;
+    border-radius: 50%;
+    background: #2a2724;
+    color: var(--ink-ghost);
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .wf .wf-mchat-send.on {
+    background: var(--accent);
+    color: var(--accent-ink-on);
+  }
+  .wf .wf-mchat-soon {
+    padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+    font-size: 13px;
+    color: var(--ink-faint);
+    border-top: 1px solid var(--line);
+    flex: none;
+  }
+}

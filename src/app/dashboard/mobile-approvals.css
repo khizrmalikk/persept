@@ -1,0 +1,456 @@
+/* Mobile approvals (< 768px). Scoped under `.wf`; only shown inside the
+   `.wf-only-mobile` root (hidden on desktop). Matches the mobile handoff. */
+
+.wf .wf-mapp {
+  position: relative;
+}
+.wf .wf-mapp-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 22px 18px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wf .wf-mapp-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.wf .wf-mapp-title {
+  font-family: var(--font-arch);
+  font-weight: 800;
+  font-size: 30px;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin: 0;
+}
+.wf .wf-mapp-sub {
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-mut);
+  margin: 0;
+}
+
+/* segmented control */
+.wf .wf-mapp-seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  background: var(--panel);
+  border-radius: 12px;
+  border: 1px solid var(--line);
+}
+.wf .wf-mapp-seg-btn {
+  min-height: 40px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ink-faint);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.wf .wf-mapp-seg-btn.is-active {
+  background: #2a2724;
+  color: var(--ink);
+}
+
+/* waiting cards */
+.wf .wf-mapp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.wf .wf-mapp-empty {
+  padding: 40px 16px;
+  text-align: center;
+  color: var(--ink-faint);
+  font-size: 15px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 14px;
+}
+.wf .wf-mapp-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.wf .wf-mapp-card-open {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+.wf .wf-mapp-card-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.wf .wf-mapp-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.wf .wf-mapp-tile.sm {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  font-size: 16px;
+}
+.wf .wf-mapp-card-meta {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--ink-mut);
+}
+.wf .wf-mapp-card-name {
+  color: var(--ink);
+  font-weight: 600;
+}
+.wf .wf-mapp-risk {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.wf .wf-mapp-risk.is-low {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink-soft);
+}
+.wf .wf-mapp-risk.is-medium {
+  background: oklch(0.8 0.14 70 / 0.16);
+  color: var(--accent);
+}
+.wf .wf-mapp-risk.is-high {
+  background: oklch(0.72 0.17 25 / 0.16);
+  color: var(--err);
+}
+.wf .wf-mapp-card-action {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+.wf .wf-mapp-held {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+}
+.wf .wf-mapp-card-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.wf .wf-mapp-quick-form {
+  display: block;
+}
+.wf .wf-mapp-quick {
+  width: 100%;
+  min-height: 44px;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--accent-ink-on);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.wf .wf-mapp-review {
+  min-height: 44px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+/* decided list */
+.wf .wf-mapp-decided {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--line);
+}
+.wf .wf-mapp-drow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+.wf .wf-mapp-demoji {
+  font-size: 18px;
+}
+.wf .wf-mapp-dmain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.wf .wf-mapp-daction {
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wf .wf-mapp-dwhen {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin-top: 3px;
+}
+.wf .wf-mapp-decision {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.wf .wf-mapp-decision.is-good {
+  background: oklch(0.8 0.16 150 / 0.14);
+  color: var(--ok);
+}
+.wf .wf-mapp-decision.is-bad {
+  background: oklch(0.72 0.17 25 / 0.16);
+  color: var(--err);
+}
+
+/* ── review overlay (full-screen) ─────────────────────────────────────── */
+.wf .wf-mapp-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+.wf .wf-mapp-ov-bar {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 1px solid var(--line);
+  flex: none;
+}
+.wf .wf-mapp-back {
+  min-height: 44px;
+  padding: 0 12px;
+  border: none;
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+.wf .wf-mapp-ov-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.wf .wf-mapp-ov-id {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.wf .wf-mapp-ov-idmain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.wf .wf-mapp-ov-name {
+  font-weight: 600;
+  font-size: 15px;
+}
+.wf .wf-mapp-ov-when {
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+.wf .wf-mapp-ov-action {
+  font-family: var(--font-arch);
+  font-weight: 800;
+  font-size: 24px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.wf .wf-mapp-ov-why {
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+.wf .wf-mapp-ov-why span {
+  color: var(--accent);
+}
+.wf .wf-mapp-ov-meta {
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  gap: 8px 12px;
+  font-size: 13px;
+  padding: 12px 14px;
+  background: var(--panel);
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  margin: 0;
+}
+.wf .wf-mapp-ov-meta dt {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+}
+.wf .wf-mapp-ov-meta dd {
+  margin: 0;
+}
+.wf .wf-mapp-ov-doc {
+  padding: 16px;
+  background: var(--surface-2);
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  font-size: 15px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+.wf .wf-mapp-ov-editwrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.wf .wf-mapp-ov-editlabel {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.wf .wf-mapp-ov-textarea {
+  min-height: 260px;
+  padding: 14px;
+  background: var(--input);
+  border: 1px solid oklch(0.8 0.14 70 / 0.6);
+  border-radius: 12px;
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+}
+.wf .wf-mapp-ov-note {
+  min-height: 44px;
+  padding: 0 14px;
+  background: var(--input);
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  outline: none;
+}
+.wf .wf-mapp-ov-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  background: var(--input);
+  flex: none;
+}
+.wf .wf-mapp-ov-foot-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.wf .wf-mapp-btn {
+  font: inherit;
+  cursor: pointer;
+}
+.wf .wf-mapp-btn.primary {
+  min-height: 48px;
+  border: none;
+  border-radius: 11px;
+  background: var(--accent);
+  color: var(--accent-ink-on);
+  font-size: 16px;
+  font-weight: 600;
+}
+.wf .wf-mapp-btn.ghost {
+  min-height: 48px;
+  border: 1px solid var(--line-strong);
+  border-radius: 11px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 16px;
+}
+.wf .wf-mapp-btn.reject {
+  min-height: 44px;
+  border: none;
+  border-radius: 11px;
+  background: oklch(0.72 0.17 25 / 0.1);
+  color: var(--err);
+  font-size: 15px;
+  font-weight: 500;
+}
+.wf .wf-mapp-ov-hint {
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink-ghost);
+}
+
+/* toast */
+.wf .wf-mapp-toast {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(74px + env(safe-area-inset-bottom));
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px;
+  border-radius: 12px;
+  background: #f4f1ec;
+  color: #0e0d0c;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+.wf .wf-mapp-toast-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: oklch(0.62 0.16 150);
+  flex-shrink: 0;
+}

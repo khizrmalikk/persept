@@ -7,12 +7,14 @@ import {
 import { parseOutbound } from "@/lib/workforce/outreach";
 import { agentColor, rosterById } from "@/lib/workforce/roster";
 import { type Approval, ago } from "@/lib/workforce/types";
+import { MobileApprovals } from "../_components/MobileApprovals";
 import {
   ApprovalsView,
   type ApprovalVM,
   type DecidedVM,
 } from "./_components/ApprovalsView";
 import "../approvals.css";
+import "../mobile-approvals.css";
 
 export const dynamic = "force-dynamic";
 
@@ -113,13 +115,25 @@ export default async function ApprovalsPage() {
   });
 
   return (
-    <ApprovalsView
-      waiting={waiting}
-      held={held}
-      decided={decided}
-      approveAction={approveFromForm}
-      rejectAction={rejectFromForm}
-      sendEditAction={sendApprovedEdit}
-    />
+    <>
+      <div className="wf-only-desktop">
+        <ApprovalsView
+          waiting={waiting}
+          held={held}
+          decided={decided}
+          approveAction={approveFromForm}
+          rejectAction={rejectFromForm}
+          sendEditAction={sendApprovedEdit}
+        />
+      </div>
+      <MobileApprovals
+        waiting={waiting}
+        held={held}
+        decided={decided}
+        approveAction={approveFromForm}
+        rejectAction={rejectFromForm}
+        sendEditAction={sendApprovedEdit}
+      />
+    </>
   );
 }

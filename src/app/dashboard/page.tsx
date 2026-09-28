@@ -8,9 +8,11 @@ import { getHandoffs, parseOutbound } from "@/lib/workforce/outreach";
 import { agentColor, ROSTER, rosterById } from "@/lib/workforce/roster";
 import { getActiveSubagents } from "@/lib/workforce/subagents";
 import type { Agent, Approval, WfEvent } from "@/lib/workforce/types";
+import { type MobileAgent, MobileOffice } from "./_components/MobileOffice";
 import { type OfficeRoom, OfficeRooms } from "./_components/office/OfficeRooms";
 import { dueState } from "./_components/panels/dates";
 import "./office.css";
+import "./mobile-office.css";
 
 // Office home (redesign): the six-room office + running/backlog/health + the
 // waiting/urgent/latest/pulse rail. Server component (real reads, 6s refresh);
@@ -343,6 +345,32 @@ export default async function Office() {
     .format(now)
     .toLowerCase();
   const summaryLine = `${pendingCount} ${pendingCount === 1 ? "thing is" : "things are"} waiting for you. ${working} ${working === 1 ? "agent is" : "agents are"} working with ${totalWorkers} worker${totalWorkers === 1 ? "" : "s"}.`;
+  const greeting =
+    dubaiHour < 5
+      ? "still up"
+      : dubaiHour < 12
+        ? "good morning"
+        : dubaiHour < 17
+          ? "good afternoon"
+          : "good evening";
+
+  // ── mobile agent list (roster order) ───────────────────────────────────
+  const mobileAgents: MobileAgent[] = ROSTER.map((r) => {
+    const st = statusOf(r.id);
+    return {
+      id: r.id,
+      name: r.name,
+      emoji: r.emoji,
+      hue: r.hue,
+      status: st,
+      task:
+        st === "soon"
+          ? "not deployed yet"
+          : (liveById.get(r.id)?.current_task ?? "idle · next run scheduled"),
+      workers: workersByAgent.get(r.id)?.length ?? 0,
+      pending: pendingByAgent.get(r.id) ?? 0,
+    };
+  });
 
   const stats = [
     { value: String(deployed), of: " / 6", label: "online", color: "#f4f1ec" },
@@ -357,244 +385,268 @@ export default async function Office() {
   ];
 
   return (
-    <div className="of-wrap">
-      <div className="of-head">
-        <div>
-          <div className="of-eyebrow">office · {dateLine}</div>
-          <h1 className="of-h1">good {partOfDay}, khizr</h1>
-          <p className="of-sum">{summaryLine}</p>
-        </div>
-      </div>
-      <div className="of-stats">
-        {stats.map((s) => (
-          <div className="of-stat" key={s.label}>
-            <div className="of-stat-n" style={{ color: s.color }}>
-              {s.value}
-              {s.of && <span className="of-stat-of">{s.of}</span>}
-            </div>
-            <div className="of-stat-l">{s.label}</div>
-          </div>
-        ))}
-      </div>
-
-      <div className="of-body">
-        <div className="of-main">
-          <OfficeRooms rooms={rooms} />
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))",
-              gap: 16,
-            }}
-          >
-            {/* running */}
-            <div className="of-panel">
-              <div className="of-panel-head">
-                <span className="of-panel-title">running</span>
-                <span className="of-panel-note">
-                  {working} agents · {totalWorkers} workers
-                </span>
-              </div>
-              {running.length === 0 ? (
-                <div className="of-empty">nothing running right now.</div>
-              ) : (
-                running.map((r) => (
-                  <div className="of-run-row" key={r.id}>
-                    <div className="of-run-head">
-                      <span
-                        className="of-run-emoji"
-                        style={{ background: r.tint }}
-                      >
-                        {r.emoji}
-                      </span>
-                      <span className="of-run-name">{r.name}</span>
-                      <span className="of-run-task">{r.task}</span>
-                    </div>
-                    {r.workers.map((w) => (
-                      <div className="of-run-worker" key={w.task}>
-                        <span className="of-connector">└</span>
-                        <span
-                          className="of-run-wdot"
-                          style={{ border: `1.5px solid ${w.color}` }}
-                        />
-                        <span className="of-run-wtask">{w.task}</span>
-                        <span className="of-run-wbar">
-                          <span style={{ width: "60%", background: w.color }} />
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ))
-              )}
-            </div>
-
-            {/* backlog */}
-            <div className="of-panel">
-              <div className="of-panel-head">
-                <span className="of-panel-title">backlog</span>
-                <Link href="/dashboard/agents/chief" className="of-panel-link">
-                  open →
-                </Link>
-              </div>
-              {backlog.length === 0 ? (
-                <div className="of-empty">backlog is clear.</div>
-              ) : (
-                backlog.map((b) => (
-                  <div className="of-row" key={b.id}>
-                    <span>{b.emoji}</span>
-                    <span className="of-row-title">{b.title}</span>
-                    <span className="of-row-due" style={{ color: b.due.color }}>
-                      {b.due.text}
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {/* health */}
-            <div className="of-panel">
-              <div className="of-panel-head">
-                <span className="of-panel-title">health</span>
-                <span className="of-panel-note">from chief · STATE.md</span>
-              </div>
-              {health2.length === 0 ? (
-                <div className="of-empty">all clear.</div>
-              ) : (
-                health2.map((h) => (
-                  <Link href={h.href} className="of-h-row" key={h.key}>
-                    <span
-                      className="of-h-dot"
-                      style={{ background: h.color }}
-                    />
-                    <span className="of-h-text">{h.text}</span>
-                    <span className="of-h-arrow">→</span>
-                  </Link>
-                ))
-              )}
+    <>
+      <MobileOffice
+        agents={mobileAgents}
+        greeting={greeting}
+        dateLine={dateLine}
+        summary={summaryLine}
+        onlineCount={deployed}
+        workingCount={working}
+        pendingCount={pendingCount}
+      />
+      <div className="wf-only-desktop">
+        <div className="of-wrap">
+          <div className="of-head">
+            <div>
+              <div className="of-eyebrow">office · {dateLine}</div>
+              <h1 className="of-h1">good {partOfDay}, khizr</h1>
+              <p className="of-sum">{summaryLine}</p>
             </div>
           </div>
-        </div>
-
-        {/* right rail */}
-        <div className="of-rail">
-          <div className="of-panel">
-            <div className="of-panel-head">
-              <span className="of-panel-title">
-                waiting for you{" "}
-                <span style={{ color: AMBER }}>{pendingCount}</span>
-              </span>
-              <Link href="/dashboard/approvals" className="of-panel-link">
-                open inbox →
-              </Link>
-            </div>
-            {queue.length === 0 ? (
-              <div className="of-empty">
-                nothing waiting. the agents are working inside their limits.
-              </div>
-            ) : (
-              queue.map((q) => (
-                <div className="of-q-card" key={q.id}>
-                  <div className="of-q-top">
-                    <span className="of-q-tile" style={{ background: q.tint }}>
-                      {q.emoji}
-                    </span>
-                    <span className="of-q-name">{q.name}</span>
-                    <span style={{ flex: 1 }} />
-                    <span
-                      className="of-q-risk"
-                      style={{ background: q.riskBg, color: q.riskFg }}
-                    >
-                      {q.risk}
-                    </span>
-                  </div>
-                  <div className="of-q-action">{q.action}</div>
-                  <div className="of-q-actions">
-                    <form action={approveFromForm}>
-                      <input type="hidden" name="id" value={q.id} />
-                      <input type="hidden" name="agent" value={q.agentId} />
-                      <button type="submit" className="of-btn-amber">
-                        {q.approveLabel}
-                      </button>
-                    </form>
-                    <Link
-                      href="/dashboard/approvals"
-                      className="of-btn-outline"
-                    >
-                      review
-                    </Link>
-                    <form action={rejectFromForm}>
-                      <input type="hidden" name="id" value={q.id} />
-                      <input type="hidden" name="agent" value={q.agentId} />
-                      <button type="submit" className="of-btn-ghost">
-                        reject
-                      </button>
-                    </form>
-                  </div>
+          <div className="of-stats">
+            {stats.map((s) => (
+              <div className="of-stat" key={s.label}>
+                <div className="of-stat-n" style={{ color: s.color }}>
+                  {s.value}
+                  {s.of && <span className="of-stat-of">{s.of}</span>}
                 </div>
-              ))
-            )}
-          </div>
-
-          <div className="of-panel">
-            <div className="of-panel-title" style={{ marginBottom: 8 }}>
-              urgent
-            </div>
-            {urgent.length === 0 ? (
-              <div className="of-empty">all calm. nothing on fire.</div>
-            ) : (
-              urgent.map((u) => (
-                <Link href={u.href} className="of-u-row" key={u.key}>
-                  <span
-                    className="of-u-kind"
-                    style={{ background: u.bg, color: u.fg }}
-                  >
-                    {u.kind}
-                  </span>
-                  <span>{u.text}</span>
-                </Link>
-              ))
-            )}
-          </div>
-
-          <div className="of-panel">
-            <div className="of-panel-head">
-              <span className="of-panel-title">latest</span>
-              <Link href="/dashboard/activity" className="of-panel-link">
-                see all →
-              </Link>
-            </div>
-            {latest.length === 0 ? (
-              <div className="of-empty">nothing yet.</div>
-            ) : (
-              latest.map((e) => (
-                <div
-                  className="of-l-row"
-                  key={e.id}
-                  style={{ paddingLeft: e.indent }}
-                >
-                  <span className="of-l-time">{e.t}</span>
-                  <span>{e.emoji}</span>
-                  <span className="of-l-text" style={{ color: e.fg }}>
-                    {e.text}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
-
-          <div className="of-panel of-pulse">
-            {pulse.map((p) => (
-              <div key={p.label}>
-                <div className="of-pulse-l">{p.label}</div>
-                <div className="of-pulse-v" style={{ color: p.color }}>
-                  {p.value}
-                </div>
+                <div className="of-stat-l">{s.label}</div>
               </div>
             ))}
           </div>
+
+          <div className="of-body">
+            <div className="of-main">
+              <OfficeRooms rooms={rooms} />
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))",
+                  gap: 16,
+                }}
+              >
+                {/* running */}
+                <div className="of-panel">
+                  <div className="of-panel-head">
+                    <span className="of-panel-title">running</span>
+                    <span className="of-panel-note">
+                      {working} agents · {totalWorkers} workers
+                    </span>
+                  </div>
+                  {running.length === 0 ? (
+                    <div className="of-empty">nothing running right now.</div>
+                  ) : (
+                    running.map((r) => (
+                      <div className="of-run-row" key={r.id}>
+                        <div className="of-run-head">
+                          <span
+                            className="of-run-emoji"
+                            style={{ background: r.tint }}
+                          >
+                            {r.emoji}
+                          </span>
+                          <span className="of-run-name">{r.name}</span>
+                          <span className="of-run-task">{r.task}</span>
+                        </div>
+                        {r.workers.map((w) => (
+                          <div className="of-run-worker" key={w.task}>
+                            <span className="of-connector">└</span>
+                            <span
+                              className="of-run-wdot"
+                              style={{ border: `1.5px solid ${w.color}` }}
+                            />
+                            <span className="of-run-wtask">{w.task}</span>
+                            <span className="of-run-wbar">
+                              <span
+                                style={{ width: "60%", background: w.color }}
+                              />
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* backlog */}
+                <div className="of-panel">
+                  <div className="of-panel-head">
+                    <span className="of-panel-title">backlog</span>
+                    <Link
+                      href="/dashboard/agents/chief"
+                      className="of-panel-link"
+                    >
+                      open →
+                    </Link>
+                  </div>
+                  {backlog.length === 0 ? (
+                    <div className="of-empty">backlog is clear.</div>
+                  ) : (
+                    backlog.map((b) => (
+                      <div className="of-row" key={b.id}>
+                        <span>{b.emoji}</span>
+                        <span className="of-row-title">{b.title}</span>
+                        <span
+                          className="of-row-due"
+                          style={{ color: b.due.color }}
+                        >
+                          {b.due.text}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* health */}
+                <div className="of-panel">
+                  <div className="of-panel-head">
+                    <span className="of-panel-title">health</span>
+                    <span className="of-panel-note">from chief · STATE.md</span>
+                  </div>
+                  {health2.length === 0 ? (
+                    <div className="of-empty">all clear.</div>
+                  ) : (
+                    health2.map((h) => (
+                      <Link href={h.href} className="of-h-row" key={h.key}>
+                        <span
+                          className="of-h-dot"
+                          style={{ background: h.color }}
+                        />
+                        <span className="of-h-text">{h.text}</span>
+                        <span className="of-h-arrow">→</span>
+                      </Link>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* right rail */}
+            <div className="of-rail">
+              <div className="of-panel">
+                <div className="of-panel-head">
+                  <span className="of-panel-title">
+                    waiting for you{" "}
+                    <span style={{ color: AMBER }}>{pendingCount}</span>
+                  </span>
+                  <Link href="/dashboard/approvals" className="of-panel-link">
+                    open inbox →
+                  </Link>
+                </div>
+                {queue.length === 0 ? (
+                  <div className="of-empty">
+                    nothing waiting. the agents are working inside their limits.
+                  </div>
+                ) : (
+                  queue.map((q) => (
+                    <div className="of-q-card" key={q.id}>
+                      <div className="of-q-top">
+                        <span
+                          className="of-q-tile"
+                          style={{ background: q.tint }}
+                        >
+                          {q.emoji}
+                        </span>
+                        <span className="of-q-name">{q.name}</span>
+                        <span style={{ flex: 1 }} />
+                        <span
+                          className="of-q-risk"
+                          style={{ background: q.riskBg, color: q.riskFg }}
+                        >
+                          {q.risk}
+                        </span>
+                      </div>
+                      <div className="of-q-action">{q.action}</div>
+                      <div className="of-q-actions">
+                        <form action={approveFromForm}>
+                          <input type="hidden" name="id" value={q.id} />
+                          <input type="hidden" name="agent" value={q.agentId} />
+                          <button type="submit" className="of-btn-amber">
+                            {q.approveLabel}
+                          </button>
+                        </form>
+                        <Link
+                          href="/dashboard/approvals"
+                          className="of-btn-outline"
+                        >
+                          review
+                        </Link>
+                        <form action={rejectFromForm}>
+                          <input type="hidden" name="id" value={q.id} />
+                          <input type="hidden" name="agent" value={q.agentId} />
+                          <button type="submit" className="of-btn-ghost">
+                            reject
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="of-panel">
+                <div className="of-panel-title" style={{ marginBottom: 8 }}>
+                  urgent
+                </div>
+                {urgent.length === 0 ? (
+                  <div className="of-empty">all calm. nothing on fire.</div>
+                ) : (
+                  urgent.map((u) => (
+                    <Link href={u.href} className="of-u-row" key={u.key}>
+                      <span
+                        className="of-u-kind"
+                        style={{ background: u.bg, color: u.fg }}
+                      >
+                        {u.kind}
+                      </span>
+                      <span>{u.text}</span>
+                    </Link>
+                  ))
+                )}
+              </div>
+
+              <div className="of-panel">
+                <div className="of-panel-head">
+                  <span className="of-panel-title">latest</span>
+                  <Link href="/dashboard/activity" className="of-panel-link">
+                    see all →
+                  </Link>
+                </div>
+                {latest.length === 0 ? (
+                  <div className="of-empty">nothing yet.</div>
+                ) : (
+                  latest.map((e) => (
+                    <div
+                      className="of-l-row"
+                      key={e.id}
+                      style={{ paddingLeft: e.indent }}
+                    >
+                      <span className="of-l-time">{e.t}</span>
+                      <span>{e.emoji}</span>
+                      <span className="of-l-text" style={{ color: e.fg }}>
+                        {e.text}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="of-panel of-pulse">
+                {pulse.map((p) => (
+                  <div key={p.label}>
+                    <div className="of-pulse-l">{p.label}</div>
+                    <div className="of-pulse-v" style={{ color: p.color }}>
+                      {p.value}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

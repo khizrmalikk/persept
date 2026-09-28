@@ -5,8 +5,11 @@ import { signOut } from "@/lib/workforce/auth-actions";
 import { ROSTER, type SidebarAgent } from "@/lib/workforce/roster";
 import { getActiveSubagents } from "@/lib/workforce/subagents";
 import { AutoRefresh } from "./_components/AutoRefresh";
+import { MobileTabBar } from "./_components/MobileTabBar";
+import { MobileTopBar } from "./_components/MobileTopBar";
 import { Sidebar } from "./_components/Sidebar";
 import "./workforce.css";
+import "./mobile.css";
 
 export const metadata: Metadata = {
   title: "Persept · workforce",
@@ -122,7 +125,9 @@ export default async function DashboardLayout({
         operator={email ?? "operator"}
         signOut={signOut}
       />
+      <MobileTopBar />
       <div className="wf-content">{children}</div>
+      <MobileTabBar pending={pending} chatHref="/dashboard/agents/hunter" />
       <AutoRefresh seconds={6} />
     </div>
   );
