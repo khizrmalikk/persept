@@ -116,27 +116,56 @@ export default async function Office() {
     if (p.agent_id)
       pendingByAgent.set(p.agent_id, (pendingByAgent.get(p.agent_id) ?? 0) + 1);
 
+  // Workers = running OR finished in the last 10 min (getActiveSubagents already
+  // scopes to that window). Keep the recently-finished ones so sub-agent activity
+  // is visible even when a worker finishes in seconds; `running` drives status.
   const workersByAgent = new Map<string, { label: string }[]>();
+  const runningByAgent = new Map<string, number>();
   for (const w of workerRows)
-    if (w.status === "running" && w.agent_id) {
+    if (w.agent_id) {
       const arr = workersByAgent.get(w.agent_id) ?? [];
       arr.push({ label: w.label ?? "background task" });
       workersByAgent.set(w.agent_id, arr);
+      if (w.status === "running")
+        runningByAgent.set(
+          w.agent_id,
+          (runningByAgent.get(w.agent_id) ?? 0) + 1,
+        );
     }
-  const totalWorkers = [...workersByAgent.values()].reduce(
-    (n, a) => n + a.length,
-    0,
-  );
 
   type St = "working" | "waiting" | "idle" | "soon";
   const statusOf = (id: string): St => {
     if (!liveById.has(id)) return "soon";
     const a = liveById.get(id);
-    if (a?.status === "working" || (workersByAgent.get(id)?.length ?? 0) > 0)
+    if (a?.status === "working" || (runningByAgent.get(id) ?? 0) > 0)
       return "working";
     if ((pendingByAgent.get(id) ?? 0) > 0) return "waiting";
     return "idle";
   };
+
+  // What an agent is doing: its current_task, else its most recent event summary
+  // (the bridge often leaves current_task empty even while an agent is working).
+  const latestByAgent = new Map<string, string>();
+  for (const e of (recent as WfEvent[] | null) ?? []) {
+    if (e.agent_id && !latestByAgent.has(e.agent_id)) {
+      const s = cleanSummary(e.summary ?? "");
+      if (s) latestByAgent.set(e.agent_id, s);
+    }
+  }
+  const taskOf = (id: string, st: St): string => {
+    if (st === "soon") return "not deployed yet";
+    const ct = liveById.get(id)?.current_task?.trim();
+    if (ct) return ct;
+    if (st === "working") return latestByAgent.get(id) ?? "working…";
+    return "idle · next run scheduled";
+  };
+  // only show workers for an agent that is actually working
+  const workersFor = (id: string, st: St) =>
+    st === "working" ? (workersByAgent.get(id) ?? []) : [];
+  const totalWorkers = ROSTER.reduce(
+    (n, r) => n + workersFor(r.id, statusOf(r.id)).length,
+    0,
+  );
 
   const deployed = ROSTER.filter((r) => liveById.has(r.id)).length;
   const working = ROSTER.filter((r) => statusOf(r.id) === "working").length;
@@ -149,7 +178,7 @@ export default async function Office() {
     const hue = a?.hue ?? 70;
     const c = agentColor(hue);
     const st = statusOf(id);
-    const ws = workersByAgent.get(id) ?? [];
+    const ws = workersFor(id, st);
     const waitN = pendingByAgent.get(id) ?? 0;
     const chipBg =
       st === "working"
@@ -181,10 +210,7 @@ export default async function Office() {
       chipBg,
       chipFg: st === "working" ? c : st === "waiting" ? AMBER : "#8a847b",
       status: st,
-      task:
-        st === "soon"
-          ? "not deployed yet"
-          : (liveById.get(id)?.current_task ?? "idle · next run scheduled"),
+      task: taskOf(id, st),
       basePct: st === "working" ? 42 : 0,
       workerLine: ws.length
         ? `${ws.length} worker${ws.length > 1 ? "s" : ""}`
@@ -210,7 +236,7 @@ export default async function Office() {
         name: r.name,
         emoji: r.emoji,
         tint: agentColor(r.hue, 0.16),
-        task: liveById.get(r.id)?.current_task ?? "coordinating workers",
+        task: taskOf(r.id, "working"),
         workers: ws.map((w) => ({ task: w.label, color: c })),
       };
     },
@@ -363,11 +389,8 @@ export default async function Office() {
       emoji: r.emoji,
       hue: r.hue,
       status: st,
-      task:
-        st === "soon"
-          ? "not deployed yet"
-          : (liveById.get(r.id)?.current_task ?? "idle · next run scheduled"),
-      workers: workersByAgent.get(r.id)?.length ?? 0,
+      task: taskOf(r.id, st),
+      workers: workersFor(r.id, st).length,
       pending: pendingByAgent.get(r.id) ?? 0,
     };
   });
