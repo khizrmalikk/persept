@@ -140,7 +140,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  border-radius: 999px;
+  border-radius: 10px;
   font-weight: 600;
   font-family: var(--geist);
   cursor: pointer;
@@ -149,13 +149,15 @@
     color 0.18s ease,
     border-color 0.18s ease;
 }
-.pl-amber-btn {
+/* `.pl .` bumps specificity above `.pl a` so amber buttons keep near-black text
+   (like the dashboard's --accent-ink-on), not the cream anchor colour. */
+.pl .pl-amber-btn {
   background: var(--amber);
   color: var(--bg);
   padding: 16px 26px;
   font-size: 16px;
 }
-.pl-amber-btn:hover {
+.pl .pl-amber-btn:hover {
   background: var(--light);
   color: var(--bg);
 }
@@ -223,7 +225,7 @@
   background: var(--light);
   color: var(--bg);
   padding: 10px 18px;
-  border-radius: 999px;
+  border-radius: 10px;
   font-weight: 600;
 }
 .pl a.pl-book:hover {
@@ -769,7 +771,7 @@
   background: var(--bg);
   color: var(--light);
   padding: 14px 22px;
-  border-radius: 999px;
+  border-radius: 10px;
   font-weight: 600;
 }
 .pl-card-cta-dark:hover {
@@ -779,7 +781,7 @@
   align-self: flex-start;
   border: 1px solid rgba(255, 255, 255, 0.25);
   padding: 14px 22px;
-  border-radius: 999px;
+  border-radius: 10px;
   font-weight: 600;
   color: var(--tx);
 }
@@ -907,7 +909,7 @@
   background: var(--light);
   color: var(--bg);
   padding: 14px 22px;
-  border-radius: 999px;
+  border-radius: 10px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -1093,7 +1095,7 @@
   border: 1px solid var(--bd4);
   color: var(--tx);
   padding: 12px 20px;
-  border-radius: 999px;
+  border-radius: 10px;
   font-weight: 600;
   font-size: 15px;
   background: transparent;
@@ -1117,4 +1119,17 @@
   .pl-inbox-card {
     transition: none;
   }
+}
+
+/* proof — the role lines below the meeting-room illustration */
+.pl-proof-roles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 32px;
+  margin-top: 56px;
+  border-top: 1px solid var(--bd3);
+  padding-top: 28px;
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--tx);
 }

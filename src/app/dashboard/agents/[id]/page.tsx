@@ -16,7 +16,7 @@ import {
   groupThreads,
   parseOutbound,
 } from "@/lib/workforce/outreach";
-import { agentColor, rosterById } from "@/lib/workforce/roster";
+import { agentColor, ROSTER, rosterById } from "@/lib/workforce/roster";
 import { getActiveSubagents } from "@/lib/workforce/subagents";
 import {
   type Agent,
@@ -31,9 +31,11 @@ import {
 } from "@/lib/workforce/types";
 import "../../agent.css";
 import "../../hunter.css";
+import "../../mobile-chat.css";
 import { CallPanel } from "../../_components/CallPanel";
 import { type ChatMessage, ChatPane } from "../../_components/ChatPane";
 import { HunterHeader, type HunterStats } from "../../_components/HunterHeader";
+import { type ChatChip, MobileChat } from "../../_components/MobileChat";
 import { AgentPanels } from "../../_components/panels/AgentPanels";
 import { dueState } from "../../_components/panels/dates";
 import type { ProspectRow } from "../../_components/panels/PipelineTable";
@@ -52,6 +54,7 @@ export default async function AgentPage({
     { data: tasks },
     { data: roster },
     workerRows,
+    { data: allPending },
   ] = await Promise.all([
     db.from("agents").select("*").eq("id", id).maybeSingle(),
     db
@@ -75,21 +78,67 @@ export default async function AgentPage({
       .limit(10),
     db.from("agents").select("*").order("id"),
     getActiveSubagents(),
+    db.from("approvals").select("agent_id").eq("status", "pending"),
   ]);
+
+  // ── mobile chat chip roster: every agent + its status (shared by all branches) ──
+  const liveById = new Map(
+    ((roster as Agent[] | null) ?? []).map((x) => [x.id, x]),
+  );
+  const pendingByAgent = new Map<string, number>();
+  for (const p of (allPending as { agent_id: string | null }[] | null) ?? [])
+    if (p.agent_id)
+      pendingByAgent.set(p.agent_id, (pendingByAgent.get(p.agent_id) ?? 0) + 1);
+  const runningByAgent = new Map<string, number>();
+  for (const w of workerRows)
+    if (w.status === "running" && w.agent_id)
+      runningByAgent.set(w.agent_id, (runningByAgent.get(w.agent_id) ?? 0) + 1);
+  const statusOf = (aid: string): string => {
+    const live = liveById.get(aid);
+    if (!live) return "soon";
+    if (live.status === "working" || (runningByAgent.get(aid) ?? 0) > 0)
+      return "working";
+    return (pendingByAgent.get(aid) ?? 0) > 0 ? "waiting" : "idle";
+  };
+  const chipRoster: ChatChip[] = ROSTER.map((rr) => ({
+    id: rr.id,
+    name: rr.name,
+    emoji: rr.emoji,
+    hue: rr.hue,
+    statusLabel: statusOf(rr.id),
+  }));
 
   // Fixer (and any roster agent not yet in `agents`) is "not deployed" — render
   // the full shell with a not-deployed work card rather than a 404.
   if (!agent) {
-    const r = rosterById(id);
-    if (!r) notFound();
+    const nd = rosterById(id);
+    if (!nd) notFound();
     return (
-      <NotDeployedAgent
-        id={r.id}
-        name={r.name}
-        emoji={r.emoji}
-        hue={r.hue}
-        room={r.room}
-      />
+      <>
+        <MobileChat
+          roster={chipRoster}
+          current={{
+            id: nd.id,
+            name: nd.name,
+            emoji: nd.emoji,
+            hue: nd.hue,
+            statusLabel: "soon",
+            task: "not deployed",
+          }}
+          messages={[]}
+          canChat={false}
+          sendAction={sendMessageFromForm}
+        />
+        <div className="wf-only-desktop">
+          <NotDeployedAgent
+            id={nd.id}
+            name={nd.name}
+            emoji={nd.emoji}
+            hue={nd.hue}
+            room={nd.room}
+          />
+        </div>
+      </>
     );
   }
   const a = agent as Agent;
@@ -125,6 +174,27 @@ export default async function AgentPage({
   const taskList = (tasks as Task[] | null) ?? [];
   const recentRuns = taskList.slice(0, 6);
 
+  const r = rosterById(a.id);
+  const hue = r?.hue ?? 70;
+
+  // ── The mobile chat (< 768px) — rendered for every agent branch below. ──────
+  const mchat = (
+    <MobileChat
+      roster={chipRoster}
+      current={{
+        id: a.id,
+        name: agentName,
+        emoji: agentEmoji,
+        hue,
+        statusLabel: statusOf(a.id),
+        task: a.current_task ?? "",
+      }}
+      messages={chatMessages}
+      canChat
+      sendAction={sendMessageFromForm}
+    />
+  );
+
   // ── The chat: the workspace centerpiece. Fills its column's full height/width. ──
   const chat = (
     <ChatPane
@@ -155,12 +225,17 @@ export default async function AgentPage({
   // ── Hunter: a dedicated chat page (office-style — chat centre, outreach data on
   //    the flanks). Campaigns live on their own route now (./hunter/campaigns). ──
   if (a.id === "hunter") {
-    return await buildHunterChat(a, agentName, chat);
+    return (
+      <>
+        {mchat}
+        <div className="wf-only-desktop">
+          {await buildHunterChat(a, agentName, chat)}
+        </div>
+      </>
+    );
   }
 
   // ── the new agent shell: identity header + work / chat / right-rail ─────────
-  const r = rosterById(a.id);
-  const hue = r?.hue ?? 70;
   const agcVars = {
     "--agc": agentColor(hue),
     "--agc-tint": agentColor(hue, 0.16),
@@ -182,179 +257,190 @@ export default async function AgentPage({
       : "idle";
 
   return (
-    <div className="wf-ag" style={agcVars}>
-      <header className="wf-ag-head">
-        <div className="wf-ag-glow" />
-        <span className={`wf-ag-avatar${workingNow ? " is-working" : ""}`}>
-          {agentEmoji}
-        </span>
-        <div className="wf-ag-id">
-          <div className="wf-ag-id-top">
-            <h1 className="wf-ag-name">{agentName}</h1>
-            <span className={`wf-ag-chip is-${chipKey}`}>
-              <span className="dot" />
-              {STATUS_LABEL[chipKey] ?? chipKey}
+    <>
+      {mchat}
+      <div className="wf-only-desktop">
+        <div className="wf-ag" style={agcVars}>
+          <header className="wf-ag-head">
+            <div className="wf-ag-glow" />
+            <span className={`wf-ag-avatar${workingNow ? " is-working" : ""}`}>
+              {agentEmoji}
             </span>
-            {room && <span className="wf-ag-room">{room}</span>}
+            <div className="wf-ag-id">
+              <div className="wf-ag-id-top">
+                <h1 className="wf-ag-name">{agentName}</h1>
+                <span className={`wf-ag-chip is-${chipKey}`}>
+                  <span className="dot" />
+                  {STATUS_LABEL[chipKey] ?? chipKey}
+                </span>
+                {room && <span className="wf-ag-room">{room}</span>}
+              </div>
+              {tagline && <div className="wf-ag-tagline">{tagline}</div>}
+            </div>
+            <dl className="wf-ag-meta">
+              {model && (
+                <div>
+                  <dt>model</dt>
+                  <dd className="mono">{model}</dd>
+                </div>
+              )}
+              <div>
+                <dt>last active</dt>
+                <dd>{ago(a.last_active_at)}</dd>
+              </div>
+              <div>
+                <dt>workers</dt>
+                <dd>{running.length}</dd>
+              </div>
+              <div>
+                <dt>waiting</dt>
+                <dd>{pendingList.length}</dd>
+              </div>
+            </dl>
+          </header>
+
+          <div className="wf-ag-cols">
+            <section className="wf-ag-work" aria-label="work">
+              <AgentPanels
+                agent={a}
+                agents={agents}
+                museEnabled={museEnabled}
+              />
+            </section>
+
+            <section className="wf-ag-chat" aria-label="chat">
+              {chat}
+            </section>
+
+            <aside className="wf-ag-rail" aria-label="approvals and workers">
+              <div className="wf-ag-card">
+                <div className="wf-ag-card-title">waiting for you</div>
+                {pendingList.length ? (
+                  pendingList.map((ap) => {
+                    const ob = parseOutbound(ap.draft);
+                    const label = ob
+                      ? ob.channel.toLowerCase().includes("linkedin")
+                        ? "publish"
+                        : "send"
+                      : "approve";
+                    const preview = (ob ? ob.body : (ap.draft ?? "")).trim();
+                    return (
+                      <div className="wf-ag-wait" key={ap.id}>
+                        <div className="wf-ag-wait-action">
+                          {ap.action ?? "approval request"}
+                        </div>
+                        {preview && (
+                          <div className="wf-ag-wait-preview">{preview}</div>
+                        )}
+                        <div className="wf-ag-wait-btns">
+                          <form action={approveFromForm}>
+                            <input type="hidden" name="id" value={ap.id} />
+                            <input type="hidden" name="agent" value={a.id} />
+                            <button className="wf-ag-btn" type="submit">
+                              {label}
+                            </button>
+                          </form>
+                          <Link
+                            href="/dashboard/approvals"
+                            className="wf-ag-btn ghost"
+                          >
+                            edit
+                          </Link>
+                          <form action={rejectFromForm}>
+                            <input type="hidden" name="id" value={ap.id} />
+                            <input type="hidden" name="agent" value={a.id} />
+                            <button className="wf-ag-btn bare" type="submit">
+                              reject
+                            </button>
+                          </form>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="wf-ag-empty">nothing waiting on you.</p>
+                )}
+              </div>
+
+              <div className="wf-ag-card">
+                <div className="wf-ag-card-head">
+                  <span className="wf-ag-card-title">workers</span>
+                  <span className="wf-ag-card-sub">
+                    {running.length} running
+                  </span>
+                </div>
+                {running.length === 0 && finished.length === 0 ? (
+                  <p className="wf-ag-empty">
+                    no workers running. {agentName.toLowerCase()} spins them up
+                    for longer tasks; they show here while they run.
+                  </p>
+                ) : (
+                  <>
+                    {running.map((w) => (
+                      <div className="wf-ag-worker" key={w.session_key}>
+                        <div className="wf-ag-worker-top">
+                          <span
+                            className="wf-ag-worker-dot"
+                            style={{ background: agentColor(hue, 0.22) }}
+                          />
+                          <span className="wf-ag-worker-task">
+                            {w.label ?? "background task"}
+                          </span>
+                          <span className="wf-ag-worker-age">
+                            {ago(w.started_at ?? w.updated_at)}
+                          </span>
+                        </div>
+                        <div className="wf-ag-worker-bar">
+                          <i />
+                        </div>
+                      </div>
+                    ))}
+                    {finished.map((w) => (
+                      <div className="wf-ag-finished" key={w.session_key}>
+                        <span className="tick">✓</span>
+                        <span className="wf-ag-worker-task">
+                          {w.label ?? "task"}
+                        </span>
+                        <span className="wf-ag-worker-age">
+                          {ago(w.updated_at ?? w.started_at)}
+                        </span>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+
+              <div className="wf-ag-card">
+                <div className="wf-ag-card-title">recent runs</div>
+                {recentRuns.length ? (
+                  recentRuns.map((t) => {
+                    const st =
+                      t.status === "error"
+                        ? "err"
+                        : t.status === "ok"
+                          ? "ok"
+                          : "run";
+                    return (
+                      <div className="wf-ag-run" key={t.id}>
+                        <span className="wf-ag-run-t">
+                          {ago(t.started_at ?? t.finished_at)}
+                        </span>
+                        <span className="wf-ag-run-job">
+                          {t.name ?? t.source ?? "run"}
+                        </span>
+                        <span className={`wf-ag-run-st ${st}`}>{t.status}</span>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="wf-ag-empty">no runs yet.</p>
+                )}
+              </div>
+            </aside>
           </div>
-          {tagline && <div className="wf-ag-tagline">{tagline}</div>}
         </div>
-        <dl className="wf-ag-meta">
-          {model && (
-            <div>
-              <dt>model</dt>
-              <dd className="mono">{model}</dd>
-            </div>
-          )}
-          <div>
-            <dt>last active</dt>
-            <dd>{ago(a.last_active_at)}</dd>
-          </div>
-          <div>
-            <dt>workers</dt>
-            <dd>{running.length}</dd>
-          </div>
-          <div>
-            <dt>waiting</dt>
-            <dd>{pendingList.length}</dd>
-          </div>
-        </dl>
-      </header>
-
-      <div className="wf-ag-cols">
-        <section className="wf-ag-work" aria-label="work">
-          <AgentPanels agent={a} agents={agents} museEnabled={museEnabled} />
-        </section>
-
-        <section className="wf-ag-chat" aria-label="chat">
-          {chat}
-        </section>
-
-        <aside className="wf-ag-rail" aria-label="approvals and workers">
-          <div className="wf-ag-card">
-            <div className="wf-ag-card-title">waiting for you</div>
-            {pendingList.length ? (
-              pendingList.map((ap) => {
-                const ob = parseOutbound(ap.draft);
-                const label = ob
-                  ? ob.channel.toLowerCase().includes("linkedin")
-                    ? "publish"
-                    : "send"
-                  : "approve";
-                const preview = (ob ? ob.body : (ap.draft ?? "")).trim();
-                return (
-                  <div className="wf-ag-wait" key={ap.id}>
-                    <div className="wf-ag-wait-action">
-                      {ap.action ?? "approval request"}
-                    </div>
-                    {preview && (
-                      <div className="wf-ag-wait-preview">{preview}</div>
-                    )}
-                    <div className="wf-ag-wait-btns">
-                      <form action={approveFromForm}>
-                        <input type="hidden" name="id" value={ap.id} />
-                        <input type="hidden" name="agent" value={a.id} />
-                        <button className="wf-ag-btn" type="submit">
-                          {label}
-                        </button>
-                      </form>
-                      <Link
-                        href="/dashboard/approvals"
-                        className="wf-ag-btn ghost"
-                      >
-                        edit
-                      </Link>
-                      <form action={rejectFromForm}>
-                        <input type="hidden" name="id" value={ap.id} />
-                        <input type="hidden" name="agent" value={a.id} />
-                        <button className="wf-ag-btn bare" type="submit">
-                          reject
-                        </button>
-                      </form>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <p className="wf-ag-empty">nothing waiting on you.</p>
-            )}
-          </div>
-
-          <div className="wf-ag-card">
-            <div className="wf-ag-card-head">
-              <span className="wf-ag-card-title">workers</span>
-              <span className="wf-ag-card-sub">{running.length} running</span>
-            </div>
-            {running.length === 0 && finished.length === 0 ? (
-              <p className="wf-ag-empty">
-                no workers running. {agentName.toLowerCase()} spins them up for
-                longer tasks; they show here while they run.
-              </p>
-            ) : (
-              <>
-                {running.map((w) => (
-                  <div className="wf-ag-worker" key={w.session_key}>
-                    <div className="wf-ag-worker-top">
-                      <span
-                        className="wf-ag-worker-dot"
-                        style={{ background: agentColor(hue, 0.22) }}
-                      />
-                      <span className="wf-ag-worker-task">
-                        {w.label ?? "background task"}
-                      </span>
-                      <span className="wf-ag-worker-age">
-                        {ago(w.started_at ?? w.updated_at)}
-                      </span>
-                    </div>
-                    <div className="wf-ag-worker-bar">
-                      <i />
-                    </div>
-                  </div>
-                ))}
-                {finished.map((w) => (
-                  <div className="wf-ag-finished" key={w.session_key}>
-                    <span className="tick">✓</span>
-                    <span className="wf-ag-worker-task">
-                      {w.label ?? "task"}
-                    </span>
-                    <span className="wf-ag-worker-age">
-                      {ago(w.updated_at ?? w.started_at)}
-                    </span>
-                  </div>
-                ))}
-              </>
-            )}
-          </div>
-
-          <div className="wf-ag-card">
-            <div className="wf-ag-card-title">recent runs</div>
-            {recentRuns.length ? (
-              recentRuns.map((t) => {
-                const st =
-                  t.status === "error"
-                    ? "err"
-                    : t.status === "ok"
-                      ? "ok"
-                      : "run";
-                return (
-                  <div className="wf-ag-run" key={t.id}>
-                    <span className="wf-ag-run-t">
-                      {ago(t.started_at ?? t.finished_at)}
-                    </span>
-                    <span className="wf-ag-run-job">
-                      {t.name ?? t.source ?? "run"}
-                    </span>
-                    <span className={`wf-ag-run-st ${st}`}>{t.status}</span>
-                  </div>
-                );
-              })
-            ) : (
-              <p className="wf-ag-empty">no runs yet.</p>
-            )}
-          </div>
-        </aside>
       </div>
-    </div>
+    </>
   );
 }
 

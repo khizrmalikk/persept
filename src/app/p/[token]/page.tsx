@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { Markdown } from "@/app/dashboard/_components/panels/Markdown";
+import { PerseptMark } from "@/components/ui/logo";
 import {
   getProposalByToken,
   PUBLIC_STATUSES,
@@ -54,23 +55,7 @@ export default async function PublicProposal({
       <article className="prop-doc">
         <header className="prop-head">
           <span className="prop-brand">
-            <svg
-              viewBox="0 0 143.44 126.56"
-              width="24"
-              height="21"
-              aria-hidden="true"
-            >
-              <polygon
-                points="26.85 126.06 100.34 .5 142.56 .5 68.83 126.06 26.85 126.06"
-                fill="oklch(0.62 0.14 60)"
-              />
-              <polyline
-                points="100.34 .5 1.02 .5 26.85 33.86 80.82 33.86"
-                fill="none"
-                stroke="#1a1714"
-                strokeWidth="9"
-              />
-            </svg>
+            <PerseptMark size={22} style={{ color: "#1a1714" }} />
             <span className="prop-brand-word">Persept</span>
           </span>
           <span className="prop-kicker">proposal</span>

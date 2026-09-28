@@ -1,4 +1,8 @@
 import Link from "next/link";
+// the official brand mark lives in one place; re-exported for existing importers
+import { PerseptMark } from "@/components/ui/logo";
+
+export { PerseptMark };
 
 // Shared chrome for the cinematic dark pages (landing + contact): the logo mark,
 // the sticky nav and the footer. `base` is "" on the landing (so the nav anchors
@@ -11,29 +15,6 @@ export const BOOKING_EXTERNAL = /^https?:/i.test(BOOKING_HREF);
 export const bookAttrs = BOOKING_EXTERNAL
   ? { target: "_blank", rel: "noreferrer" as const }
   : {};
-
-export function PerseptMark() {
-  return (
-    <svg
-      viewBox="0 0 143.44 126.56"
-      width="26"
-      height="23"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <polygon
-        points="26.85 126.06 100.34 .5 142.56 .5 68.83 126.06 26.85 126.06"
-        fill="oklch(0.8 0.14 70)"
-      />
-      <polyline
-        points="100.34 .5 1.02 .5 26.85 33.86 80.82 33.86"
-        fill="none"
-        stroke="#f4f1ec"
-        strokeWidth="9"
-      />
-    </svg>
-  );
-}
 
 export function PlNav({ base = "" }: { base?: string }) {
   return (

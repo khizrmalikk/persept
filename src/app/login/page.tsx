@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PerseptMark } from "@/components/ui/logo";
 import { sendMagicLink } from "@/lib/workforce/auth-actions";
 import "@/components/sections/landing.css";
 import "./login.css";
@@ -26,23 +27,7 @@ export default async function Login({
         <div className="login-grid" />
         <div className="login-inner">
           <Link href="/" className="login-brand">
-            <svg
-              viewBox="0 0 143.44 126.56"
-              width="24"
-              height="21"
-              aria-hidden="true"
-            >
-              <polygon
-                points="26.85 126.06 100.34 .5 142.56 .5 68.83 126.06 26.85 126.06"
-                fill="oklch(0.8 0.14 70)"
-              />
-              <polyline
-                points="100.34 .5 1.02 .5 26.85 33.86 80.82 33.86"
-                fill="none"
-                stroke="#f4f1ec"
-                strokeWidth="9"
-              />
-            </svg>
+            <PerseptMark size={22} />
             <span className="login-brand-word">Persept</span>
             <span className="login-brand-sub">/ workforce</span>
           </Link>

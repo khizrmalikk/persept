@@ -1,0 +1,159 @@
+/* ============================================================================
+   MOBILE dashboard (< 768px) — office · approvals · chat.
+   Foundation: hide the sidebar, turn the app shell into a phone column
+   (top bar → scrollable content → bottom tab bar), and the desktop/mobile
+   visibility toggles. Per-screen styles live in mobile-office/approvals/chat.
+   Everything scoped under `.wf` (dark tokens already apply). See mobile handoff.
+   ========================================================================== */
+
+/* visibility toggles — desktop content is transparent to layout on desktop and
+   hidden on phones; mobile content is the reverse. */
+.wf .wf-only-desktop {
+  display: contents;
+}
+.wf .wf-only-mobile {
+  display: none;
+}
+
+/* chrome hidden on desktop */
+.wf .wf-mtop,
+.wf .wf-mtab {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  /* app shell becomes a fixed-height phone column */
+  .wf.wf-app {
+    flex-direction: column;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .wf .wf-sb {
+    display: none;
+  }
+  .wf .wf-content {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .wf .wf-only-desktop {
+    display: none;
+  }
+  .wf .wf-only-mobile {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    flex-direction: column;
+  }
+
+  /* ── top bar ──────────────────────────────────────────────────────────── */
+  .wf .wf-mtop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px 10px;
+    border-bottom: 1px solid var(--line);
+    flex: none;
+  }
+  .wf .wf-mtop-brand {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .wf .wf-mtop-word {
+    font-family: var(--font-arch);
+    font-weight: 800;
+    font-size: 17px;
+    letter-spacing: -0.02em;
+  }
+  .wf .wf-mtop-live {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-faint);
+    letter-spacing: 0.08em;
+  }
+  .wf .wf-mtop-live span:last-child {
+    white-space: nowrap;
+  }
+  .wf .wf-mtop-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ok);
+    box-shadow: 0 0 8px var(--ok);
+  }
+
+  /* ── bottom tab bar ───────────────────────────────────────────────────── */
+  .wf .wf-mtab {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid var(--line);
+    background: var(--sidebar);
+    padding: 6px 8px calc(8px + env(safe-area-inset-bottom));
+    flex: none;
+  }
+  .wf .wf-mtab-btn {
+    min-height: 52px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: var(--ink-ghost);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .wf .wf-mtab-btn.is-active {
+    color: var(--ink);
+  }
+  .wf .wf-mtab-ico {
+    display: inline-flex;
+    color: currentColor;
+  }
+  .wf .wf-mtab-grid {
+    display: grid;
+    grid-template-columns: 7px 7px;
+    gap: 3px;
+  }
+  .wf .wf-mtab-grid i {
+    width: 7px;
+    height: 7px;
+    border-radius: 2px;
+    background: currentColor;
+  }
+  .wf .wf-mtab-box {
+    position: relative;
+    width: 18px;
+    height: 16px;
+    border: 2px solid currentColor;
+    border-radius: 4px;
+  }
+  .wf .wf-mtab-badge {
+    position: absolute;
+    top: -9px;
+    right: -14px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--accent-ink-on);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .wf .wf-mtab-bubble {
+    width: 18px;
+    height: 15px;
+    border: 2px solid currentColor;
+    border-radius: 8px 8px 8px 2px;
+  }
+}
