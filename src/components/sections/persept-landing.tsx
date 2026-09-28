@@ -1,5 +1,6 @@
 import { OfficePanel } from "./office-panel";
 import { BOOKING_HREF, bookAttrs, PlFooter, PlNav } from "./pl-chrome";
+import { ProofVideo } from "./proof-video";
 import "./landing.css";
 
 // The single-page cinematic landing (dark, amber, Archivo). Rebuilt from the
@@ -237,30 +238,9 @@ function ProofScene() {
           />
         </g>
       </svg>
-      {/* the showreel plays on the presentation board (muted autoplay loop);
-          the dashboard screenshot is the poster until the video is ready. */}
-      <video
-        src="/persept-showreel.mp4"
-        poster="/images/dashboard-office.png"
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        aria-label="The Persept office dashboard showreel, running on the board"
-        style={{
-          position: "absolute",
-          left: "17.14%",
-          top: "6.4%",
-          width: "65.71%",
-          height: "66.9%",
-          objectFit: "contain",
-          objectPosition: "center",
-          background: "#0e0d0c",
-          borderRadius: 6,
-          display: "block",
-        }}
-      />
+      {/* the showreel plays on the presentation board (muted autoplay loop),
+          with the perfectly-synced mix behind a sound toggle. */}
+      <ProofVideo />
       <div
         style={{
           position: "absolute",

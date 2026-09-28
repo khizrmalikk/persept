@@ -1133,3 +1133,38 @@
   line-height: 1.45;
   color: var(--tx);
 }
+
+/* proof — sound toggle for the board showreel (mix is a synced separate track) */
+.pl-proof-sound {
+  position: absolute;
+  left: 18.5%;
+  top: 63%;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px 7px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(14, 13, 12, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: var(--tx);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease;
+}
+.pl-proof-sound:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--tx);
+}
+.pl-proof-sound[aria-pressed="true"] {
+  border-color: var(--amber);
+  color: var(--amber);
+}
