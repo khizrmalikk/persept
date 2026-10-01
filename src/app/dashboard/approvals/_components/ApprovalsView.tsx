@@ -41,6 +41,32 @@ export type DecidedVM = {
 type Action = (fd: FormData) => void | Promise<void>;
 type Tab = "waiting" | "held" | "decided";
 
+// whatsapp / instagram drafts are sent by the owner from his phone: give him a
+// one-tap open link right in the detail (digits only for wa.me; a handle for ig).
+function manualSendHref(
+  channel: string,
+  to: string,
+  body: string,
+): { label: string; href: string } | null {
+  const ch = channel.toLowerCase();
+  if (ch === "whatsapp") {
+    const m = to.match(/wa\.me\/(\+?\d+)/i);
+    const digits = (m ? m[1] : to).replace(/\D/g, "");
+    if (!digits) return null;
+    return {
+      label: "open in whatsapp",
+      href: `https://wa.me/${digits}?text=${encodeURIComponent(body)}`,
+    };
+  }
+  if (ch === "instagram") {
+    const urlMatch = to.match(/instagram\.com\/([A-Za-z0-9._]+)/i);
+    const handle = urlMatch ? urlMatch[1] : to.trim().replace(/^@/, "");
+    if (!/^[A-Za-z0-9._]{2,30}$/.test(handle)) return null;
+    return { label: "open instagram", href: `https://instagram.com/${handle}` };
+  }
+  return null;
+}
+
 export function ApprovalsView({
   waiting,
   held,
@@ -48,6 +74,8 @@ export function ApprovalsView({
   approveAction,
   rejectAction,
   sendEditAction,
+  returnAction,
+  embedded = false,
 }: {
   waiting: ApprovalVM[];
   held: ApprovalVM[];
@@ -55,6 +83,10 @@ export function ApprovalsView({
   approveAction: Action;
   rejectAction: Action;
   sendEditAction: Action;
+  returnAction: Action;
+  // Rendered inside another page (e.g. the Hunter approvals tab): drop the big
+  // page title block and keep just the tabs, since the host already has a header.
+  embedded?: boolean;
 }) {
   const [tab, setTab] = useState<Tab>("waiting");
   const [selId, setSelId] = useState<number | null>(waiting[0]?.id ?? null);
@@ -107,15 +139,17 @@ export function ApprovalsView({
       : "nothing waiting. the agents are working inside their limits.";
 
   return (
-    <div className="wf-apx">
+    <div className={`wf-apx${embedded ? " is-embedded" : ""}`}>
       <header className="wf-apx-head">
-        <div>
-          <div className="wf-apx-eyebrow">approvals</div>
-          <h1 className="wf-apx-title">waiting for you</h1>
-          <p className="wf-apx-lede">
-            agents draft and prepare. you press send, merge, publish and pay.
-          </p>
-        </div>
+        {!embedded && (
+          <div>
+            <div className="wf-apx-eyebrow">approvals</div>
+            <h1 className="wf-apx-title">waiting for you</h1>
+            <p className="wf-apx-lede">
+              agents draft and prepare. you press send, merge, publish and pay.
+            </p>
+          </div>
+        )}
         <div className="wf-apx-tabs">
           {tabs.map(([k, label, count]) => (
             <button
@@ -241,10 +275,41 @@ export function ApprovalsView({
                 )}
               </div>
 
+              {(() => {
+                const ms =
+                  sel.outbound && !editing
+                    ? manualSendHref(sel.channel, sel.to, sel.body)
+                    : null;
+                return ms ? (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      flexWrap: "wrap",
+                      padding: "0 20px 4px",
+                    }}
+                  >
+                    <span className="wf-apx-hint">
+                      you send this one from your phone —
+                    </span>
+                    <a
+                      className="wf-apx-btn primary"
+                      href={ms.href}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                    >
+                      {ms.label}
+                    </a>
+                  </div>
+                ) : null;
+              })()}
+
               <div className="wf-apx-foot">
-                <input
+                <textarea
                   className="wf-apx-note"
                   name="note"
+                  rows={3}
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   placeholder={`note to ${sel.agentName.toLowerCase()} (optional) · e.g. softer opening`}
@@ -321,6 +386,16 @@ export function ApprovalsView({
                       </button>
                     </>
                   )}
+                  {!editing && sel.body.trim().length > 0 && (
+                    <button
+                      type="submit"
+                      className="wf-apx-btn ghost"
+                      formAction={returnAction}
+                      title="send the draft + your note to scribe to rewrite; the revised version returns here for approval"
+                    >
+                      send to scribe
+                    </button>
+                  )}
                   <button
                     type="submit"
                     className="wf-apx-btn danger"
@@ -329,8 +404,9 @@ export function ApprovalsView({
                     reject
                   </button>
                   <span className="wf-apx-hint">
-                    nothing leaves until you press it. the bridge acts within a
-                    minute.
+                    {sel.body.trim().length > 0
+                      ? "send to scribe puts your note + this draft back to scribe; the rewrite returns here. reject just closes it."
+                      : "nothing leaves until you press it. the bridge acts within a minute."}
                   </span>
                 </div>
               </div>
@@ -358,9 +434,15 @@ export function ApprovalsView({
                 <span className="wf-apx-decided-action">{d.action}</span>
                 <span>
                   <span
-                    className={`wf-apx-decision${d.bad ? " is-bad" : " is-good"}`}
+                    className={`wf-apx-decision${
+                      d.bad
+                        ? " is-bad"
+                        : d.status === "returned"
+                          ? " is-info"
+                          : " is-good"
+                    }`}
                   >
-                    {d.status}
+                    {d.status === "returned" ? "sent to scribe" : d.status}
                   </span>
                 </span>
               </div>

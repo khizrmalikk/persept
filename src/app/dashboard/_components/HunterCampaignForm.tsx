@@ -10,11 +10,21 @@ import {
 import type { CampaignAsset } from "@/lib/workforce/outreach";
 
 const CHANNELS = ["email", "instagram", "whatsapp", "linkedin"];
+// mirrors MUSE_PLATFORMS in outreach.ts (kept local — that module is server-only).
+const PLATFORMS = [
+  "linkedin",
+  "instagram",
+  "x",
+  "reddit",
+  "tiktok",
+  "newsletter",
+];
 
 export type CampaignForm = {
   id: string;
   name: string;
   status: string;
+  owner: string;
   goal: string;
   audience: string;
   offer: string;
@@ -22,13 +32,24 @@ export type CampaignForm = {
   channels: string[];
   daily_cap: number;
   follow_up_days: number[];
+  search_queries: string[];
+  platforms: string[];
+  starts: string;
+  ends: string;
   assets: CampaignAsset[];
   slug: string;
 };
 
 export function HunterCampaignForm({ initial }: { initial: CampaignForm }) {
   const isNew = !initial.id;
+  const [owner, setOwner] = useState(initial.owner || "hunter");
+  const isMuse = owner === "muse";
   const [channels, setChannels] = useState<string[]>(initial.channels);
+  const [platforms, setPlatforms] = useState<string[]>(initial.platforms);
+  const togglePlatform = (p: string) =>
+    setPlatforms((prev) =>
+      prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p],
+    );
   const [assets, setAssets] = useState<CampaignAsset[]>(initial.assets);
   const [assetUrl, setAssetUrl] = useState("");
   const [addList, setAddList] = useState("");
@@ -92,8 +113,12 @@ export function HunterCampaignForm({ initial }: { initial: CampaignForm }) {
     <div className="wf-hn-editor">
       <form action={saveCampaign} className="wf-hn-editor-main">
         <input type="hidden" name="id" value={initial.id} />
+        {isNew && <input type="hidden" name="owner" value={owner} />}
         {channels.map((c) => (
           <input key={c} type="hidden" name="channels" value={c} />
+        ))}
+        {platforms.map((p) => (
+          <input key={p} type="hidden" name="platforms" value={p} />
         ))}
         <input type="hidden" name="assets" value={JSON.stringify(assets)} />
         <div>
@@ -123,6 +148,20 @@ export function HunterCampaignForm({ initial }: { initial: CampaignForm }) {
             </select>
           </label>
         </div>
+
+        {isNew ? (
+          <label className="wf-hn-field">
+            owner
+            <select value={owner} onChange={(e) => setOwner(e.target.value)}>
+              <option value="hunter">hunter · outreach</option>
+              <option value="muse">muse · marketing</option>
+            </select>
+          </label>
+        ) : (
+          <div className="wf-hn-cv-k">
+            owner · {isMuse ? "muse (marketing)" : "hunter (outreach)"}
+          </div>
+        )}
 
         <label className="wf-hn-field">
           goal
@@ -159,70 +198,140 @@ export function HunterCampaignForm({ initial }: { initial: CampaignForm }) {
           />
         </label>
 
-        <div className="wf-hn-rules">
-          <div className="wf-hn-cv-k">rules</div>
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 6,
-              alignItems: "center",
-            }}
-          >
-            <span
-              style={{ fontSize: 12, color: "var(--ink-faint)", width: 70 }}
+        {isMuse ? (
+          <div className="wf-hn-rules">
+            <div className="wf-hn-cv-k">rules</div>
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 6,
+                alignItems: "center",
+              }}
             >
-              channels
-            </span>
-            {CHANNELS.map((c) => {
-              const on = channels.includes(c);
-              return (
-                <button
-                  key={c}
-                  type="button"
-                  className={`wf-hn-toggle${on ? " on" : ""}`}
-                  onClick={() => toggle(c)}
-                >
-                  {on ? "✓ " : ""}
-                  {c}
-                </button>
-              );
-            })}
+              <span
+                style={{ fontSize: 12, color: "var(--ink-faint)", width: 70 }}
+              >
+                platforms
+              </span>
+              {PLATFORMS.map((p) => {
+                const on = platforms.includes(p);
+                return (
+                  <button
+                    key={p}
+                    type="button"
+                    className={`wf-hn-toggle${on ? " on" : ""}`}
+                    onClick={() => togglePlatform(p)}
+                  >
+                    {on ? "✓ " : ""}
+                    {p}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="wf-hn-grid2">
+              <label className="wf-hn-field">
+                starts
+                <input
+                  type="date"
+                  name="starts"
+                  defaultValue={initial.starts}
+                />
+              </label>
+              <label className="wf-hn-field">
+                ends
+                <input type="date" name="ends" defaultValue={initial.ends} />
+              </label>
+            </div>
           </div>
-          <div className="wf-hn-grid3">
-            <label className="wf-hn-field">
-              daily cap
-              <input
-                type="number"
-                name="daily_cap"
-                defaultValue={initial.daily_cap}
+        ) : (
+          <div className="wf-hn-rules">
+            <div className="wf-hn-cv-k">rules</div>
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 6,
+                alignItems: "center",
+              }}
+            >
+              <span
+                style={{ fontSize: 12, color: "var(--ink-faint)", width: 70 }}
+              >
+                channels
+              </span>
+              {CHANNELS.map((c) => {
+                const on = channels.includes(c);
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    className={`wf-hn-toggle${on ? " on" : ""}`}
+                    onClick={() => toggle(c)}
+                  >
+                    {on ? "✓ " : ""}
+                    {c}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="wf-hn-grid3">
+              <label className="wf-hn-field">
+                daily cap
+                <input
+                  type="number"
+                  name="daily_cap"
+                  defaultValue={initial.daily_cap}
+                />
+              </label>
+              <label className="wf-hn-field">
+                follow-up day 1
+                <input
+                  type="number"
+                  name="follow_up_1"
+                  defaultValue={initial.follow_up_days[0] ?? 3}
+                />
+              </label>
+              <label className="wf-hn-field">
+                follow-up day 2
+                <input
+                  type="number"
+                  name="follow_up_2"
+                  defaultValue={initial.follow_up_days[1] ?? 7}
+                />
+              </label>
+            </div>
+            <label className="wf-hn-field" style={{ marginTop: 4 }}>
+              search queries
+              <textarea
+                name="search_queries"
+                defaultValue={initial.search_queries.join("\n")}
+                placeholder={
+                  "holiday home management dubai marina\nairbnb management palm jumeirah\n…"
+                }
+                style={{ minHeight: 96 }}
               />
-            </label>
-            <label className="wf-hn-field">
-              follow-up day 1
-              <input
-                type="number"
-                name="follow_up_1"
-                defaultValue={initial.follow_up_days[0] ?? 3}
-              />
-            </label>
-            <label className="wf-hn-field">
-              follow-up day 2
-              <input
-                type="number"
-                name="follow_up_2"
-                defaultValue={initial.follow_up_days[1] ?? 7}
-              />
+              <span
+                style={{
+                  fontSize: 12,
+                  color: "var(--ink-faint)",
+                  lineHeight: 1.5,
+                  marginTop: 4,
+                }}
+              >
+                what a customer would type into google maps, with a place in
+                each one. these run every morning and feed scout.
+              </span>
             </label>
           </div>
-        </div>
+        )}
 
         <div className="wf-hn-saverow">
           <button type="submit" className="wf-hn-btn amber lg">
             {isNew ? "create campaign" : "save changes"}
           </button>
           <span className="wf-hn-savehint">
-            hunter sees changes within a minute
+            {isMuse ? "muse" : "hunter"} sees changes within a minute
           </span>
         </div>
       </form>
@@ -271,36 +380,42 @@ export function HunterCampaignForm({ initial }: { initial: CampaignForm }) {
           <input ref={fileRef} type="file" hidden onChange={onFile} />
         </div>
 
-        <div className="wf-hn-panel">
-          <div className="wf-hn-panel-title">add prospects</div>
-          <div
-            style={{ fontSize: 12, color: "var(--ink-faint)", lineHeight: 1.5 }}
-          >
-            paste company names, websites or a list. hunter researches each one
-            and adds it to this campaign.
+        {!isMuse && (
+          <div className="wf-hn-panel">
+            <div className="wf-hn-panel-title">add prospects</div>
+            <div
+              style={{
+                fontSize: 12,
+                color: "var(--ink-faint)",
+                lineHeight: 1.5,
+              }}
+            >
+              paste company names, websites or a list. hunter researches each
+              one and adds it to this campaign.
+            </div>
+            <textarea
+              className="wf-hn-textarea"
+              style={{ minHeight: 100, fontSize: 13 }}
+              value={addList}
+              onChange={(e) => setAddList(e.target.value)}
+              placeholder={"La Brisa Dubai\nfrankporter.com\n…"}
+            />
+            <button
+              type="button"
+              className="wf-hn-btn cream"
+              style={{ alignSelf: "flex-start" }}
+              disabled={adding || !addList.trim()}
+              onClick={sendProspects}
+            >
+              {adding ? "sending…" : "send to hunter"}
+            </button>
+            {added > 0 && (
+              <span
+                style={{ fontSize: 12, color: "var(--ok)" }}
+              >{`sent to hunter · ${added} prospect${added > 1 ? "s" : ""}`}</span>
+            )}
           </div>
-          <textarea
-            className="wf-hn-textarea"
-            style={{ minHeight: 100, fontSize: 13 }}
-            value={addList}
-            onChange={(e) => setAddList(e.target.value)}
-            placeholder={"La Brisa Dubai\nfrankporter.com\n…"}
-          />
-          <button
-            type="button"
-            className="wf-hn-btn cream"
-            style={{ alignSelf: "flex-start" }}
-            disabled={adding || !addList.trim()}
-            onClick={sendProspects}
-          >
-            {adding ? "sending…" : "send to hunter"}
-          </button>
-          {added > 0 && (
-            <span
-              style={{ fontSize: 12, color: "var(--ok)" }}
-            >{`sent to hunter · ${added} prospect${added > 1 ? "s" : ""}`}</span>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

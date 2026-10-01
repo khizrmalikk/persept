@@ -229,6 +229,14 @@
   border: 1px solid var(--line);
   overflow: hidden;
 }
+/* The chat fills its full-height column: the scroll region absolutely fills the
+   flex space instead of the office card's --chat-scroll-max cap, so the newest
+   message never overflows behind the composer. Mirrors .wf-ws-chat. */
+.wf .wf-ag-chat .chat-scroll {
+  position: absolute;
+  inset: 0;
+  max-height: none;
+}
 .wf .wf-ag-chat .chat-head {
   border-bottom: 1px solid var(--line);
   padding: 14px 18px;

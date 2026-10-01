@@ -15,10 +15,12 @@ const RUN_MSG = "run the weekly prospecting run now, exactly as in AGENTS.md";
 function LeadRow({
   lead,
   checked,
+  fromCandidate,
   onToggle,
 }: {
   lead: Lead;
   checked: boolean;
+  fromCandidate: boolean;
   onToggle: (id: string, on: boolean) => void;
 }) {
   const [pending, start] = useTransition();
@@ -49,6 +51,14 @@ function LeadRow({
           {lead.channel && <span className="wf-chip sm">{lead.channel}</span>}
           {lead.campaign && (
             <span className="wf-chip sm ghost">{lead.campaign}</span>
+          )}
+          {fromCandidate && (
+            <span
+              className="wf-chip sm ghost"
+              title="matched the morning search"
+            >
+              from candidates
+            </span>
           )}
           <span className="wf-lead-age mono">{ago(lead.ts)}</span>
         </div>
@@ -95,13 +105,16 @@ function LeadRow({
 export function LeadsPanel({
   suggested,
   handled,
+  fromCandidateIds = [],
 }: {
   suggested: Lead[];
   handled: Lead[];
+  fromCandidateIds?: string[];
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showHandled, setShowHandled] = useState(false);
   const [pending, start] = useTransition();
+  const candidateIds = new Set(fromCandidateIds);
 
   const toggle = (id: string, on: boolean) =>
     setSelected((prev) => {
@@ -162,6 +175,7 @@ export function LeadsPanel({
                 key={l.id}
                 lead={l}
                 checked={selected.has(l.id)}
+                fromCandidate={candidateIds.has(l.id)}
                 onToggle={toggle}
               />
             ))}

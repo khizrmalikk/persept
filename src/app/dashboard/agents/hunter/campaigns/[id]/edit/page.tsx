@@ -27,6 +27,7 @@ export default async function EditCampaignPage({
           id: campaign.id,
           name: campaign.name,
           status: campaign.status,
+          owner: campaign.agent_id,
           goal: campaign.goal,
           audience: campaign.audience,
           offer: campaign.offer,
@@ -34,6 +35,10 @@ export default async function EditCampaignPage({
           channels: campaign.rules.channels,
           daily_cap: campaign.rules.daily_cap,
           follow_up_days: campaign.rules.follow_up_days,
+          search_queries: campaign.rules.search_queries,
+          platforms: campaign.rules.platforms,
+          starts: campaign.rules.starts,
+          ends: campaign.rules.ends,
           assets: campaign.assets,
           slug: slugify(campaign.name),
         }}

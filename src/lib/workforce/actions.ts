@@ -8,6 +8,10 @@ import {
   type CampaignAsset,
   type CampaignRules,
   DEFAULT_RULES,
+  MUSE_PLATFORMS,
+  normDate,
+  normSearchQueries,
+  parseOutbound,
   slugify,
 } from "./outreach";
 
@@ -222,6 +226,11 @@ export async function saveCampaign(fd: FormData): Promise<void> {
   const followUps = [fd.get("follow_up_1"), fd.get("follow_up_2")]
     .map((v) => Number(v))
     .filter((n) => Number.isFinite(n) && n > 0);
+  const platforms = fd
+    .getAll("platforms")
+    .map(String)
+    .map((p) => p.trim())
+    .filter((p) => MUSE_PLATFORMS.includes(p));
   const rules: CampaignRules = {
     channels: channels.length ? channels : [...DEFAULT_RULES.channels],
     daily_cap:
@@ -231,6 +240,12 @@ export async function saveCampaign(fd: FormData): Promise<void> {
     follow_up_days: followUps.length
       ? followUps
       : [...DEFAULT_RULES.follow_up_days],
+    // one google-maps query per line, trimmed, blanks dropped, max 8.
+    search_queries: normSearchQueries(fd.get("search_queries")),
+    // muse campaigns: platforms + a run window.
+    platforms: [...new Set(platforms)],
+    starts: normDate(fd.get("starts")),
+    ends: normDate(fd.get("ends")),
   };
 
   let assets: CampaignAsset[] = [];
@@ -243,8 +258,8 @@ export async function saveCampaign(fd: FormData): Promise<void> {
 
   const now = new Date().toISOString();
   const db = supabaseAdmin();
+  // agent_id (owner) is set ONLY on create; existing rows keep theirs on edit.
   const row = {
-    agent_id: "hunter",
     name,
     status,
     goal,
@@ -260,19 +275,39 @@ export async function saveCampaign(fd: FormData): Promise<void> {
   if (id) {
     await db.from("campaigns").update(row).eq("id", id);
   } else {
+    const ownerRaw = String(fd.get("owner") ?? "hunter").trim();
+    const owner = ownerRaw === "muse" ? "muse" : "hunter";
     const { data } = await db
       .from("campaigns")
-      .insert({ ...row, created_at: now })
+      .insert({ ...row, agent_id: owner, created_at: now })
       .select("id")
       .maybeSingle();
     campaignId = (data as { id: string } | null)?.id ?? "";
   }
   revalidatePath("/dashboard/agents/hunter");
+  revalidatePath("/dashboard/agents/muse");
   redirect(
     campaignId
       ? `/dashboard/agents/hunter/campaigns/${campaignId}`
       : "/dashboard/agents/hunter",
   );
+}
+
+// Delete a campaign. Dashboard-owned write (like saveCampaign): the row is gone
+// and the bridge drops its mirrored campaigns/<slug>.md within a minute. Scoped to
+// hunter so a stray id can't remove another agent's row. Lands back on the board.
+export async function deleteCampaign(id: string): Promise<void> {
+  await guard();
+  const rowId = id.trim();
+  if (!rowId) return;
+  await supabaseAdmin()
+    .from("campaigns")
+    .delete()
+    .eq("id", rowId)
+    .eq("agent_id", "hunter");
+  revalidatePath("/dashboard/agents/hunter");
+  revalidatePath("/dashboard/agents/hunter/campaigns");
+  redirect("/dashboard/agents/hunter/campaigns");
 }
 
 // Stream a campaign asset into the public `campaign-assets` bucket and return its
@@ -354,6 +389,127 @@ export async function sendApprovedEdit(fd: FormData): Promise<void> {
   revalidatePath("/dashboard/approvals");
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/agents/${agentId}`);
+}
+
+// "send back to scribe": the owner wants the draft rewritten with his notes, then
+// returned to the inbox for approval. We hand Scribe the current draft + notes as a
+// `message` action (Scribe rewrites and re-raises a fresh approval for the owning
+// agent), and mark THIS approval `returned` so it leaves the queue and shows in the
+// decided tab as a record that it was sent back. The revised draft arrives as a new
+// pending approval when Scribe is done.
+export async function returnApprovalToScribe(fd: FormData): Promise<void> {
+  await guard();
+  const id = Number(fd.get("id"));
+  const note = String(fd.get("note") ?? "").trim();
+  if (!id) return;
+  const db = supabaseAdmin();
+  const { data } = await db
+    .from("approvals")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  const ap = data as {
+    agent_id?: string | null;
+    draft?: string | null;
+  } | null;
+  if (!ap) return;
+
+  const forAgent = (ap.agent_id ?? "hunter").trim() || "hunter";
+  const ob = parseOutbound(ap.draft);
+  const channel = ob?.channel ?? "";
+  const meta = [
+    channel && `channel: ${channel}`,
+    ob?.to && `to: ${ob.to}`,
+    ob?.campaign && `campaign: ${ob.campaign}`,
+  ]
+    .filter(Boolean)
+    .join(", ");
+  const body = (ob ? ob.body : (ap.draft ?? "")).trim();
+
+  // A directive, unambiguous revise request. The point is that Scribe APPLIES the
+  // owner's note and re-raises the fixed draft — not that it asks the owner
+  // clarifying questions. Keep the same approval (#id) and owning agent.
+  const parts: string[] = [
+    `the owner reviewed approval #${id} and wants it revised. apply the note below to the draft — change exactly what it asks and leave the rest.`,
+    "",
+    "owner's note:",
+    note || "(no note — tighten the writing and fix any grammar.)",
+    "",
+  ];
+  if (meta) parts.push(`draft meta: ${meta}`);
+  parts.push(
+    "current draft:",
+    body,
+    "",
+    `make the edit now and re-raise the revised draft as a new approval for ${forAgent} (this replaces approval #${id}). do not reply with questions — apply the note and re-raise. if the note is genuinely impossible, raise the approval anyway with a one-line reason.`,
+  );
+  const text = parts.join("\n");
+  await sendAgentCommand("scribe", text);
+
+  await db
+    .from("approvals")
+    .update({
+      status: "returned",
+      decision_note: note || "sent back to scribe",
+      decided_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  revalidatePath("/dashboard/approvals");
+  revalidatePath("/dashboard");
+  revalidatePath(`/dashboard/agents/${forAgent}`);
+  revalidatePath("/dashboard/agents/scribe");
+}
+
+// ── Manual-channel sends (whatsapp / instagram) ───────────────────────────────
+// A `messages` row with status `approved_manual` is one the owner sends himself
+// from his phone. "mark sent" tells the owning agent `sent <company>` (so it moves
+// the prospect on) and flips the row to `sent` with a fresh ts. `messages` is
+// bridge-owned; the dashboard only patches this status, like leads/proposals/posts.
+export async function markMessageSent(
+  messageId: string,
+  agentId: string,
+  company: string,
+): Promise<void> {
+  await guard();
+  const id = messageId.trim();
+  const aid = agentId.trim() || "hunter";
+  if (!id) return;
+  const co = company.trim();
+  if (co) await sendAgentCommand(aid, `sent ${co}`);
+  await supabaseAdmin()
+    .from("messages")
+    .update({ status: "sent", ts: new Date().toISOString() })
+    .eq("id", id);
+  revalidatePath(`/dashboard/agents/${aid}`);
+  revalidatePath("/dashboard/agents/hunter/conversations");
+}
+
+// Read-only, guarded: the newest event for an agent whose text starts with
+// `prefix` (case-insensitive). Used to poll for Scout's "find candidates: …"
+// reply after "find candidates now", the same way a call polls for a reply.
+export async function latestAgentReply(
+  agentId: string,
+  prefix: string,
+): Promise<{ text: string; ts: string } | null> {
+  await guard();
+  const id = agentId.trim();
+  const p = prefix.trim().toLowerCase();
+  if (!id) return null;
+  const { data } = await supabaseAdmin()
+    .from("events")
+    .select("ts, summary, payload")
+    .eq("agent_id", id)
+    .order("ts", { ascending: false })
+    .limit(20);
+  for (const row of (data as
+    | { ts: string; summary: string | null; payload: unknown }[]
+    | null) ?? []) {
+    const payloadText = (row.payload as { text?: string } | null)?.text ?? "";
+    const text = (payloadText || row.summary || "").trim();
+    if (text.toLowerCase().startsWith(p)) return { text, ts: row.ts };
+  }
+  return null;
 }
 
 // Hand-offs: mark an open hand-off done or dropped. Direct write to `handoffs`
@@ -653,4 +809,171 @@ export async function savePostStatsFromForm(fd: FormData): Promise<void> {
     await sendAgentCommand("muse", `stats ${slug}: ${summary}`);
   }
   revalidateMuse();
+}
+
+// ── Knowledge base: upload / edit / remove ────────────────────────────────────
+// `knowledge_files` is DASHBOARD-owned; the bridge mirrors each row into every
+// listed agent's workspace as memory/knowledge/<slug>.md within two minutes and
+// removes it on `deleted_at`. It reads the `text` column, so extraction happens
+// HERE on upload (pdf-parse for pdf, mammoth for docx, plain read otherwise). The
+// file goes to the private `knowledge` bucket at <id>/<filename>.
+
+const KNOWLEDGE_AGENT_IDS = ["scribe", "hunter", "muse", "chief", "scout"];
+const KNOWLEDGE_MAX_BYTES = 15 * 1024 * 1024;
+
+function knowledgeExt(name: string): string {
+  const m = name.toLowerCase().match(/\.([a-z0-9]+)$/);
+  return m ? m[1] : "";
+}
+
+// Server-side text extraction. Returns trimmed text, or null when nothing could
+// be read (unsupported, empty, or a parser error) — the row is still inserted.
+async function extractKnowledgeText(
+  bytes: Uint8Array,
+  filename: string,
+): Promise<string | null> {
+  const ext = knowledgeExt(filename);
+  try {
+    if (ext === "pdf") {
+      const { PDFParse } = await import("pdf-parse");
+      const parser = new PDFParse({ data: bytes });
+      const res = await parser.getText();
+      await parser.destroy?.();
+      const t = (res?.text ?? "").trim();
+      return t || null;
+    }
+    if (ext === "docx") {
+      const mammoth = await import("mammoth");
+      const res = await mammoth.extractRawText({ buffer: Buffer.from(bytes) });
+      const t = (res?.value ?? "").trim();
+      return t || null;
+    }
+    if (ext === "md" || ext === "markdown" || ext === "txt" || ext === "csv") {
+      const t = Buffer.from(bytes).toString("utf8").trim();
+      return t || null;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function revalidateKnowledge() {
+  revalidatePath("/dashboard/knowledge");
+  revalidatePath("/dashboard/agents/scribe");
+}
+
+export async function uploadKnowledgeFile(
+  fd: FormData,
+): Promise<{ ok: true } | { error: string }> {
+  await guard();
+  const file = fd.get("file");
+  if (!(file instanceof File) || file.size === 0) return { error: "no file" };
+  if (file.size > KNOWLEDGE_MAX_BYTES)
+    return { error: "file too large (max 15mb)" };
+  const ext = knowledgeExt(file.name);
+  if (!["pdf", "docx", "md", "markdown", "txt", "csv"].includes(ext))
+    return { error: "unsupported type (pdf, docx, md, txt, csv)" };
+
+  const title =
+    String(fd.get("title") ?? "").trim() ||
+    file.name.replace(/\.[a-z0-9]+$/i, "").trim() ||
+    file.name;
+  const summary = String(fd.get("summary") ?? "").trim();
+  const agents = fd
+    .getAll("agents")
+    .map(String)
+    .map((a) => a.trim())
+    .filter((a) => KNOWLEDGE_AGENT_IDS.includes(a));
+  const agentIds = agents.length ? [...new Set(agents)] : ["scribe"];
+
+  const id = crypto.randomUUID();
+  const safe = file.name.replace(/[^a-zA-Z0-9._-]+/g, "_");
+  const path = `${id}/${safe}`;
+  const bytes = new Uint8Array(await file.arrayBuffer());
+
+  const db = supabaseAdmin();
+  const { error: upErr } = await db.storage
+    .from("knowledge")
+    .upload(path, bytes, {
+      contentType: file.type || "application/octet-stream",
+      upsert: true,
+    });
+  if (upErr) return { error: upErr.message };
+
+  const text = await extractKnowledgeText(bytes, file.name);
+  const now = new Date().toISOString();
+  const { error: insErr } = await db.from("knowledge_files").insert({
+    id,
+    title,
+    path,
+    mime: file.type || "",
+    bytes: file.size,
+    text,
+    summary,
+    agent_ids: agentIds,
+    created_at: now,
+    updated_at: now,
+  });
+  if (insErr) return { error: insErr.message };
+  revalidateKnowledge();
+  return { ok: true };
+}
+
+export async function updateKnowledgeFile(fd: FormData): Promise<void> {
+  await guard();
+  const id = String(fd.get("id") ?? "").trim();
+  if (!id) return;
+  const title = String(fd.get("title") ?? "").trim() || "untitled";
+  const summary = String(fd.get("summary") ?? "").trim();
+  const agents = fd
+    .getAll("agents")
+    .map(String)
+    .map((a) => a.trim())
+    .filter((a) => KNOWLEDGE_AGENT_IDS.includes(a));
+  const agentIds = agents.length ? [...new Set(agents)] : ["scribe"];
+  await supabaseAdmin()
+    .from("knowledge_files")
+    .update({
+      title,
+      summary,
+      agent_ids: agentIds,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+  revalidateKnowledge();
+}
+
+// "remove": soft-delete only. Sets deleted_at + updated_at; the bridge removes the
+// workspace copy on seeing deleted_at. The row (and text) are kept for the record.
+export async function removeKnowledgeFile(id: string): Promise<void> {
+  await guard();
+  const rowId = id.trim();
+  if (!rowId) return;
+  const now = new Date().toISOString();
+  await supabaseAdmin()
+    .from("knowledge_files")
+    .update({ deleted_at: now, updated_at: now })
+    .eq("id", rowId);
+  revalidateKnowledge();
+}
+
+// ── Ideas inbox: dismiss ──────────────────────────────────────────────────────
+// `ideas` is BRIDGE-owned; the dashboard only flips `status` (like leads). Dismiss
+// records the reason and stamps the decision. "ask chief" is a plain sendAgentCommand
+// from the client (`decide idea <short_id> now`), so it needs no action here.
+export async function dismissIdea(id: string): Promise<void> {
+  await guard();
+  const rowId = id.trim();
+  if (!rowId) return;
+  await supabaseAdmin()
+    .from("ideas")
+    .update({
+      status: "dismiss",
+      reason: "dismissed by owner",
+      decided_at: new Date().toISOString(),
+    })
+    .eq("id", rowId);
+  revalidatePath("/dashboard/agents/chief");
+  revalidatePath("/dashboard");
 }

@@ -222,6 +222,14 @@
   background: transparent;
   border-radius: 0;
 }
+/* The center chat fills the full-height column: the scroll region absolutely
+   fills the flex space instead of the office card's --chat-scroll-max cap, so the
+   newest message never hides behind the composer. Mirrors .wf-ws-chat. */
+.wf .wf-hn-center .chat-scroll {
+  position: absolute;
+  inset: 0;
+  max-height: none;
+}
 
 /* funnel */
 .wf .wf-hn-funnel-row {
@@ -1050,4 +1058,164 @@
   height: 8px;
   border-radius: 50%;
   background: oklch(0.62 0.16 150);
+}
+
+/* manual-channel sends (whatsapp / instagram): the owner sends these from his
+   phone — an open link + "mark sent", shown under a conversation bubble and in
+   the "to send from your phone" panels. */
+.wf .wf-manualsend {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 6px;
+}
+
+/* ── ideas inbox (chief's page) ─────────────────────────────────────────── */
+.wf .wf-ideas {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.wf .wf-idea {
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--panel);
+  padding: 12px 14px;
+}
+.wf .wf-idea-top {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.wf .wf-idea-agent {
+  font-size: 12px;
+  color: var(--ink-mut);
+}
+.wf .wf-idea-title {
+  font-family: var(--font-arch);
+  font-weight: 700;
+  font-size: 15px;
+  flex: 1;
+  min-width: 0;
+}
+.wf .wf-idea-age {
+  font-size: 10px;
+  color: var(--ink-faint);
+}
+.wf .wf-idea-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.wf .wf-ideas-decided {
+  margin-top: 4px;
+}
+.wf .wf-ideas-decided-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  border-top: 1px solid var(--line-soft);
+  font-size: 12.5px;
+}
+.wf .wf-ideas-decided-title {
+  color: var(--ink-soft);
+}
+.wf .wf-ideas-decided-reason {
+  color: var(--ink-faint);
+  text-align: right;
+}
+
+/* ── copy requests panel (hunter / muse / scribe) ───────────────────────── */
+.wf .wf-copy {
+  display: flex;
+  flex-direction: column;
+}
+.wf .wf-copy-row {
+  padding: 9px 0;
+  border-top: 1px solid var(--line-soft);
+}
+.wf .wf-copy-row:first-child {
+  border-top: 0;
+}
+.wf .wf-copy-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.wf .wf-copy-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex: 0 0 auto;
+}
+.wf .wf-copy-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wf .wf-copy-age {
+  font-size: 10px;
+  color: var(--ink-faint);
+}
+.wf .wf-copy-drafted {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 5px;
+  font-size: 12px;
+}
+.wf .wf-copy-subject {
+  color: var(--ink-mut);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wf .wf-copy-stuck {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+/* ── muse campaigns panel (muse's page) ─────────────────────────────────── */
+.wf .wf-muse-camps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.wf a.wf-muse-camp {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--panel);
+}
+.wf a.wf-muse-camp:hover {
+  border-color: var(--hn-30);
+}
+.wf .wf-muse-camp-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+.wf .wf-muse-camp-name {
+  font-family: var(--font-arch);
+  font-weight: 700;
+  font-size: 15px;
+}
+.wf .wf-muse-camp-posts {
+  font-family: var(--font-geist-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
 }

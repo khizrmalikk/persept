@@ -17,6 +17,7 @@ const KINDS = [
   "lead",
   "approval",
   "post",
+  "warning",
   "error",
 ];
 function normKind(raw: string | null): string {

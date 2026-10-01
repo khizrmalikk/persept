@@ -1,0 +1,129 @@
+/* Knowledge base page — scoped under .wf like the rest of the dashboard. Reuses
+   the hunter panel / field / button / toggle classes; these are the extras. */
+
+.wf .wf-kb {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 8px 4px 64px;
+}
+.wf .wf-kb-eyebrow {
+  font-family: var(--font-geist-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.wf .wf-kb-h1 {
+  font-family: var(--font-arch);
+  font-weight: 800;
+  font-size: 30px;
+  margin: 4px 0 6px;
+}
+.wf .wf-kb-lede {
+  font-size: 14px;
+  color: var(--ink-mut);
+  max-width: 56ch;
+  line-height: 1.55;
+}
+
+.wf .wf-kb-uploader {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.wf .wf-kb-uprow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.wf .wf-kb-agents {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.wf .wf-kb-upfoot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.wf .wf-kb-err {
+  font-size: 12px;
+  color: var(--err);
+}
+
+.wf .wf-kb-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.wf .wf-kb-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+}
+.wf .wf-kb-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.wf .wf-kb-title {
+  font-family: var(--font-arch);
+  font-weight: 700;
+  font-size: 16px;
+}
+.wf .wf-kb-meta {
+  font-family: var(--font-geist-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.wf .wf-kb-chips {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.wf .wf-kb-summary {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.wf .wf-kb-preview {
+  font-size: 12.5px;
+  color: var(--ink-mut);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.wf .wf-kb-notext {
+  color: var(--accent);
+  font-style: italic;
+}
+.wf .wf-kb-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* the small "knowledge" panel on scribe's page */
+.wf .wf-kb-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.wf .wf-kb-mini-row {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  padding: 4px 0;
+}
+.wf .wf-kb-mini-row span:first-child {
+  color: var(--ink-faint);
+}

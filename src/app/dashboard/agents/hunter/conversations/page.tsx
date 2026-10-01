@@ -63,16 +63,19 @@ export default async function ConversationsPage() {
       threadId: first.thread_id ?? t.key,
       subject: last.subject ?? "",
       msgs: t.messages.map((m) => ({
+        id: m.id,
         out: m.direction === "out",
         channel: m.channel ?? "email",
         kind: KIND[m.kind] ?? m.kind,
         t: when(m.ts),
         subject: m.subject ?? "",
         body: m.body ?? "",
+        status: m.status ?? "",
+        contact: m.contact ?? "",
         foot:
           m.direction === "out"
             ? m.status === "approved_manual"
-              ? "sent · approved by you"
+              ? "waiting for you to send"
               : "sent"
             : "received",
       })),

@@ -1,10 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { DeleteCampaignButton } from "@/app/dashboard/_components/DeleteCampaignButton";
+import { ExpandableText } from "@/app/dashboard/_components/ExpandableText";
+import { HunterCandidatesPanel } from "@/app/dashboard/_components/HunterCandidatesPanel";
 import { HunterHeader } from "@/app/dashboard/_components/HunterHeader";
 import { dueState } from "@/app/dashboard/_components/panels/dates";
 import { getAgentFile, parseMarkdownTable } from "@/lib/workforce/files";
 import {
   getCampaign,
+  getCampaignCandidates,
   getHandoffs,
   getMessages,
   slugify,
@@ -53,14 +57,21 @@ export default async function CampaignViewPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [{ stats, pending }, campaign, messages, handoffsOpen, prospectsFile] =
-    await Promise.all([
-      getHunterHeaderStats(),
-      getCampaign(id),
-      getMessages("hunter"),
-      getHandoffs("hunter", ["open"]),
-      getAgentFile("hunter", "PROSPECTS.md"),
-    ]);
+  const [
+    { stats, pending },
+    campaign,
+    messages,
+    handoffsOpen,
+    prospectsFile,
+    candidates,
+  ] = await Promise.all([
+    getHunterHeaderStats(),
+    getCampaign(id),
+    getMessages("hunter"),
+    getHandoffs("hunter", ["open"]),
+    getAgentFile("hunter", "PROSPECTS.md"),
+    getCampaignCandidates(id, 50),
+  ]);
   if (!campaign) notFound();
 
   const slug = slugify(campaign.name);
@@ -123,9 +134,16 @@ export default async function CampaignViewPage({
             </span>
           </div>
         </div>
-        <Link href={`./${id}/edit`} className="wf-hn-btn ghost">
-          edit
-        </Link>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <Link href={`./${id}/edit`} className="wf-hn-btn ghost">
+            edit
+          </Link>
+          <DeleteCampaignButton
+            id={campaign.id}
+            name={campaign.name}
+            variant="button"
+          />
+        </div>
       </div>
 
       <div className="wf-hn-cv-grid">
@@ -134,7 +152,11 @@ export default async function CampaignViewPage({
           {brief.map(([k, v]) => (
             <div key={k}>
               <div className="wf-hn-cv-k">{k}</div>
-              <div className={`wf-hn-cv-v${v ? "" : " empty"}`}>{v || "—"}</div>
+              {v ? (
+                <ExpandableText className="wf-hn-cv-v" text={v} lines={4} />
+              ) : (
+                <div className="wf-hn-cv-v empty">—</div>
+              )}
             </div>
           ))}
         </div>
@@ -238,6 +260,11 @@ export default async function CampaignViewPage({
           })
         )}
       </div>
+
+      <HunterCandidatesPanel
+        campaignName={campaign.name}
+        candidates={candidates}
+      />
     </div>
   );
 }

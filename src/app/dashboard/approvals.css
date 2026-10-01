@@ -7,6 +7,12 @@
   padding: 28px clamp(20px, 3vw, 40px) 48px;
   max-width: 1400px;
 }
+/* embedded inside another page (Hunter approvals tab): the host supplies the
+   outer padding + header, so drop ours and let it fill the width. */
+.wf .wf-apx.is-embedded {
+  padding: 4px 0 24px;
+  max-width: none;
+}
 .wf .wf-apx-head {
   display: flex;
   flex-wrap: wrap;
@@ -311,6 +317,10 @@
   border: 1px solid var(--line-strong);
   color: var(--ink);
   outline: none;
+  /* a roomy multi-line note so the whole message is visible; still resizable */
+  min-height: 76px;
+  line-height: 1.5;
+  resize: vertical;
 }
 .wf .wf-apx-note::placeholder {
   color: var(--ink-faint);
@@ -413,6 +423,11 @@
 .wf .wf-apx-decision.is-bad {
   background: var(--err-bg);
   color: var(--err);
+}
+/* sent-back-to-scribe: a neutral amber, neither approved (good) nor rejected (bad) */
+.wf .wf-apx-decision.is-info {
+  background: oklch(0.8 0.14 70 / 0.16);
+  color: var(--accent);
 }
 
 @media (max-width: 900px) {

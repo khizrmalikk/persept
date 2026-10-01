@@ -586,3 +586,17 @@
   font-weight: 700;
   font-size: 18px;
 }
+
+/* home: "n ideas waiting for chief" line under the summary */
+.wf .of-ideas-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+}
+.wf .of-ideas-line:hover {
+  text-decoration: underline;
+}

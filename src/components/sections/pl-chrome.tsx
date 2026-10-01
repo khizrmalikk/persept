@@ -10,7 +10,7 @@ export { PerseptMark };
 
 export const BOOKING_HREF =
   process.env.NEXT_PUBLIC_BOOKING_URL ||
-  "mailto:khizr@persept.ai?subject=15%20minutes";
+  "https://calendly.com/khizr-persept/ai-workforce-consultation";
 export const BOOKING_EXTERNAL = /^https?:/i.test(BOOKING_HREF);
 export const bookAttrs = BOOKING_EXTERNAL
   ? { target: "_blank", rel: "noreferrer" as const }

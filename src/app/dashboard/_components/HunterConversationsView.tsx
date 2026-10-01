@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { sendOutboundAsOwner } from "@/lib/workforce/actions";
+import { ManualSend } from "./ManualSend";
 
 export type ConvoMsg = {
+  id: string;
   out: boolean;
   channel: string;
   kind: string;
@@ -11,6 +13,8 @@ export type ConvoMsg = {
   subject: string;
   body: string;
   foot: string;
+  status: string;
+  contact: string;
 };
 export type ConvoThread = {
   key: string;
@@ -145,6 +149,16 @@ export function HunterConversationsView({
                   <div className="wf-hn-bubble-body">{m.body}</div>
                   {m.foot && <div className="wf-hn-bubble-foot">{m.foot}</div>}
                 </div>
+                {m.out && m.status === "approved_manual" && (
+                  <ManualSend
+                    messageId={m.id}
+                    agentId="hunter"
+                    company={thread.company}
+                    channel={m.channel}
+                    contact={m.contact || thread.email}
+                    body={m.body}
+                  />
+                )}
                 {!m.out && (
                   <button
                     type="button"
