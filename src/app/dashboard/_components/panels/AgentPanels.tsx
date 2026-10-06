@@ -58,6 +58,7 @@ import { PipelineSummary } from "./PipelineSummary";
 import { PipelineTable, type ProspectRow } from "./PipelineTable";
 import { ProposalsPanel } from "./ProposalsPanel";
 import { type Review, ReviewsPanel } from "./ReviewsPanel";
+import { ScribeLessonsPanel } from "./ScribeLessonsPanel";
 import { SourcesPanel } from "./SourcesPanel";
 import { StatePanel } from "./StatePanel";
 import { TodayLog } from "./TodayLog";
@@ -257,6 +258,9 @@ async function ScribePanels({ agentId }: { agentId: string }) {
         requests={copy}
         right={avgMin != null ? `avg ${avgMin} min to draft` : undefined}
       />
+      <Cell wide>
+        <ScribeLessonsPanel agentId={agentId} />
+      </Cell>
     </>
   );
 }

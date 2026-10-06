@@ -8,19 +8,6 @@ import { useRef, useState } from "react";
 // video only when it drifts (>0.25s) — which is really just the loop boundary —
 // so it stays aligned without stutter. One shared position style with the old img.
 
-const FRAME_STYLE: React.CSSProperties = {
-  position: "absolute",
-  left: "17.14%",
-  top: "6.4%",
-  width: "65.71%",
-  height: "66.9%",
-  objectFit: "contain",
-  objectPosition: "center",
-  background: "#0e0d0c",
-  borderRadius: 6,
-  display: "block",
-};
-
 export function ProofVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -64,7 +51,7 @@ export function ProofVideo() {
         preload="metadata"
         onTimeUpdate={onTimeUpdate}
         aria-label="The Persept office dashboard showreel, running on the board"
-        style={FRAME_STYLE}
+        className="pl-proof-video"
       />
       {/* biome-ignore lint/a11y/useMediaCaption: instrumental mix, no dialogue */}
       <audio ref={audioRef} src="/persept-mix.wav" loop preload="auto" />

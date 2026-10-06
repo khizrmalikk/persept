@@ -16,6 +16,14 @@ export const bookAttrs = BOOKING_EXTERNAL
   ? { target: "_blank", rel: "noreferrer" as const }
   : {};
 
+// WhatsApp: set NEXT_PUBLIC_WHATSAPP_URL to the real wa.me link before launch.
+// The default is an obvious placeholder number the founder replaces.
+export const WHATSAPP_HREF =
+  process.env.NEXT_PUBLIC_WHATSAPP_URL || "https://wa.me/971500000000";
+export const LINKEDIN_HREF =
+  process.env.NEXT_PUBLIC_LINKEDIN_URL ||
+  "https://www.linkedin.com/company/persept";
+
 export function PlNav({ base = "" }: { base?: string }) {
   return (
     <nav className="pl-nav">
@@ -28,13 +36,25 @@ export function PlNav({ base = "" }: { base?: string }) {
         <span>Persept</span>
       </Link>
       <div className="pl-nav-links pl-nav-hide">
-        <a href={`${base}#roles`}>Roles</a>
-        <a href={`${base}#how`}>How it runs</a>
-        <a href={`${base}#proof`}>Proof</a>
-        <a href={`${base}#products`}>GYST</a>
+        <a href={`${base}#how`}>How it works</a>
+        <a href={`${base}#who`}>Who it&rsquo;s for</a>
+        <a href={`${base}#pricing`}>Pricing</a>
+        <a href={`${base}#faq`}>FAQ</a>
+        <Link href="/trust">Trust</Link>
       </div>
       <div className="pl-nav-right">
-        <Link href="/login">Sign in</Link>
+        <Link href="/login" className="pl-nav-signin">
+          Sign in
+        </Link>
+        <a
+          href={WHATSAPP_HREF}
+          className="pl-wa"
+          target="_blank"
+          rel="noreferrer"
+        >
+          <span className="pl-wa-dot" />
+          WhatsApp
+        </a>
         <a href={BOOKING_HREF} className="pl-book" {...bookAttrs}>
           Book a call
         </a>
@@ -47,17 +67,24 @@ export function PlFooter() {
   return (
     <footer className="pl-footer">
       <div className="pl-footer-inner">
-        <span>© 2026 Persept · Dubai</span>
-        <div className="pl-footer-links">
-          <a href="mailto:khizr@persept.ai">khizr@persept.ai</a>
-          <a
-            href="https://www.linkedin.com/company/persept"
-            target="_blank"
-            rel="noreferrer"
-          >
-            LinkedIn
+        <div className="pl-footer-top">
+          <span>© 2026 Persept Software Solutions · Dubai</span>
+          <div className="pl-footer-links">
+            <a href="mailto:khizr@persept.ai">khizr@persept.ai</a>
+            <a href={LINKEDIN_HREF} target="_blank" rel="noreferrer">
+              LinkedIn
+            </a>
+            <Link href="/privacy">Privacy policy</Link>
+            <Link href="/terms">Terms</Link>
+            <Link href="/trust">Trust</Link>
+            <Link href="/login">Client sign in</Link>
+          </div>
+        </div>
+        <div className="pl-footer-also">
+          <span>Also from Persept:</span>
+          <a href="https://startgyst.com" target="_blank" rel="noreferrer">
+            GYST →
           </a>
-          <Link href="/login">Client sign in</Link>
         </div>
       </div>
     </footer>

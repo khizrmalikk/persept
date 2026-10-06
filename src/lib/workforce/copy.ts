@@ -4,11 +4,17 @@
 
 import { supabaseAdmin } from "@/lib/supabase/server";
 
-export type CopyStatus = "requested" | "writing" | "drafted";
+export type CopyStatus =
+  | "requested"
+  | "writing"
+  | "drafted"
+  | "question"
+  | "refused";
 
 export type CopyRequest = {
   id: string;
   short_id: string;
+  root_id: string;
   ts: string | null;
   for_agent: string;
   writer: string;
@@ -33,6 +39,7 @@ function norm(row: Record<string, unknown>): CopyRequest {
   return {
     id: String(row.id),
     short_id: String(row.short_id ?? ""),
+    root_id: String(row.root_id ?? ""),
     ts: (row.ts as string | null) ?? null,
     for_agent: String(row.for_agent ?? ""),
     writer: String(row.writer ?? ""),
@@ -45,7 +52,13 @@ function norm(row: Record<string, unknown>): CopyRequest {
     thread: String(row.thread ?? ""),
     image: String(row.image ?? ""),
     context: String(row.context ?? ""),
-    status: (["requested", "writing", "drafted"].includes(status)
+    status: ([
+      "requested",
+      "writing",
+      "drafted",
+      "question",
+      "refused",
+    ].includes(status)
       ? status
       : "requested") as CopyStatus,
     approval_id:

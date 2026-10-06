@@ -2,10 +2,20 @@
 // Used by the main /dashboard/approvals page (all agents) and the Hunter agent's
 // approvals tab (scoped to hunter). Server-safe (no client-only imports).
 
+import {
+  type DraftVersion,
+  draftAuthorLabel,
+  draftKindLabel,
+} from "@/lib/workforce/drafts";
 import { parseOutbound } from "@/lib/workforce/outreach";
 import { agentColor, rosterById } from "@/lib/workforce/roster";
-import { type Approval, ago } from "@/lib/workforce/types";
-import type { ApprovalVM, DecidedVM } from "./ApprovalsView";
+import { type Approval, ago, when } from "@/lib/workforce/types";
+import type { ApprovalVM, DecidedVM, VersionVM } from "./ApprovalsView";
+
+// Scribe raises a "question about …" approval to ask the owner, not to send.
+export function isQuestionApproval(action: string | null): boolean {
+  return /^\s*question about\b/i.test(action ?? "");
+}
 
 type RiskLevel = "low" | "medium" | "high";
 
@@ -66,10 +76,11 @@ export function approvalToVM(ap: Approval): ApprovalVM {
     context: outbound?.campaign || "",
     body: (outbound ? outbound.body : ap.draft) ?? "",
     held: ap.status === "held",
+    isQuestion: isQuestionApproval(ap.action),
   };
 }
 
-export function approvalToDecidedVM(d: Approval): DecidedVM {
+export function approvalToDecidedVM(d: Approval, versions = 0): DecidedVM {
   const r = rosterById(d.agent_id ?? "");
   const status = (d.status ?? "decided").toLowerCase();
   return {
@@ -80,5 +91,23 @@ export function approvalToDecidedVM(d: Approval): DecidedVM {
     action: d.action ?? "",
     status,
     bad: status === "rejected",
+    versions,
   };
+}
+
+// The draft-version chain, serialized for the client history panel.
+export function toVersionVMs(versions: DraftVersion[]): VersionVM[] {
+  return versions.map((v) => ({
+    id: v.id,
+    n: v.n,
+    author: v.author,
+    authorLabel: draftAuthorLabel(v.author),
+    kind: v.kind,
+    kindLabel: draftKindLabel(v.kind),
+    when: v.ts ? when(v.ts) : "",
+    note: v.note,
+    subject: v.subject,
+    body: v.body,
+    diffable: v.kind === "revision" || v.kind === "edited",
+  }));
 }

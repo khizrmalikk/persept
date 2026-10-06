@@ -5,10 +5,20 @@ import {
   returnApprovalToScribe,
   sendApprovedEdit,
 } from "@/lib/workforce/actions";
+import { getApprovalChains } from "@/lib/workforce/drafts";
 import type { Approval } from "@/lib/workforce/types";
 import { MobileApprovals } from "../_components/MobileApprovals";
-import { ApprovalsView, type DecidedVM } from "./_components/ApprovalsView";
-import { approvalToDecidedVM, approvalToVM } from "./_components/build-vm";
+import {
+  ApprovalsView,
+  type CopyMetaVM,
+  type DecidedVM,
+  type VersionVM,
+} from "./_components/ApprovalsView";
+import {
+  approvalToDecidedVM,
+  approvalToVM,
+  toVersionVMs,
+} from "./_components/build-vm";
 import "../approvals.css";
 import "../mobile-approvals.css";
 
@@ -31,11 +41,27 @@ export default async function ApprovalsPage() {
   ]);
 
   const all = (pend as Approval[] | null) ?? [];
+  const decidedRows = (dec as Approval[] | null) ?? [];
   const waiting = all.filter((a) => a.status !== "held").map(approvalToVM);
   const held = all.filter((a) => a.status === "held").map(approvalToVM);
 
-  const decided: DecidedVM[] = ((dec as Approval[] | null) ?? []).map(
-    approvalToDecidedVM,
+  // Draft-version chains for everything shown (pending + held + decided).
+  const { versionsByApproval, metaByApproval } = await getApprovalChains([
+    ...all.map((a) => a.id),
+    ...decidedRows.map((a) => a.id),
+  ]);
+  const history: Record<number, VersionVM[]> = {};
+  const copyMeta: Record<number, CopyMetaVM> = {};
+  for (const a of all) {
+    const v = versionsByApproval[a.id];
+    if (v?.length) history[a.id] = toVersionVMs(v);
+    const m = metaByApproval[a.id];
+    if (m)
+      copyMeta[a.id] = { company: m.company, kind: m.kind, channel: m.channel };
+  }
+
+  const decided: DecidedVM[] = decidedRows.map((d) =>
+    approvalToDecidedVM(d, versionsByApproval[d.id]?.length ?? 0),
   );
 
   return (
@@ -49,6 +75,8 @@ export default async function ApprovalsPage() {
           rejectAction={rejectFromForm}
           sendEditAction={sendApprovedEdit}
           returnAction={returnApprovalToScribe}
+          history={history}
+          copyMeta={copyMeta}
         />
       </div>
       <MobileApprovals

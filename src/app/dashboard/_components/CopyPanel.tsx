@@ -17,6 +17,8 @@ function pill(status: string): { background: string; color: string } {
       background: "oklch(0.78 0.12 220 / 0.16)",
       color: "oklch(0.84 0.09 220)",
     };
+  if (status === "question" || status === "refused")
+    return { background: "oklch(0.8 0.14 70 / 0.16)", color: "var(--accent)" };
   return { background: "rgba(255,255,255,0.07)", color: "var(--ink-soft)" };
 }
 
@@ -25,6 +27,7 @@ function Row({ req, nowMs }: { req: CopyRequest; nowMs: number }) {
   const [asked, setAsked] = useState(false);
   const startedMs = req.ts ? new Date(req.ts).getTime() : nowMs;
   const stuck = req.status === "writing" && nowMs - startedMs > STUCK_MS;
+  const refused = req.status === "refused";
   const label = req.company || req.context.split("\n")[0] || req.to || "—";
 
   const resend = () =>
@@ -36,7 +39,7 @@ function Row({ req, nowMs }: { req: CopyRequest; nowMs: number }) {
   return (
     <div className="wf-copy-row">
       <div className="wf-copy-top">
-        {stuck && <span className="wf-copy-dot" />}
+        {(stuck || refused) && <span className="wf-copy-dot" />}
         <span className="wf-chip-mono">{req.kind || "copy"}</span>
         {req.channel && <span className="wf-chip-mono">{req.channel}</span>}
         <span className="wf-copy-label">{label}</span>
@@ -45,6 +48,7 @@ function Row({ req, nowMs }: { req: CopyRequest; nowMs: number }) {
           {req.status}
         </span>
       </div>
+      {refused && req.body && <div className="wf-copy-refused">{req.body}</div>}
       {req.status === "drafted" && (req.subject || req.approval_id != null) && (
         <div className="wf-copy-drafted">
           {req.approval_id != null && (

@@ -1,114 +1,289 @@
+import { FaqList } from "./faq";
+import { HowOrbit } from "./how-orbit";
 import { OfficePanel } from "./office-panel";
-import { BOOKING_HREF, bookAttrs, PlFooter, PlNav } from "./pl-chrome";
+import {
+  BOOKING_HREF,
+  bookAttrs,
+  PlFooter,
+  PlNav,
+  WHATSAPP_HREF,
+} from "./pl-chrome";
+import { PricingSection } from "./pricing";
 import { ProofVideo } from "./proof-video";
 import "./landing.css";
 
-// The single-page cinematic landing (dark, amber, Archivo). Rebuilt from the
-// design handoff. Static server markup; only the hero office is a client island.
+// The single-page landing, rebuilt from the "Persept Landing v4" design handoff:
+// an AI sales team for any UAE firm that wins work by quotation. Static server
+// markup; only the hero office simulation and the proof showreel are client
+// islands.
 
 const col = (h: number) => `oklch(0.78 0.12 ${h})`;
 
-const ROLES: { title: string; body: string; gate: string; h: number }[] = [
-  {
-    title: "Outreach",
-    body: "Finds companies that fit, writes the first message and the day-3 and day-7 follow-ups, reads the replies and proposes call times.",
-    gate: "You approve every message",
-    h: 150,
-  },
-  {
-    title: "Proposals",
-    body: "Turns your call notes into a proposal the same day, published as a page the prospect can open.",
-    gate: "You approve before it is sent",
-    h: 220,
-  },
-  {
-    title: "Customer replies",
-    body: "Answers customer messages and Google reviews in your voice. Anything about money or complaints comes to you.",
-    gate: "You approve the sensitive ones",
-    h: 290,
-  },
-  {
-    title: "Daily brief",
-    body: "What happened yesterday, what needs your decision and what is due today, in one message every morning.",
-    gate: "",
-    h: 70,
-  },
-  {
-    title: "Market watch",
-    body: "Reads the news, forums and competitors in your niche every morning and tags what matters for sales or content.",
-    gate: "",
-    h: 20,
-  },
-  {
-    title: "Marketing",
-    body: "A weekly content plan and drafts in your voice, plus suggestions from your own numbers, like a discount when occupancy dips.",
-    gate: "You approve before anything is published",
-    h: 110,
-  },
+// ── Sound familiar? — seven owner quotes, then the amber answer cell ─────────
+const QUOTES = [
+  "Quotes take days.",
+  "We never follow up.",
+  "All our work comes from referrals.",
+  "I'm the bottleneck.",
+  "We forget past clients.",
+  "We hear about projects too late.",
+  "Deadlines slip.",
 ];
 
-const IS = [
-  "A small team of named roles, each with one job",
-  "Embedded in your email, WhatsApp, calendar and documents",
-  "Reporting to you every morning",
-];
-const IS_NOT = [
-  "A chatbot on your website",
-  "A tool you have to operate",
-  "Autopilot. Nothing goes out without your approval",
-];
-
-const STATS = [
-  { n: "24/7", l: "On the clock" },
-  { n: "0", l: "Messages sent without a human tap" },
-  { n: "<24h", l: "From call notes to proposal" },
-  { n: "1", l: "Morning brief to read" },
-];
-
-const HOW = [
+// ── How it works: the six steps ─────────────────────────────────────────────
+const STEPS: {
+  n: string;
+  role: string;
+  agent: string;
+  body: string;
+  h: number;
+}[] = [
   {
     n: "01",
-    t: "Map",
-    d: "We find where agents help in your business. You keep the map whether or not you go ahead.",
+    role: "Spot",
+    agent: "Lead Scout",
+    h: 20,
+    body: "Watches the public signals that show a business is about to buy, such as new hotels and restaurants, building handovers, new licences, new regulations and show exhibitor lists. Finds a named contact on the company's own site.",
   },
   {
     n: "02",
-    t: "Deploy",
-    d: "Your own private instance. Your data stays there, never shared with other clients.",
+    role: "Reach",
+    agent: "Outreach",
+    h: 150,
+    body: "Sends a short first email and follow-ups on day 3 and day 7, timed to the buyer's deadline. Sorts the replies and passes the warm ones to you.",
   },
   {
     n: "03",
-    t: "Dashboard",
-    d: "A dashboard only you and we can open, with an approvals inbox at the centre.",
+    role: "Brief",
+    agent: "Brief Intake",
+    h: 290,
+    body: "Turns requests from email or WhatsApp into a clear brief covering scope, size, budget and deadline, plus the questions still missing.",
   },
-  { n: "04", t: "Run", d: "The agents work 24/7. You decide in one tap." },
+  {
+    n: "04",
+    role: "Propose",
+    agent: "Proposals",
+    h: 220,
+    body: "Writes a proposal page with your past work and prices from your rate card. You see when the buyer opens it.",
+  },
+  {
+    n: "05",
+    role: "Deliver",
+    agent: "Project Tracker",
+    h: 110,
+    body: "Keeps every deadline for won jobs and chases suppliers for confirmations.",
+  },
+  {
+    n: "06",
+    role: "Renew",
+    agent: "Renewals",
+    h: 70,
+    body: "Reminds past clients before contracts lapse and asks about the next job at the right time.",
+  },
+];
+
+// ── Signals Lead Scout reads daily ──────────────────────────────────────────
+const SIGNALS: { n: string; h: number; title: string; trades: string }[] = [
+  {
+    n: "01",
+    h: 20,
+    title: "A new hotel opening in 2027",
+    trades: "Furniture, linen, uniforms, kitchens, signage, landscaping",
+  },
+  {
+    n: "02",
+    h: 150,
+    title: "A building handed over this quarter",
+    trades: "Fire safety, MEP maintenance, cleaning, security",
+  },
+  {
+    n: "03",
+    h: 290,
+    title: "Dubai's new building safety law",
+    trades: "Engineering inspections, facade, waterproofing",
+  },
+  {
+    n: "04",
+    h: 220,
+    title: "A restaurant announcing its opening",
+    trades: "Kitchen equipment, signage, fit-out",
+  },
+  {
+    n: "05",
+    h: 110,
+    title: "A company that just raised funding or opened in DIFC",
+    trades: "IT, furniture, fit-out, recruitment, PR",
+  },
+  {
+    n: "06",
+    h: 70,
+    title: "An e-invoicing or Emiratisation deadline",
+    trades: "ERP implementers, recruitment, training",
+  },
+  {
+    n: "07",
+    h: 20,
+    title: "A show's exhibitor list",
+    trades: "Stand builders, gifting, printing, video",
+  },
+  {
+    n: "08",
+    h: 70,
+    title: "Last year's clients",
+    trades: "Every trade: renewals and repeat work",
+  },
+];
+
+// ── Who it's for — trade chips ──────────────────────────────────────────────
+const CHIPS = [
+  "Fire and life safety contractors",
+  "MEP and HVAC maintenance",
+  "Commercial kitchen suppliers",
+  "Signage makers",
+  "Office furniture and fit-out",
+  "IT managed services",
+  "Hotel pre-opening suppliers",
+  "Building inspection and facade firms",
+  "E-invoicing and ERP implementers",
+  "Recruitment agencies",
+  "Exhibition stand builders",
+  "Event companies",
+  "Corporate gifting",
+];
+
+// ── You keep the final say ──────────────────────────────────────────────────
+const FINAL_SAY = [
+  "Every email, price and proposal waits in your approvals inbox.",
+  "Clear it in one 15-minute batch a day, from your phone.",
+  "Prices come only from your rate card. The agents never invent a number.",
+  "The agents never phone anyone. Calls are yours.",
+];
+
+// ── Proof stats — placeholder-but-believable figures until the real dashboard
+// logs are wired in. Swap for actual numbers (and the month) before launch.
+const STATS = [
+  { n: "1,284", l: "companies researched in September" },
+  { n: "418", l: "emails drafted, 0 sent without approval" },
+  { n: "23", l: "proposals written" },
+];
+
+// ── Your first week ─────────────────────────────────────────────────────────
+const WEEK = [
+  {
+    day: "Day 1",
+    body: "A 15-minute call. You tell me who your best clients are and what signals they leave.",
+    green: false,
+  },
+  {
+    day: "Day 3",
+    body: "Your target list for one campaign, with your rate card and past work loaded.",
+    green: false,
+  },
+  {
+    day: "Day 7",
+    body: "First emails out, after you approve them.",
+    green: true,
+  },
+  {
+    day: "Day 30",
+    body: "Results report: leads reached, replies, proposals opened, jobs won.",
+    green: false,
+  },
+];
+
+// ── Comparison ──────────────────────────────────────────────────────────────
+const CMP_HEAD = [
+  "Hire a sales coordinator",
+  "Pay-per-lead sites",
+  "Do it yourself",
+];
+const CMP_ROWS: { k: string; cells: string[]; persept: string }[] = [
+  {
+    k: "Cost",
+    cells: [
+      "AED 5,000 to 8,000 a month plus visa",
+      "Pay per lead, shared with competitors",
+      "Your evenings",
+    ],
+    persept: "From [AED 2,990] a month",
+  },
+  {
+    k: "Leads",
+    cells: [
+      "Whoever they find",
+      "The same leads as everyone else",
+      "Whoever you have time for",
+    ],
+    persept: "Your own list, from public signals",
+  },
+  {
+    k: "Follow-ups",
+    cells: ["When they remember", "Not included", "When you remember"],
+    persept: "Day 3 and day 7, every time",
+  },
+  {
+    k: "Proposals",
+    cells: ["Days", "Not included", "Days"],
+    persept: "Same day, from your rate card",
+  },
+  {
+    k: "Who approves",
+    cells: ["You", "Not applicable", "You"],
+    persept: "You, every time",
+  },
+];
+
+// ── FAQ ─────────────────────────────────────────────────────────────────────
+const FAQ: { q: string; a: string }[] = [
+  {
+    q: "Does this work for my trade?",
+    a: "If you sell to businesses and quote every job, yes. On the first call we work out which signals your buyers leave.",
+  },
+  {
+    q: "What does it cost?",
+    a: "A 30-day pilot is [AED 3,500] with setup included. After that, from [AED 2,990] a month, with AI usage included.",
+  },
+  {
+    q: "Do emails come from my company?",
+    a: "Yes. They are sent under your name from a separate sending address on your domain, so your everyday email isn't affected.",
+  },
+  {
+    q: "Is cold email allowed?",
+    a: "We email business addresses only, keep volumes low and relevant, and put a one-click opt-out in every message. Anyone who opts out is never contacted again.",
+  },
+  {
+    q: "Where do the leads come from?",
+    a: "From public business sources for your trade, plus your own past clients. Each contact's source is recorded.",
+  },
+  {
+    q: "Do the agents make phone calls?",
+    a: "No. Calls are yours. The agents tell you who replied and is worth calling.",
+  },
+  {
+    q: "What if a proposal has the wrong price?",
+    a: "It can't go out without you. Prices come only from your rate card.",
+  },
+  {
+    q: "Who owns the lists and data?",
+    a: "You do. Export them any time. We delete our copy within 30 days of the contract ending.",
+  },
+  {
+    q: "Which tools does it work with?",
+    a: "Gmail or Outlook, WhatsApp, Google Sheets, and Zoho or HubSpot if you already use them.",
+  },
 ];
 
 // The proof "meeting room" — hand-drawn cream line art (feTurbulence wobble) of a
-// team facing a presentation board that shows the real office dashboard, with a
-// cream "Hunter · 02:14" notification card overlapping the board. Ported from the
-// design handoff SVG. Pure static markup.
+// team facing a presentation board that plays the real office showreel, with a
+// cream "Outreach · 02:14" notification card overlapping the board.
 function ProofScene() {
   return (
-    <div
-      style={{
-        position: "relative",
-        width: "100%",
-        aspectRatio: "1400 / 860",
-        marginTop: 24,
-      }}
-    >
+    <div className="pl-proof-scene">
       <svg
         viewBox="0 0 1400 860"
         preserveAspectRatio="none"
         aria-hidden="true"
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          overflow: "visible",
-        }}
+        className="pl-proof-svg"
         fill="none"
         stroke="#f4f1ec"
         strokeWidth={2.4}
@@ -184,14 +359,6 @@ function ProofScene() {
             d="M60 860 L72 780 L140 780 L152 860 M84 780 C70 720 40 690 30 640 M104 780 C104 710 96 660 110 600 M124 780 C140 720 170 700 184 660 M96 740 C80 730 60 732 48 720 M112 700 C126 690 140 690 150 676"
             strokeWidth={2}
           />
-          <path
-            d="M346 862 L346 810 Q346 780 376 774 L392 770 Q378 756 378 738 A34 34 0 1 1 446 738 Q446 756 432 770 L448 774 Q470 780 470 800"
-            fill="#0e0d0c"
-          />
-          <path
-            d="M1054 862 L1054 810 Q1054 780 1024 774 L1008 770 Q1022 756 1022 738 A34 34 0 1 0 954 738 Q954 756 968 770 L952 774 Q930 780 930 800"
-            fill="#0e0d0c"
-          />
           <path d="M480 688 L920 688 L1180 820 L220 820 Z" fill="#0e0d0c" />
           <path d="M220 820 L220 836 L1180 836 L1180 820" />
           <path
@@ -241,72 +408,17 @@ function ProofScene() {
       {/* the showreel plays on the presentation board (muted autoplay loop),
           with the perfectly-synced mix behind a sound toggle. */}
       <ProofVideo />
-      <div
-        style={{
-          position: "absolute",
-          right: "4%",
-          top: "44%",
-          width: "min(300px, 30%)",
-          minWidth: 210,
-          background: "#f4f1ec",
-          color: "#0e0d0c",
-          borderRadius: 14,
-          padding: "16px 18px",
-          boxShadow: "0 24px 60px rgba(0,0,0,0.55)",
-          transform: "rotate(-2deg)",
-          display: "flex",
-          flexDirection: "column",
-          gap: 10,
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            fontFamily: "var(--mono)",
-            fontSize: 11,
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            color: "#6b655d",
-          }}
-        >
-          <span
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              background: "oklch(0.62 0.16 150)",
-            }}
-          />
-          <span>Hunter · 02:14</span>
+      <div className="pl-proof-note">
+        <div className="pl-proof-note-meta">
+          <span className="pl-proof-note-dot" />
+          <span>Outreach · 02:14</span>
         </div>
-        <div style={{ fontSize: 16, lineHeight: 1.35, fontWeight: 500 }}>
+        <div className="pl-proof-note-text">
           3 intro emails drafted overnight. Send?
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <span
-            style={{
-              background: "#0e0d0c",
-              color: "#f4f1ec",
-              borderRadius: 8,
-              padding: "7px 14px",
-              fontSize: 13,
-              fontWeight: 600,
-            }}
-          >
-            Send
-          </span>
-          <span
-            style={{
-              border: "1px solid rgba(14,13,12,0.2)",
-              borderRadius: 8,
-              padding: "7px 14px",
-              fontSize: 13,
-            }}
-          >
-            Review
-          </span>
+        <div className="pl-proof-note-actions">
+          <span className="pl-proof-note-send">Send</span>
+          <span className="pl-proof-note-review">Review</span>
         </div>
       </div>
     </div>
@@ -324,98 +436,217 @@ export function PerseptLanding() {
         <div className="pl-hero-inner">
           <div className="pl-eyebrow pl-hero-eyebrow">
             <span className="pl-live" />
-            <span>AI workforce studio · Dubai · agents on the clock</span>
+            <span>An AI sales team for firms that win work by quotation</span>
           </div>
           <h1 className="pl-h1">
-            Hire an AI workforce.{" "}
+            Hire an AI sales team.{" "}
             <span className="pl-amber">Keep the final say.</span>
           </h1>
           <div className="pl-hero-row">
             <p className="pl-lead">
-              Named agents take over the repetitive, message-heavy work of your
-              company: outreach, customer replies, proposals and reports, around
-              the clock, inside the tools you already use. Anything touching
-              money, access or a customer waits for your tap.
+              For firms that win work by quotation. AI agents spot who is about
+              to buy, send the proposal the same day, follow up every quote and
+              bring past clients back. You approve everything.
             </p>
-            <div className="pl-cta-row">
-              <a
-                href={BOOKING_HREF}
-                className="pl-pill pl-amber-btn"
-                {...bookAttrs}
-              >
-                Book a 15-minute call
-              </a>
-              <a href="#proof" className="pl-pill pl-outline-btn">
-                See it running
-              </a>
+            <div className="pl-hero-ctas">
+              <div className="pl-cta-row">
+                <a
+                  href={BOOKING_HREF}
+                  className="pl-pill pl-amber-btn"
+                  {...bookAttrs}
+                >
+                  Book a 15-minute call
+                </a>
+                <a href="#office" className="pl-pill pl-outline-btn">
+                  See it running
+                </a>
+              </div>
+              <div className="pl-hero-sub">First campaign live in 7 days.</div>
             </div>
           </div>
 
-          <OfficePanel />
+          <div id="office" className="pl-office-anchor">
+            <OfficePanel />
+          </div>
 
           <p className="pl-office-cap">
-            The agents draft and prepare. A person presses send, publish and
-            pay.
+            The agents spot, follow up and write. You approve every email and
+            every price.
           </p>
         </div>
       </header>
 
-      {/* ── What it is / is not ──────────────────────────────────────── */}
-      <section className="pl-section pl-wii">
-        <div className="pl-inner pl-wii-grid">
-          <h2 className="pl-h2">Staff, not software.</h2>
-          <div className="pl-cols">
-            <div>
-              <div className="pl-col-label amber">What it is</div>
-              <div className="pl-list">
-                {IS.map((line) => (
-                  <div className="pl-list-item" key={line}>
-                    {line}
-                  </div>
-                ))}
+      {/* ── Sound familiar? ──────────────────────────────────────────── */}
+      <section className="pl-section pl-sf">
+        <div className="pl-inner">
+          <div className="pl-eyebrow amber" style={{ marginBottom: 20 }}>
+            Sound familiar?
+          </div>
+          <h2 className="pl-h2-big pl-sf-h2">
+            Every firm that quotes for a living says the same things
+          </h2>
+          <div className="pl-sf-grid">
+            {QUOTES.map((q, i) => (
+              <div className="pl-sf-cell" key={q}>
+                <span className="pl-sf-num">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <div className="pl-sf-quote">&ldquo;{q}&rdquo;</div>
               </div>
-            </div>
-            <div>
-              <div className="pl-col-label mut">What it is not</div>
-              <div className="pl-list mut">
-                {IS_NOT.map((line) => (
-                  <div className="pl-list-item" key={line}>
-                    {line}
-                  </div>
-                ))}
-              </div>
+            ))}
+            <div className="pl-sf-answer">
+              None of these needs more staff. They need the same work done every
+              day without anyone having to remember it.
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── Roles ────────────────────────────────────────────────────── */}
-      <section className="pl-section pl-roles" id="roles">
-        <div className="pl-inner">
-          <div className="pl-eyebrow amber" style={{ marginBottom: 20 }}>
-            The roster
+      {/* ── How it works ─────────────────────────────────────────────── */}
+      <section className="pl-section pl-how-sec" id="how">
+        <div className="pl-inner pl-how-top">
+          <div className="pl-how-intro">
+            <div className="pl-eyebrow amber">How it works</div>
+            <h2 className="pl-h2-big">From the first signal to the next job</h2>
+            <p className="pl-how-lead">
+              One agent for each step. Every email, price and proposal comes to
+              the middle and waits for you.
+            </p>
           </div>
-          <h2
-            className="pl-h2-big"
-            style={{ maxWidth: "16ch", marginBottom: 64 }}
-          >
-            Six roles. Each one does a single job well.
-          </h2>
-          <div className="pl-role-grid">
-            {ROLES.map((r, i) => (
-              <div className="pl-role" key={r.title}>
-                <div className="pl-role-top">
-                  <span className="pl-role-num">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
+          <HowOrbit />
+        </div>
+
+        <div className="pl-inner pl-how-steps">
+          <div className="pl-step-grid">
+            {STEPS.map((s) => (
+              <div className="pl-step" key={s.n}>
+                <div className="pl-step-meta">
                   <span
-                    className="pl-role-chip"
-                    style={{ background: col(r.h) }}
+                    className="pl-step-chip"
+                    style={{ background: col(s.h) }}
                   />
+                  <span>
+                    {s.n} · {s.role}
+                  </span>
                 </div>
-                <h3 className="pl-role-title">{r.title}</h3>
-                <p className="pl-role-body">{r.body}</p>
-                {r.gate && <div className="pl-role-gate">→ {r.gate}</div>}
+                <h3 className="pl-step-title">{s.agent}</h3>
+                <p className="pl-step-body">{s.body}</p>
+              </div>
+            ))}
+          </div>
+          <div className="pl-across">
+            <div className="pl-eyebrow amber">Running across all steps</div>
+            <div className="pl-across-item">
+              <strong>Daily Brief:</strong> One message each morning covering
+              pipeline, proposals opened, replies waiting and deadlines.
+            </div>
+            <div className="pl-across-item">
+              <strong>Content:</strong> Turns finished projects into LinkedIn
+              posts and case studies for you to approve.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Signals ──────────────────────────────────────────────────── */}
+      <section className="pl-section pl-signals" id="signals">
+        <div className="pl-inner">
+          <div className="pl-signals-head">
+            <div>
+              <div className="pl-eyebrow pl-signals-eyebrow">
+                <span className="pl-signals-dot" />
+                <span>Signals · read daily by Lead Scout</span>
+              </div>
+              <h2 className="pl-h2-big" style={{ maxWidth: "15ch" }}>
+                Know who is about to buy, before your competitors do
+              </h2>
+            </div>
+            <p className="pl-signals-body">
+              Most firms hear about a project after the supplier has been
+              picked. Lead Scout reads public signals every day so you hear
+              first.
+            </p>
+          </div>
+          <div className="pl-signal-grid">
+            {SIGNALS.map((s) => (
+              <div className="pl-signal" key={s.n}>
+                <div className="pl-signal-top">
+                  <div className="pl-signal-meta">
+                    <span
+                      className="pl-signal-dot"
+                      style={{ background: col(s.h) }}
+                    />
+                    <span>Signal {s.n}</span>
+                  </div>
+                  <h3 className="pl-signal-title">{s.title}</h3>
+                </div>
+                <div className="pl-signal-foot">
+                  <span className="pl-signal-foot-k">Trades it suits</span>
+                  <span className="pl-signal-foot-v">{s.trades}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Who it's for ─────────────────────────────────────────────── */}
+      <section className="pl-section pl-who" id="who">
+        <div className="pl-inner">
+          <div className="pl-who-head">
+            <div>
+              <div className="pl-eyebrow amber" style={{ marginBottom: 20 }}>
+                Who it&rsquo;s for
+              </div>
+              <h2 className="pl-h2-big" style={{ maxWidth: "13ch" }}>
+                Built for firms that quote every job
+              </h2>
+            </div>
+            <p className="pl-who-body">
+              If you sell to businesses, quote every project and your jobs are
+              worth AED 20,000 or more, it fits.
+            </p>
+          </div>
+          <div className="pl-chips">
+            {CHIPS.map((c) => (
+              <span className="pl-chip" key={c}>
+                {c}
+              </span>
+            ))}
+          </div>
+          <div className="pl-who-rule">
+            <p className="pl-who-diff">
+              Different trade? If you quote every job,{" "}
+              <a href={BOOKING_HREF} className="pl-amber" {...bookAttrs}>
+                book a call
+              </a>
+              .
+            </p>
+            <p className="pl-who-nofit">
+              <span className="pl-nofit-tag">Not a fit</span>
+              Mostly consumer work, jobs under AED 10,000, or tenders where only
+              approved panels can bid.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── You keep the final say (cream band) ──────────────────────── */}
+      <section className="pl-section pl-say" id="approval">
+        <div className="pl-inner">
+          <div
+            className="pl-eyebrow pl-say-eyebrow"
+            style={{ marginBottom: 20 }}
+          >
+            You keep the final say
+          </div>
+          <h2 className="pl-h2-big pl-say-h2">
+            Nothing leaves without your approval
+          </h2>
+          <div className="pl-say-grid">
+            {FINAL_SAY.map((line) => (
+              <div className="pl-say-point" key={line}>
+                {line}
               </div>
             ))}
           </div>
@@ -434,8 +665,8 @@ export function PerseptLanding() {
             on Persept.
           </h2>
           <p className="pl-proof-lead">
-            Before we set it up for anyone else, we run the company on it. This
-            is our own office, every day.
+            The same agents find, email and send proposals for Persept every
+            day.
           </p>
           <div className="pl-stats">
             {STATS.map((s) => (
@@ -446,105 +677,89 @@ export function PerseptLanding() {
             ))}
           </div>
           <ProofScene />
-          <div className="pl-proof-roles">
-            <div>
-              <span className="pl-amber">Chief of staff</span> briefs the
-              founder every morning
-            </div>
-            <div>
-              <span className="pl-amber">Outreach</span> drafts every message;
-              the founder presses send
-            </div>
-            <div>
-              <span className="pl-amber">Proposals</span> writes the proposal
-              the day of the call
-            </div>
-            <div>
-              <span className="pl-amber">Content</span> drafts the week&rsquo;s
-              posts
-            </div>
-          </div>
         </div>
       </section>
 
-      {/* ── How it runs (light band) ─────────────────────────────────── */}
-      <section className="pl-section pl-how" id="how">
+      {/* ── Your first week ──────────────────────────────────────────── */}
+      <section className="pl-section pl-week">
         <div className="pl-inner">
-          <div
-            className="pl-eyebrow"
-            style={{ marginBottom: 20, color: "var(--on-light-2)" }}
-          >
-            How it runs
+          <div className="pl-eyebrow amber" style={{ marginBottom: 20 }}>
+            Your first week
           </div>
           <h2
             className="pl-h2-big"
-            style={{ maxWidth: "15ch", marginBottom: 72 }}
+            style={{ maxWidth: "14ch", marginBottom: 72 }}
           >
-            A private deployment and your one tap.
+            From call to first campaign in 7 days
           </h2>
-          <div className="pl-how-grid">
-            {HOW.map((s) => (
-              <div className="pl-how-col" key={s.n}>
-                <div className="pl-how-n">{s.n}</div>
-                <h3 className="pl-how-h3">{s.t}</h3>
-                <p className="pl-how-body">{s.d}</p>
+          <div className="pl-week-grid">
+            {WEEK.map((w) => (
+              <div className="pl-week-col" key={w.day}>
+                <div className="pl-week-line">
+                  <span className={`pl-week-dot${w.green ? " green" : ""}`} />
+                  <span className="pl-week-rule" />
+                </div>
+                <div className={`pl-week-day${w.green ? " green" : ""}`}>
+                  {w.day}
+                </div>
+                <p className="pl-week-body">{w.body}</p>
               </div>
             ))}
           </div>
-          <p className="pl-how-foot">
-            PDPL-aligned · set up and kept running by a person you can call
-          </p>
         </div>
       </section>
 
-      {/* ── Two ways to start ────────────────────────────────────────── */}
-      <section className="pl-section">
+      {/* ── Pricing ──────────────────────────────────────────────────── */}
+      <PricingSection />
+
+      {/* ── Comparison ───────────────────────────────────────────────── */}
+      <section className="pl-section pl-cmp-sec">
         <div className="pl-inner">
           <div className="pl-eyebrow amber" style={{ marginBottom: 20 }}>
-            The engagement
+            Comparison
           </div>
-          <h2 className="pl-h2-big" style={{ marginBottom: 64 }}>
-            Two ways to start.
+          <h2 className="pl-h2-big" style={{ marginBottom: 56 }}>
+            What else you could do
           </h2>
-          <div className="pl-start-grid">
-            <div className="pl-card pilot">
-              <div className="pl-card-tag">
-                <span>01</span>
-                <span>Most chosen</span>
+          <div className="pl-cmp-scroll">
+            <div className="pl-cmp">
+              <div className="pl-cmp-cell pl-cmp-corner" />
+              {CMP_HEAD.map((h) => (
+                <div className="pl-cmp-cell pl-cmp-colhead" key={h}>
+                  {h}
+                </div>
+              ))}
+              <div className="pl-cmp-cell pl-cmp-colhead pl-cmp-persept pl-cmp-persept-head">
+                Persept
               </div>
-              <h3 className="pl-card-h3">30-day paid pilot</h3>
-              <p className="pl-card-body">
-                Setup, integrations and playbooks, then a full month live.
-                Continue monthly if it earns its place.
-              </p>
-              <a
-                href="mailto:khizr@persept.ai?subject=Pilot"
-                className="pl-card-cta-dark"
-              >
-                Start a pilot
-              </a>
-            </div>
-            <div className="pl-card consult">
-              <div className="pl-card-tag mut">
-                <span>02</span>
-              </div>
-              <h3 className="pl-card-h3">Consultation</h3>
-              <p className="pl-card-body">
-                Half a day inside your business. You get a written map of where
-                agents would help and what to run first.
-              </p>
-              <a
-                href="mailto:khizr@persept.ai?subject=Consultation"
-                className="pl-card-cta-outline"
-              >
-                Book a consultation
-              </a>
+              {CMP_ROWS.map((row) => (
+                <PlCmpRow
+                  key={row.k}
+                  k={row.k}
+                  cells={row.cells}
+                  persept={row.persept}
+                />
+              ))}
             </div>
           </div>
-          <p className="pl-start-note">
-            Founder rate for the first three clients, in exchange for a case
-            study.
-          </p>
+        </div>
+      </section>
+
+      {/* ── FAQ ──────────────────────────────────────────────────────── */}
+      <section className="pl-section pl-faq-sec" id="faq">
+        <div className="pl-inner pl-faq-grid">
+          <div className="pl-faq-head">
+            <div className="pl-eyebrow amber" style={{ marginBottom: 20 }}>
+              FAQ
+            </div>
+            <h2 className="pl-h2" style={{ fontSize: "clamp(40px,5vw,72px)" }}>
+              Questions firms ask
+            </h2>
+            <a href="/trust" className="pl-faq-trust">
+              How we handle your data →
+            </a>
+          </div>
+          <FaqList items={FAQ} />
         </div>
       </section>
 
@@ -555,53 +770,33 @@ export function PerseptLanding() {
             <div className="pl-eyebrow amber" style={{ marginBottom: 20 }}>
               About
             </div>
-            <h2 className="pl-h2-med">
-              A small studio in Dubai, building since 2024.
-            </h2>
+            <h2 className="pl-h2-med">Who builds it</h2>
           </div>
           <div className="pl-about-body">
             <p className="pl-about-p">
-              Persept sets up named agents that take over the repetitive work of
-              small businesses, and ships its own products alongside. Every
-              deployment is set up and looked after by the person who built it.
+              A small studio in Dubai. I built these agents to run
+              Persept&rsquo;s own sales first, then set them up for other firms.
+              Before Persept I worked in banking and consulting at Emirates NBD,
+              PwC and Rasmala. Every deployment is set up and looked after by
+              me.
             </p>
             <div className="pl-founder">
               <div className="pl-founder-photo">photo</div>
               <div>
                 <div className="pl-founder-name">Khizr Malik</div>
-                <div className="pl-founder-sub">Founder · khizr@persept.ai</div>
+                <div className="pl-founder-links">
+                  <a href="mailto:khizr@persept.ai">khizr@persept.ai</a>
+                  <a
+                    href="https://www.linkedin.com/company/persept"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    LinkedIn
+                  </a>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* ── Products (GYST) ──────────────────────────────────────────── */}
-      <section className="pl-products" id="products">
-        <div className="pl-inner">
-          <div className="pl-eyebrow mut" style={{ marginBottom: 20 }}>
-            Also from Persept
-          </div>
-          <a
-            href="https://startgyst.com"
-            className="pl-gyst"
-            target="_blank"
-            rel="noreferrer"
-          >
-            <div className="pl-gyst-main">
-              <div className="pl-gyst-head">
-                <span className="pl-gyst-name">GYST</span>
-                <span className="pl-gyst-live">LIVE</span>
-              </div>
-              <p className="pl-gyst-body">
-                The whole job search, one guided path. Search every board,
-                tailor a screening-ready CV to each role, and reach people who
-                can refer you.
-              </p>
-              <div className="pl-gyst-price">£9.99/mo · 7-day free trial</div>
-            </div>
-            <span className="pl-gyst-visit">Visit startgyst.com →</span>
-          </a>
         </div>
       </section>
 
@@ -609,22 +804,60 @@ export function PerseptLanding() {
       <section className="pl-cta">
         <div className="pl-cta-glow" />
         <div className="pl-cta-inner">
-          <h2 className="pl-cta-h2">Fifteen minutes.</h2>
+          <h2 className="pl-cta-h2">
+            Fifteen minutes.{" "}
+            <span className="pl-amber">
+              Tell me where your best jobs come from.
+            </span>
+          </h2>
           <p className="pl-cta-p">
-            Tell me where the time goes. I&rsquo;ll tell you which parts an
-            agent could take.
+            I&rsquo;ll show you the agents running and the first campaign
+            I&rsquo;d start for you.
           </p>
-          <a
-            href={BOOKING_HREF}
-            className="pl-pill pl-amber-btn"
-            {...bookAttrs}
-          >
-            Book a 15-minute call
-          </a>
+          <div className="pl-cta-row" style={{ justifyContent: "center" }}>
+            <a
+              href={BOOKING_HREF}
+              className="pl-pill pl-amber-btn"
+              {...bookAttrs}
+            >
+              Book a 15-minute call
+            </a>
+            <a
+              href={WHATSAPP_HREF}
+              className="pl-pill pl-wa-btn"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <span className="pl-wa-dot" />
+              Message on WhatsApp
+            </a>
+          </div>
         </div>
       </section>
 
       <PlFooter />
     </div>
+  );
+}
+
+function PlCmpRow({
+  k,
+  cells,
+  persept,
+}: {
+  k: string;
+  cells: string[];
+  persept: string;
+}) {
+  return (
+    <>
+      <div className="pl-cmp-cell pl-cmp-rowhead">{k}</div>
+      {cells.map((c) => (
+        <div className="pl-cmp-cell" key={c}>
+          {c}
+        </div>
+      ))}
+      <div className="pl-cmp-cell pl-cmp-persept pl-cmp-strong">{persept}</div>
+    </>
   );
 }
