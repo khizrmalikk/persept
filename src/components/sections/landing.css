@@ -140,7 +140,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  border-radius: 10px;
+  border-radius: 999px;
   font-weight: 600;
   font-family: var(--geist);
   cursor: pointer;
@@ -225,19 +225,50 @@
   background: var(--light);
   color: var(--bg);
   padding: 10px 18px;
-  border-radius: 10px;
+  border-radius: 999px;
   font-weight: 600;
+  white-space: nowrap;
 }
 .pl a.pl-book:hover {
   background: var(--amber-hi);
   color: var(--bg);
 }
+.pl-nav-signin {
+  white-space: nowrap;
+}
+.pl a.pl-wa {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 9px 16px;
+  border-radius: 999px;
+  color: var(--tx);
+  white-space: nowrap;
+}
+.pl a.pl-wa:hover {
+  border-color: var(--light);
+  color: var(--tx);
+}
+.pl-wa-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  flex: none;
+}
 .pl-nav-hide {
   display: none;
 }
-@media (min-width: 720px) {
+@media (min-width: 1024px) {
   .pl-nav-hide {
     display: flex;
+  }
+}
+/* the WhatsApp pill is noise on the narrowest screens */
+@media (max-width: 420px) {
+  .pl a.pl-wa {
+    display: none;
   }
 }
 
@@ -353,7 +384,8 @@
   place-items: center;
   font-family: var(--arch);
   font-weight: 800;
-  font-size: 15px;
+  font-size: 13px;
+  letter-spacing: -0.01em;
   flex: none;
 }
 .pl-agent-id {
@@ -1167,4 +1199,1233 @@
 .pl-proof-sound[aria-pressed="true"] {
   border-color: var(--amber);
   color: var(--amber);
+}
+
+/* ============================================================================
+   v3 redesign — AI sales team for firms that quote every job.
+   New sections below; tokens reused from the block at the top of this file.
+   ========================================================================== */
+
+/* ── Hero extras ─────────────────────────────────────────────────────── */
+.pl-hero-ctas {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: flex-start;
+}
+.pl-hero-sub {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--mut2);
+  letter-spacing: 0.04em;
+  max-width: 420px;
+  line-height: 1.6;
+}
+.pl-office-anchor {
+  scroll-margin-top: 90px;
+}
+
+/* ── Who it's for ────────────────────────────────────────────────────── */
+.pl-who {
+  border-top: 1px solid var(--bd);
+}
+.pl-who-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 32px 64px;
+  margin-bottom: 56px;
+}
+.pl-who-head > div {
+  flex: 1 1 420px;
+}
+.pl-who-body {
+  flex: 1 1 360px;
+  max-width: 520px;
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--tx2);
+  margin: 0;
+  text-wrap: pretty;
+}
+.pl-trade-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 16px;
+}
+.pl-trade {
+  border-radius: 20px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 40px;
+  min-height: 240px;
+}
+.pl-trade-title {
+  font-family: var(--arch);
+  font-weight: 800;
+  font-size: 28px;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  margin: 0;
+  text-wrap: balance;
+}
+.pl .pl-trade-link {
+  background: var(--s1);
+  border: 1px solid var(--bd3);
+  color: var(--tx);
+  transition: border-color 0.18s ease;
+}
+.pl .pl-trade-link:hover {
+  border-color: var(--amber);
+  color: var(--tx);
+}
+.pl-trade-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+.pl-trade-foot p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--mut);
+  max-width: 30ch;
+}
+.pl-trade-arrow {
+  font-size: 24px;
+  color: var(--amber);
+  flex: none;
+}
+.pl-trade-soon {
+  border: 1px dashed var(--bd4);
+}
+.pl-trade-soon .pl-trade-title {
+  color: var(--mut2);
+}
+.pl-soon {
+  align-self: flex-start;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mut3);
+  border: 1px solid var(--bd4);
+  border-radius: 999px;
+  padding: 5px 12px;
+}
+.pl-who-foot {
+  margin: 32px 0 0;
+  font-size: 16px;
+  color: var(--mut);
+}
+
+/* ── How it works ────────────────────────────────────────────────────── */
+.pl-how-sec {
+  border-top: 1px solid var(--bd);
+}
+.pl-how-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 48px;
+  align-items: center;
+}
+.pl-how-intro {
+  flex: 1 1 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.pl-how-lead {
+  font-size: 19px;
+  line-height: 1.55;
+  color: var(--tx2);
+  margin: 0;
+  max-width: 460px;
+  text-wrap: pretty;
+}
+
+/* orbit diagram */
+.pl-orbit {
+  flex: 1.4 1 520px;
+  position: relative;
+  aspect-ratio: 1000 / 900;
+  max-width: 860px;
+  margin: 0 auto;
+}
+.pl-orbit-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.pl-orbit-centre {
+  position: absolute;
+  left: 50%;
+  top: 63.5%;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: clamp(10px, 1.1vw, 12px);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--amber-hi);
+  white-space: nowrap;
+}
+.pl-orbit-label {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.pl-orbit-name {
+  font-weight: 600;
+  font-size: clamp(13px, 1.6vw, 17px);
+  white-space: nowrap;
+}
+.pl-orbit-step {
+  font-family: var(--mono);
+  font-size: clamp(10px, 1.1vw, 12px);
+  color: var(--mut2);
+  white-space: nowrap;
+}
+
+/* the 6-step grid + running-across strip */
+.pl-how-steps {
+  margin-top: 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.pl-step-grid {
+  display: grid;
+  /* exactly six steps, so lay them out evenly (3×2 on desktop, 2×3 on tablet)
+     rather than auto-fitting to four and leaving two empty cells */
+  grid-template-columns: 1fr;
+  gap: 1px;
+  background: var(--bd2);
+  border: 1px solid var(--bd2);
+  border-radius: 20px;
+  overflow: hidden;
+}
+@media (min-width: 640px) {
+  .pl-step-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (min-width: 960px) {
+  .pl-step-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+.pl-step {
+  background: var(--bg);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pl-step-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mut2);
+}
+.pl-step-chip {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  flex: none;
+}
+.pl-step-title {
+  font-family: var(--arch);
+  font-weight: 700;
+  font-size: 24px;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.pl-step-body {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--mut);
+  text-wrap: pretty;
+}
+.pl-across {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 40px;
+  align-items: baseline;
+  padding: 24px 28px;
+  border: 1px solid var(--bd2);
+  border-radius: 20px;
+}
+.pl-across-item {
+  flex: 1 1 300px;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--tx2);
+}
+.pl-across-item strong {
+  color: var(--tx);
+  font-weight: 600;
+}
+
+/* ── You keep the final say (cream band) ─────────────────────────────── */
+.pl-say {
+  background: var(--light);
+  color: var(--bg);
+}
+.pl-say-eyebrow {
+  color: var(--on-light-2);
+}
+.pl-say-h2 {
+  color: var(--bg);
+  max-width: 14ch;
+  margin-bottom: 72px;
+}
+.pl-say-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 32px;
+}
+.pl-say-point {
+  border-top: 2px solid var(--bg);
+  padding-top: 24px;
+  font-size: 20px;
+  line-height: 1.45;
+  font-weight: 500;
+  text-wrap: pretty;
+}
+
+/* ── Proof — notification card over the board ────────────────────────── */
+.pl-proof-note {
+  position: absolute;
+  right: 4%;
+  top: 44%;
+  width: min(300px, 30%);
+  min-width: 210px;
+  background: var(--light);
+  color: var(--bg);
+  border-radius: 14px;
+  padding: 16px 18px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  transform: rotate(-2deg);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pl-proof-note-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--on-light-2);
+}
+.pl-proof-note-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: oklch(0.62 0.16 150);
+}
+.pl-proof-note-text {
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: 500;
+}
+.pl-proof-note-actions {
+  display: flex;
+  gap: 8px;
+}
+.pl-proof-note-send {
+  background: var(--bg);
+  color: var(--light);
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.pl-proof-note-review {
+  border: 1px solid rgba(14, 13, 12, 0.2);
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 13px;
+}
+
+/* ── Your first week ─────────────────────────────────────────────────── */
+.pl-week {
+  background: var(--bg-alt);
+}
+.pl-week-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 32px;
+}
+.pl-week-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.pl-week-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.pl-week-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 16px oklch(0.8 0.14 70 / 0.6);
+  flex: none;
+}
+.pl-week-dot.green {
+  background: var(--green);
+  box-shadow: 0 0 16px oklch(0.8 0.16 150 / 0.6);
+}
+.pl-week-col:last-child .pl-week-dot {
+  background: transparent;
+  border: 2px solid var(--light);
+  box-shadow: none;
+}
+.pl-week-rule {
+  flex: 1;
+  height: 1px;
+  background: var(--bd4);
+}
+.pl-week-day {
+  font-family: var(--arch);
+  font-weight: 800;
+  font-size: 44px;
+  letter-spacing: -0.04em;
+}
+.pl-week-day.green {
+  color: var(--green);
+}
+.pl-week-body {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--tx2);
+  text-wrap: pretty;
+}
+
+/* ── Pricing ─────────────────────────────────────────────────────────── */
+.pl-tier-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+.pl-tier {
+  border-radius: 20px;
+  padding: 36px;
+  background: var(--s1);
+  border: 1px solid var(--bd2);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.pl-tier.featured {
+  background: var(--amber);
+  color: var(--bg);
+  border-color: transparent;
+}
+.pl-tier-head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pl-tier-name {
+  font-family: var(--arch);
+  font-weight: 800;
+  font-size: 32px;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+.pl-tier-what {
+  font-size: 16px;
+  color: var(--mut);
+}
+.pl-tier.featured .pl-tier-what {
+  color: #3a2f1f;
+}
+.pl-tier-price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.pl-tier-amount {
+  font-family: var(--arch);
+  font-weight: 800;
+  font-size: 48px;
+  letter-spacing: -0.04em;
+}
+.pl-tier-unit {
+  font-size: 15px;
+  color: var(--mut);
+}
+.pl-tier.featured .pl-tier-unit {
+  color: #3a2f1f;
+}
+.pl-tier-agents {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--bd3);
+  flex: 1;
+}
+.pl-tier.featured .pl-tier-agents {
+  border-top-color: rgba(14, 13, 12, 0.2);
+}
+.pl-tier-agents-k {
+  padding: 14px 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mut);
+}
+.pl-tier.featured .pl-tier-agents-k {
+  color: #3a2f1f;
+}
+.pl-tier-agents-v {
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--tx2);
+}
+.pl-tier.featured .pl-tier-agents-v {
+  color: var(--bg);
+}
+.pl .pl-tier-cta {
+  align-self: flex-start;
+  padding: 14px 22px;
+  font-size: 16px;
+}
+.pl .pl-tier-cta.dark {
+  background: var(--bg);
+  color: var(--light);
+}
+.pl .pl-tier-cta.dark:hover {
+  color: var(--amber-hi);
+}
+.pl .pl-tier-cta.outline {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: var(--tx);
+}
+.pl .pl-tier-cta.outline:hover {
+  border-color: var(--light);
+  color: var(--tx);
+}
+.pl-tier-notes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 24px 40px;
+  margin-top: 32px;
+  padding: 28px 32px;
+  border-radius: 20px;
+  border: 1px solid var(--bd2);
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--tx2);
+}
+.pl-tier-notes strong {
+  color: var(--tx);
+  font-weight: 600;
+}
+.pl-tier-notes strong.pl-amber {
+  color: var(--amber);
+}
+
+/* ── Comparison ──────────────────────────────────────────────────────── */
+.pl-cmp-sec {
+  background: var(--bg-alt);
+}
+.pl-cmp-scroll {
+  overflow-x: auto;
+  border-radius: 20px;
+  border: 1px solid var(--bd2);
+}
+.pl-cmp {
+  min-width: 900px;
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1.2fr 1.2fr 1.2fr;
+  font-size: 16px;
+  line-height: 1.45;
+}
+.pl-cmp-cell {
+  padding: 20px 24px;
+  border-top: 1px solid var(--bd2);
+  color: var(--tx2);
+}
+.pl-cmp-corner,
+.pl-cmp-colhead {
+  padding: 22px 24px;
+  border-top: 0;
+}
+.pl-cmp-colhead {
+  font-weight: 600;
+  color: var(--mut);
+}
+.pl-cmp-rowhead {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mut3);
+}
+.pl-cmp-persept {
+  background: oklch(0.8 0.14 70 / 0.12);
+  font-weight: 600;
+  color: var(--tx);
+}
+.pl-cmp-persept-head {
+  font-family: var(--arch);
+  font-weight: 800;
+  font-size: 20px;
+  color: oklch(0.85 0.13 70);
+}
+.pl-cmp-strong {
+  font-weight: 600;
+  color: var(--tx);
+}
+
+/* ── FAQ ─────────────────────────────────────────────────────────────── */
+.pl-faq-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 64px;
+  align-items: flex-start;
+}
+.pl-faq-head {
+  flex: 1 1 300px;
+}
+.pl-faq-trust {
+  display: inline-flex;
+  margin-top: 28px;
+  font-size: 16px;
+  color: var(--tx2);
+}
+.pl-faq-list {
+  flex: 2 1 560px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--bd3);
+}
+.pl-faq {
+  border-bottom: 1px solid var(--bd3);
+}
+.pl-faq-q {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  padding: 24px 0;
+  font-family: var(--arch);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: -0.015em;
+  list-style: none;
+  cursor: pointer;
+}
+.pl-faq-q::-webkit-details-marker {
+  display: none;
+}
+.pl-faq-plus {
+  font-size: 28px;
+  color: var(--amber);
+  transition: transform 0.2s ease;
+  flex: none;
+}
+.pl-faq[open] .pl-faq-plus {
+  transform: rotate(45deg);
+}
+.pl-faq-a {
+  margin: 0 0 26px;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--tx2);
+  max-width: 62ch;
+}
+
+/* ── About — founder links ───────────────────────────────────────────── */
+.pl-founder-links {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 14px;
+  margin-top: 4px;
+}
+.pl-founder-links a {
+  color: var(--mut2);
+}
+
+/* ── Final CTA — WhatsApp pill ───────────────────────────────────────── */
+.pl .pl-wa-btn {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  padding: 18px 30px;
+  font-size: 17px;
+  color: var(--tx);
+}
+.pl .pl-wa-btn:hover {
+  border-color: var(--light);
+  color: var(--tx);
+}
+.pl .pl-cta-row .pl-amber-btn {
+  padding: 18px 30px;
+  font-size: 17px;
+}
+
+/* ── Footer v3 ───────────────────────────────────────────────────────── */
+.pl-footer-inner {
+  flex-direction: column;
+  align-items: stretch;
+}
+.pl-footer-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 24px;
+}
+.pl-footer-also {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 24px;
+  border-top: 1px solid var(--bd);
+}
+.pl-footer-also a {
+  font-family: var(--arch);
+  font-weight: 900;
+  font-size: 16px;
+  letter-spacing: -0.02em;
+  color: var(--tx2);
+}
+
+/* ── Reduced motion — pause the orbit animation ──────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .pl-orbit-dots animateMotion,
+  .pl-orbit-arcs animateTransform {
+    display: none;
+  }
+}
+
+/* ============================================================================
+   Trade pages (/exhibitions, /gifting) + Trust page.
+   ========================================================================== */
+
+/* trade hero — no office panel, so it can breathe less at the bottom */
+.pl-thero {
+  padding-bottom: 48px;
+}
+
+/* 2 · Sound familiar? */
+.pl-pain-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 16px;
+}
+.pl-pain {
+  background: var(--s1);
+  border: 1px solid var(--bd2);
+  border-radius: 20px;
+  padding: 32px;
+  font-family: var(--arch);
+  font-weight: 700;
+  font-size: clamp(20px, 2.4vw, 26px);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--tx3);
+  text-wrap: balance;
+}
+
+/* 3 · Where your buyers are */
+.pl-buyers {
+  background: var(--bg-alt);
+}
+.pl-buyers-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 32px 64px;
+  align-items: flex-start;
+}
+.pl-buyers-grid > div:first-child {
+  flex: 1 1 360px;
+}
+.pl-buyers-body {
+  flex: 1 1 440px;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.pl-buyers-p {
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.6;
+  color: var(--tx2);
+  text-wrap: pretty;
+}
+.pl-buyers-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--bd3);
+}
+.pl-buyers-list li {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--bd3);
+  font-size: 18px;
+  line-height: 1.45;
+  color: var(--tx2);
+}
+.pl-offer {
+  background: oklch(0.8 0.14 70 / 0.12);
+  border: 1px solid oklch(0.8 0.14 70 / 0.3);
+  border-radius: 16px;
+  padding: 20px 24px;
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--tx);
+}
+
+/* 4 · The agents */
+.pl-agents-table {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--bd3);
+}
+.pl-agent-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.4fr) 1fr;
+  gap: 16px 40px;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--bd3);
+}
+.pl-agent-row-name {
+  font-family: var(--arch);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+.pl-agent-row-what {
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--tx2);
+  text-wrap: pretty;
+}
+
+/* 5 · Timing */
+.pl-timing-sec {
+  background: var(--bg-alt);
+}
+.pl-timing-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 32px 64px;
+  align-items: flex-start;
+}
+.pl-timing-grid > div:first-child {
+  flex: 1 1 340px;
+}
+.pl-timing-body {
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--tx2);
+  margin: 28px 0 0;
+  max-width: 42ch;
+  text-wrap: pretty;
+}
+.pl-timing-table {
+  flex: 1 1 440px;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--bd3);
+}
+.pl-trow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--bd3);
+}
+.pl-trow-k {
+  font-family: var(--arch);
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+.pl-trow-v {
+  font-family: var(--mono);
+  font-size: 15px;
+  color: var(--tx2);
+}
+.pl-timing-note {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--mut3);
+  padding-top: 16px;
+}
+
+/* ============================================================================
+   v4 — Sound familiar?, Signals, and the chip-based Who it's for.
+   ========================================================================== */
+
+/* ── Sound familiar? ─────────────────────────────────────────────────── */
+.pl-sf {
+  background: var(--bg-alt);
+}
+.pl-sf-h2 {
+  max-width: 16ch;
+  margin-bottom: 64px;
+}
+.pl-sf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 1px;
+  background: var(--bd2);
+  border: 1px solid var(--bd2);
+  border-radius: 20px;
+  overflow: hidden;
+}
+.pl-sf-cell {
+  background: var(--bg-alt);
+  padding: 32px 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 40px;
+  min-height: 200px;
+}
+.pl-sf-num {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--mut3);
+}
+.pl-sf-quote {
+  font-family: var(--arch);
+  font-weight: 800;
+  font-size: clamp(26px, 2.4vw, 34px);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.pl-sf-answer {
+  background: var(--amber);
+  color: var(--bg);
+  padding: 32px 28px;
+  display: flex;
+  align-items: flex-end;
+  min-height: 200px;
+  font-size: 18px;
+  line-height: 1.45;
+  font-weight: 500;
+  text-wrap: pretty;
+}
+
+/* ── Signals ─────────────────────────────────────────────────────────── */
+.pl-signals {
+  background: var(--bg-alt);
+}
+.pl-signals-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 32px 64px;
+  margin-bottom: 56px;
+}
+.pl-signals-head > div {
+  flex: 1 1 480px;
+}
+.pl-signals-eyebrow {
+  color: var(--amber);
+  margin-bottom: 20px;
+}
+.pl-signals-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: oklch(0.78 0.12 20);
+  box-shadow: 0 0 12px oklch(0.78 0.12 20);
+  flex: none;
+}
+.pl-signals-body {
+  flex: 1 1 340px;
+  max-width: 480px;
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--tx2);
+  margin: 0;
+  text-wrap: pretty;
+}
+.pl-signal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 16px;
+}
+.pl-signal {
+  background: var(--s1);
+  border: 1px solid var(--bd2);
+  border-radius: 20px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 32px;
+  min-height: 230px;
+}
+.pl-signal-top {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.pl-signal-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mut3);
+}
+.pl-signal-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+}
+.pl-signal-title {
+  font-family: var(--arch);
+  font-weight: 800;
+  font-size: 24px;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  margin: 0;
+  text-wrap: balance;
+}
+.pl-signal-foot {
+  border-top: 1px solid var(--bd2);
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pl-signal-foot-k {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+.pl-signal-foot-v {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--tx2);
+}
+
+/* ── Who it's for — chips + rule ─────────────────────────────────────── */
+.pl-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.pl-chip {
+  border: 1px solid var(--bd4);
+  border-radius: 999px;
+  padding: 14px 22px;
+  font-size: clamp(16px, 1.5vw, 19px);
+  font-weight: 500;
+  color: var(--tx3);
+  background: var(--s1);
+}
+.pl-who-rule {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 20px 48px;
+  margin-top: 48px;
+  padding-top: 28px;
+  border-top: 1px solid var(--bd2);
+}
+.pl-who-diff {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--tx3);
+}
+.pl-who-nofit {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--mut2);
+  max-width: 560px;
+}
+.pl-nofit-tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mut3);
+  margin-right: 10px;
+}
+
+/* ── Trust page ──────────────────────────────────────────────────────── */
+.pl-trust-hero {
+  padding-bottom: 24px;
+}
+.pl-trust-inner {
+  max-width: 820px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+}
+.pl-trust-block {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.pl-trust-h2 {
+  font-family: var(--arch);
+  font-weight: 800;
+  font-size: clamp(26px, 3.2vw, 36px);
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+.pl-trust-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--bd3);
+}
+.pl-trust-list li {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--bd3);
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--tx2);
+}
+.pl-trust-p {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--tx2);
+}
+.pl-trust-note {
+  margin: 4px 0 0;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--mut2);
+}
+.pl-provider-table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--bd2);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.pl-provider-head,
+.pl-provider-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1.1fr 0.8fr;
+  gap: 16px;
+  padding: 16px 20px;
+}
+.pl-provider-head {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mut3);
+  background: var(--s1);
+}
+.pl-provider-row {
+  border-top: 1px solid var(--bd2);
+  font-size: 15px;
+  color: var(--tx2);
+}
+.pl-provider-p {
+  font-weight: 600;
+  color: var(--tx);
+}
+
+/* ============================================================================
+   Proof scene — the hand-drawn meeting room, the showreel on the board, and
+   the floating notification card. Classes (not inline styles) so the mobile
+   layout can drop the illustration and let the video fill the width.
+   ========================================================================== */
+.pl-proof-scene {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1400 / 860;
+  margin-top: 24px;
+}
+.pl-proof-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+/* the showreel sits on the drawn presentation board */
+.pl-proof-video {
+  position: absolute;
+  left: 17.14%;
+  top: 6.4%;
+  width: 65.71%;
+  height: 66.9%;
+  object-fit: contain;
+  object-position: center;
+  background: var(--bg);
+  border-radius: 6px;
+  display: block;
+}
+
+/* On phones the drawn room cramps the video and the cream card covers it.
+   Drop both and show the showreel full-width at its natural ratio. */
+@media (max-width: 760px) {
+  .pl-proof-scene {
+    aspect-ratio: auto;
+  }
+  .pl-proof-svg,
+  .pl-proof-note {
+    display: none;
+  }
+  .pl-proof-video {
+    position: relative;
+    inset: auto;
+    left: auto;
+    top: auto;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--bd3);
+    border-radius: 14px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  }
+  .pl-proof-sound {
+    left: 12px;
+    top: 12px;
+  }
 }

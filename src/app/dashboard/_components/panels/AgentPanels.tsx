@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import {
   getDoneBacklog,
@@ -5,11 +6,29 @@ import {
   parseHealth,
 } from "@/lib/workforce/backlog";
 import {
+  averageDraftMinutes,
+  type CopyRequest,
+  getCopyRequests,
+} from "@/lib/workforce/copy";
+import {
   getAgentFile,
   listAgentFiles,
   parseMarkdownTable,
 } from "@/lib/workforce/files";
+import {
+  getActiveIdeas,
+  getDecidedIdeas,
+  getEscalatedApprovalMap,
+} from "@/lib/workforce/ideas";
+import { getKnowledgeForAgent } from "@/lib/workforce/knowledge";
 import { getHandledLeads, getSuggestedLeads } from "@/lib/workforce/leads";
+import {
+  getCampaigns,
+  getCandidateDomains,
+  getPostCountsByCampaign,
+  hostFromUrl,
+  slugify,
+} from "@/lib/workforce/outreach";
 import { getPosts, matchPostFile, parseMusePost } from "@/lib/workforce/posts";
 import { getProposals } from "@/lib/workforce/proposals";
 import {
@@ -19,6 +38,8 @@ import {
   type WfEvent,
   when,
 } from "@/lib/workforce/types";
+import { CopyPanel } from "../CopyPanel";
+import { IdeasPanel, type IdeaVM } from "../IdeasPanel";
 import { BacklogPanel } from "./BacklogPanel";
 import { DigestArchive } from "./DigestArchive";
 import { dueState, today } from "./dates";
@@ -37,6 +58,7 @@ import { PipelineSummary } from "./PipelineSummary";
 import { PipelineTable, type ProspectRow } from "./PipelineTable";
 import { ProposalsPanel } from "./ProposalsPanel";
 import { type Review, ReviewsPanel } from "./ReviewsPanel";
+import { ScribeLessonsPanel } from "./ScribeLessonsPanel";
 import { SourcesPanel } from "./SourcesPanel";
 import { StatePanel } from "./StatePanel";
 import { TodayLog } from "./TodayLog";
@@ -66,7 +88,10 @@ function Cell({ wide, children }: { wide?: boolean; children: ReactNode }) {
 type Due = "overdue" | "today" | "future" | "";
 
 async function HunterPanels({ agentId }: { agentId: string }) {
-  const file = await getAgentFile(agentId, "PROSPECTS.md");
+  const [file, copy] = await Promise.all([
+    getAgentFile(agentId, "PROSPECTS.md"),
+    getCopyRequests(agentId, "for"),
+  ]);
   const table = parseMarkdownTable(file?.content);
   const rows = table.rows as ProspectRow[];
   const dueOf: Record<string, Due> = {};
@@ -86,7 +111,30 @@ async function HunterPanels({ agentId }: { agentId: string }) {
       <Cell wide>
         <OfferPanel agentId={agentId} />
       </Cell>
+      <CopyCell requests={copy} />
     </>
+  );
+}
+
+// The "copy" panel (Hunter / Muse / Scribe): requests to Scribe with status,
+// approval links and a resend for anything stuck writing. `nowMs` is stamped on
+// the server so the 15-min "stuck" check can't cause a hydration mismatch.
+function CopyCell({
+  requests,
+  right,
+}: {
+  requests: CopyRequest[];
+  right?: string;
+}) {
+  return (
+    <Cell wide>
+      <HudPanel
+        title="copy"
+        right={right ?? (requests.length ? `${requests.length}` : undefined)}
+      >
+        <CopyPanel requests={requests} nowMs={Date.now()} />
+      </HudPanel>
+    </Cell>
   );
 }
 
@@ -97,16 +145,24 @@ async function ScoutPanels({
   agentId: string;
   museEnabled: boolean;
 }) {
-  const [files, suggested, handled] = await Promise.all([
+  const [files, suggested, handled, candidateDomains] = await Promise.all([
     listAgentFiles(agentId, "memory/digests/"),
     getSuggestedLeads(),
     getHandledLeads(20),
+    getCandidateDomains(),
   ]);
   const parsed: Digest[] = files.map((f) => parseDigest(f.path, f.content));
   const latest = parsed[0] ?? null;
   const archive = parsed.slice(1, 7); // previous six
   // companies with a suggested lead → digest sales items that name one get a chip
   const leadCompanies = suggested.map((l) => l.company).filter(Boolean);
+  // leads whose website domain matches a candidate row came from the morning search
+  const fromCandidateIds = suggested
+    .filter((l) => {
+      const d = hostFromUrl(l.website);
+      return d !== "" && candidateDomains.has(d);
+    })
+    .map((l) => l.id);
   return (
     <>
       <Cell wide>
@@ -116,7 +172,11 @@ async function ScoutPanels({
             title="leads"
             right={suggested.length ? `${suggested.length} new` : undefined}
           >
-            <LeadsPanel suggested={suggested} handled={handled} />
+            <LeadsPanel
+              suggested={suggested}
+              handled={handled}
+              fromCandidateIds={fromCandidateIds}
+            />
           </HudPanel>
         </div>
       </Cell>
@@ -144,22 +204,77 @@ async function ScoutPanels({
 }
 
 async function ScribePanels({ agentId }: { agentId: string }) {
-  const proposals = await getProposals(agentId);
+  const [proposals, knowledge, copy] = await Promise.all([
+    getProposals(agentId),
+    getKnowledgeForAgent(agentId, 3),
+    getCopyRequests(agentId, "writer"),
+  ]);
+  const avgMin = averageDraftMinutes(copy);
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
   return (
-    <Cell wide>
-      <HudPanel
-        title="proposals"
-        right={proposals.length ? `${proposals.length}` : undefined}
-      >
-        <ProposalsPanel proposals={proposals} siteUrl={siteUrl} />
-      </HudPanel>
-    </Cell>
+    <>
+      <Cell wide>
+        <HudPanel
+          title="proposals"
+          right={proposals.length ? `${proposals.length}` : undefined}
+        >
+          <ProposalsPanel proposals={proposals} siteUrl={siteUrl} />
+        </HudPanel>
+      </Cell>
+      <Cell>
+        <HudPanel
+          title="knowledge"
+          right={
+            <Link href="/dashboard/knowledge" className="wf-hn-link">
+              {knowledge.count ? `${knowledge.count} files` : "manage"} →
+            </Link>
+          }
+        >
+          {knowledge.files.length === 0 ? (
+            <div className="wf-hn-empty">
+              no files yet. add reference material on the knowledge page.
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {knowledge.files.map((f) => (
+                <div
+                  key={f.id}
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    fontSize: 13,
+                    padding: "4px 0",
+                  }}
+                >
+                  <span style={{ color: "var(--ink-faint)" }}>▤</span>
+                  <span>{f.title}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </HudPanel>
+      </Cell>
+      <CopyCell
+        requests={copy}
+        right={avgMin != null ? `avg ${avgMin} min to draft` : undefined}
+      />
+      <Cell wide>
+        <ScribeLessonsPanel agentId={agentId} />
+      </Cell>
+    </>
   );
 }
 
 async function MusePanels({ agentId }: { agentId: string }) {
-  const [planFiles, postFiles, posts, { data: apRows }] = await Promise.all([
+  const [
+    planFiles,
+    postFiles,
+    posts,
+    { data: apRows },
+    copy,
+    campaigns,
+    postCounts,
+  ] = await Promise.all([
     listAgentFiles(agentId, "plan/"),
     listAgentFiles(agentId, "posts/"),
     getPosts(agentId),
@@ -169,7 +284,11 @@ async function MusePanels({ agentId }: { agentId: string }) {
       .eq("agent_id", agentId)
       .eq("status", "pending")
       .order("ts", { ascending: true }),
+    getCopyRequests(agentId, "for"),
+    getCampaigns(agentId),
+    getPostCountsByCampaign(),
   ]);
+  const activeCampaigns = campaigns.filter((c) => c.status === "active");
 
   // "This week" — the newest plan file (files sort desc by path), as a table.
   const planFile = planFiles[0] ?? null;
@@ -231,6 +350,59 @@ async function MusePanels({ agentId }: { agentId: string }) {
     <>
       <Cell wide>
         <HudPanel
+          title="campaigns"
+          right={
+            <Link
+              href="/dashboard/agents/hunter/campaigns/new?owner=muse"
+              className="wf-hn-link"
+            >
+              new campaign →
+            </Link>
+          }
+        >
+          {activeCampaigns.length === 0 ? (
+            <div className="wf-hn-empty">
+              no active campaigns. start one and its platforms and posts show
+              here.
+            </div>
+          ) : (
+            <div className="wf-muse-camps">
+              {activeCampaigns.map((c) => {
+                const slug = slugify(c.name);
+                const postCount =
+                  postCounts[slug] ?? postCounts[c.name.toLowerCase()] ?? 0;
+                return (
+                  <Link
+                    key={c.id}
+                    href={`/dashboard/agents/hunter/campaigns/${c.id}`}
+                    className="wf-muse-camp"
+                  >
+                    <div className="wf-muse-camp-top">
+                      <span className="wf-muse-camp-name">{c.name}</span>
+                      <span className="wf-muse-camp-posts">
+                        {postCount} post{postCount === 1 ? "" : "s"}
+                      </span>
+                    </div>
+                    <div className="wf-hn-camp-chips">
+                      {c.rules.platforms.length === 0 ? (
+                        <span className="wf-hn-note">no platforms yet</span>
+                      ) : (
+                        c.rules.platforms.map((p) => (
+                          <span key={p} className="wf-chip-mono">
+                            {p}
+                          </span>
+                        ))
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </HudPanel>
+      </Cell>
+      <Cell wide>
+        <HudPanel
           title="this week"
           right={
             <span className="wf-muse-head-right">
@@ -258,6 +430,7 @@ async function MusePanels({ agentId }: { agentId: string }) {
           <MusePublishedPanel rows={published} />
         </HudPanel>
       </Cell>
+      <CopyCell requests={copy} />
     </>
   );
 }
@@ -269,22 +442,42 @@ async function ChiefPanels({
   agentId: string;
   agents: Agent[];
 }) {
-  const [{ data }, stateFile, reviewFiles, openItems, doneItems] =
-    await Promise.all([
-      supabaseAdmin()
-        .from("events")
-        .select("*")
-        .eq("agent_id", agentId)
-        .eq("kind", "message")
-        .order("ts", { ascending: false })
-        .limit(60),
-      getAgentFile(agentId, "STATE.md"),
-      listAgentFiles(agentId, "improvements/"),
-      getOpenBacklog(),
-      getDoneBacklog(20),
-    ]);
+  const [
+    { data },
+    stateFile,
+    reviewFiles,
+    openItems,
+    doneItems,
+    activeIdeas,
+    decidedIdeas,
+  ] = await Promise.all([
+    supabaseAdmin()
+      .from("events")
+      .select("*")
+      .eq("agent_id", agentId)
+      .eq("kind", "message")
+      .order("ts", { ascending: false })
+      .limit(60),
+    getAgentFile(agentId, "STATE.md"),
+    listAgentFiles(agentId, "improvements/"),
+    getOpenBacklog(),
+    getDoneBacklog(20),
+    getActiveIdeas(),
+    getDecidedIdeas(20),
+  ]);
   const events = (data as WfEvent[] | null) ?? [];
   const t = today();
+
+  // Escalated ideas → the open approval Chief raised for each (matched by short_id).
+  const escalatedShortIds = activeIdeas
+    .filter((i) => i.status === "escalated")
+    .map((i) => i.short_id);
+  const approvalByShortId = await getEscalatedApprovalMap(escalatedShortIds);
+  const ideaVMs: IdeaVM[] = activeIdeas.map((i) => ({
+    ...i,
+    approvalId:
+      i.status === "escalated" ? (approvalByShortId[i.short_id] ?? null) : null,
+  }));
 
   // Health: the "## Health" lines from STATE.md (empty = all clear).
   const health = parseHealth(stateFile?.content);
@@ -342,6 +535,16 @@ async function ChiefPanels({
     <>
       <Cell wide>
         <TodaysBrief text={briefText} eveningNote={eveningNote} />
+      </Cell>
+      <Cell wide>
+        <div id="wf-ideas">
+          <HudPanel
+            title="ideas from the team"
+            right={ideaVMs.length ? `${ideaVMs.length} waiting` : undefined}
+          >
+            <IdeasPanel active={ideaVMs} decided={decidedIdeas} />
+          </HudPanel>
+        </div>
       </Cell>
       <Cell wide>
         <HudPanel

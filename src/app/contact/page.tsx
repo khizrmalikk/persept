@@ -1,5 +1,6 @@
 "use client";
 
+import Script from "next/script";
 import { type ChangeEvent, type FormEvent, useState } from "react";
 import "@/components/sections/landing.css";
 import {
@@ -10,6 +11,8 @@ import {
 } from "@/components/sections/pl-chrome";
 
 const CONTACT_EMAIL = "khizr@persept.ai";
+const CALENDLY_URL =
+  "https://calendly.com/khizr-persept/ai-workforce-consultation";
 
 const SPEC = [
   { label: "Email", value: CONTACT_EMAIL, href: `mailto:${CONTACT_EMAIL}` },
@@ -319,8 +322,38 @@ export default function ContactPage() {
           </div>
         </section>
 
+        {/* ── Book straight in ───────────────────────────────────────── */}
+        <section
+          className="pl-section"
+          style={{ paddingTop: 0, paddingBottom: 120 }}
+        >
+          <div className="pl-inner">
+            <div className="pl-panel">
+              <div className="pl-eyebrow amber" style={{ marginBottom: 22 }}>
+                Book straight in
+              </div>
+              <p
+                className="pl-role-body"
+                style={{ color: "var(--tx2)", maxWidth: "48ch" }}
+              >
+                Pick a fifteen-minute slot that suits you. It lands in my diary
+                and you get a confirmation — no back-and-forth.
+              </p>
+              <div
+                className="calendly-inline-widget"
+                data-url={CALENDLY_URL}
+                style={{ minWidth: 320, height: 700, marginTop: 28 }}
+              />
+            </div>
+          </div>
+        </section>
+
         <PlFooter />
       </div>
+      <Script
+        src="https://assets.calendly.com/assets/external/widget.js"
+        strategy="lazyOnload"
+      />
     </main>
   );
 }

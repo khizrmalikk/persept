@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { DeleteCampaignButton } from "@/app/dashboard/_components/DeleteCampaignButton";
 import { HunterHeader } from "@/app/dashboard/_components/HunterHeader";
 import { getAgentFile, parseMarkdownTable } from "@/lib/workforce/files";
 import {
   type Campaign,
   getCampaigns,
+  getCandidateCounts,
   getHandoffs,
   getMessages,
   slugify,
@@ -23,14 +25,21 @@ function stPill(status: string): { background: string; color: string } {
 }
 
 export default async function CampaignsPage() {
-  const [{ stats, pending }, campaigns, messages, handoffsOpen, prospectsFile] =
-    await Promise.all([
-      getHunterHeaderStats(),
-      getCampaigns("hunter"),
-      getMessages("hunter"),
-      getHandoffs("hunter", ["open"]),
-      getAgentFile("hunter", "PROSPECTS.md"),
-    ]);
+  const [
+    { stats, pending },
+    campaigns,
+    messages,
+    handoffsOpen,
+    prospectsFile,
+    candidateCounts,
+  ] = await Promise.all([
+    getHunterHeaderStats(),
+    getCampaigns("hunter"),
+    getMessages("hunter"),
+    getHandoffs("hunter", ["open"]),
+    getAgentFile("hunter", "PROSPECTS.md"),
+    getCandidateCounts(30),
+  ]);
 
   const rows = parseMarkdownTable(prospectsFile?.content).rows;
   const cstats: Record<
@@ -79,6 +88,9 @@ export default async function CampaignsPage() {
         {campaigns.map((c) => {
           const s = cstats[c.id];
           const emptyBrief = !c.goal && !c.audience && !c.offer;
+          const noQueries =
+            c.status === "active" && c.rules.search_queries.length === 0;
+          const candidates = candidateCounts[c.id] ?? 0;
           return (
             <div
               key={c.id}
@@ -112,6 +124,7 @@ export default async function CampaignsPage() {
                   >
                     ✎
                   </Link>
+                  <DeleteCampaignButton id={c.id} name={c.name} />
                 </div>
               </div>
               <div className="wf-hn-camp-snippet">
@@ -123,6 +136,12 @@ export default async function CampaignsPage() {
                   and offer are filled in
                 </div>
               )}
+              {noQueries && (
+                <div className="wf-hn-camp-warn">
+                  no search queries · no new prospects will be found for this
+                  campaign
+                </div>
+              )}
               <div className="wf-hn-camp-chips">
                 {c.rules.channels.map((ch) => (
                   <span key={ch} className="wf-chip-mono">
@@ -130,13 +149,17 @@ export default async function CampaignsPage() {
                   </span>
                 ))}
               </div>
-              <div className="wf-hn-camp-stats">
+              <div
+                className="wf-hn-camp-stats"
+                style={{ gridTemplateColumns: "repeat(5, 1fr)" }}
+              >
                 {(
                   [
                     ["sent", s.sent],
                     ["replies", s.replies],
                     ["hand-offs", s.handoffs],
                     ["prospects", s.prospects],
+                    ["candidates", candidates],
                   ] as [string, number][]
                 ).map(([k, v]) => (
                   <div key={k}>

@@ -31,6 +31,7 @@ const KIND: Record<string, [string, string]> = {
   lead: ["oklch(0.78 0.12 20 / 0.16)", "oklch(0.82 0.1 20)"],
   approval: ["oklch(0.8 0.14 70 / 0.16)", "oklch(0.8 0.14 70)"],
   post: ["oklch(0.78 0.12 110 / 0.16)", "oklch(0.84 0.1 110)"],
+  warning: ["oklch(0.8 0.14 70 / 0.16)", "oklch(0.8 0.14 70)"],
   error: ["oklch(0.72 0.17 25 / 0.18)", "oklch(0.72 0.17 25)"],
 };
 const RUN_STATUS: Record<string, [string, string]> = {
@@ -71,6 +72,7 @@ export function ActivityView({
     "lead",
     "approval",
     "post",
+    "warning",
     "error",
   ];
 
@@ -127,6 +129,24 @@ export function ActivityView({
           ) : (
             shown.map((e) => {
               const [kbg, kfg] = KIND[e.kind] ?? KIND.message;
+              // warnings: a small amber dot and the summary, nothing else.
+              if (e.kind === "warning") {
+                return (
+                  <div key={e.id} className="wf-ac-row">
+                    <span className="wf-ac-time">{e.t}</span>
+                    <span
+                      style={{
+                        flex: "0 0 auto",
+                        width: 7,
+                        height: 7,
+                        borderRadius: "50%",
+                        background: "var(--accent)",
+                      }}
+                    />
+                    <span className="wf-ac-sum">{e.summary}</span>
+                  </div>
+                );
+              }
               return (
                 <div
                   key={e.id}

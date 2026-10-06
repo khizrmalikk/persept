@@ -13,98 +13,106 @@ import { useEffect, useRef, useState } from "react";
 const col = (h: number) => `oklch(0.78 0.12 ${h})`;
 
 type Task = [text: string, gate: 0 | 1, approval?: string];
-type AgentDef = { name: string; role: string; h: number; tasks: Task[] };
+type AgentDef = {
+  name: string;
+  ini: string;
+  role: string;
+  h: number;
+  tasks: Task[];
+};
 
 const AGENTS: AgentDef[] = [
   {
-    name: "Sami",
-    role: "Chief of staff",
+    name: "Lead Scout",
+    ini: "LS",
+    role: "Spot",
+    h: 20,
+    tasks: [
+      ["Reading this week's hotel opening list", 0],
+      ["Finding the facilities manager for a new tower", 0],
+      [
+        "18 buildings handed over this quarter",
+        1,
+        "18 new building handovers ready for outreach",
+      ],
+    ],
+  },
+  {
+    name: "Outreach",
+    ini: "OR",
+    role: "Reach",
+    h: 150,
+    tasks: [
+      [
+        "Drafting day 1 emails to new DIFC firms",
+        1,
+        "Day 1 emails to 12 new DIFC firms",
+      ],
+      ["Sorting 4 new replies", 0],
+      [
+        "Day 3 follow-up on the Marina kitchen quote",
+        1,
+        "Day 3 follow-up on the Marina kitchen quote",
+      ],
+    ],
+  },
+  {
+    name: "Brief Intake",
+    ini: "BI",
+    role: "Brief",
+    h: 290,
+    tasks: [
+      ["Reading a request forwarded from WhatsApp", 0],
+      ["Writing the brief: fire alarm AMC, 14 floors", 0],
+      [
+        "3 questions still missing",
+        1,
+        "Brief for a 14-floor fire AMC, 3 questions to ask",
+      ],
+    ],
+  },
+  {
+    name: "Proposals",
+    ini: "PR",
+    role: "Propose",
+    h: 220,
+    tasks: [
+      ["Pulling past work into the proposal", 0],
+      ["Pricing from your rate card", 0],
+      [
+        "Proposal ready for a restaurant kitchen",
+        1,
+        "Proposal for a 120-cover kitchen, AED 84,000",
+      ],
+    ],
+  },
+  {
+    name: "Project Tracker",
+    ini: "PT",
+    role: "Deliver",
+    h: 110,
+    tasks: [
+      ["Checking the site visit date for Business Bay", 0],
+      ["Chasing the supplier for confirmation", 0],
+      ["This week's deadlines sent to the team", 0],
+    ],
+  },
+  {
+    name: "Renewals",
+    ini: "RN",
+    role: "Renew",
     h: 70,
     tasks: [
       [
-        "Compiling yesterday for the morning brief",
+        "3 AMC contracts lapse in 60 days",
         1,
-        "Morning brief ready: 3 decisions need you",
+        "Renewal reminders to 3 AMC clients",
       ],
-      ["Checking what is due today", 0],
-      ["Flagging overdue invoices", 0],
-    ],
-  },
-  {
-    name: "Nora",
-    role: "Outreach",
-    h: 150,
-    tasks: [
-      ["Researching 12 companies that fit", 0],
+      ["Finding last year's clients", 0],
       [
-        "Drafting day-3 follow-up to Al Noor Properties",
+        '"Anything coming up?" to 8 past clients',
         1,
-        "Follow-up to Al Noor Properties",
-      ],
-      [
-        "Reading a reply, proposing call times",
-        1,
-        "Reply to Hamdan: Tue 10:00 or Wed 14:00?",
-      ],
-    ],
-  },
-  {
-    name: "Idris",
-    role: "Proposals",
-    h: 220,
-    tasks: [
-      ["Turning call notes into a proposal", 0],
-      ["Pricing the 30-day pilot", 0],
-      [
-        "Publishing proposal page",
-        1,
-        "Proposal for Marina Stays is ready to send",
-      ],
-    ],
-  },
-  {
-    name: "Maya",
-    role: "Customer replies",
-    h: 290,
-    tasks: [
-      ["Answering a guest about late check-in", 0],
-      [
-        "Replying to a 4-star Google review",
-        1,
-        "Reply to Google review from Sarah K.",
-      ],
-      [
-        "Escalating a refund request",
-        1,
-        "Refund request, unit 14: approve AED 350?",
-      ],
-    ],
-  },
-  {
-    name: "Leo",
-    role: "Market watch",
-    h: 20,
-    tasks: [
-      ["Reading niche forums and news", 0],
-      ["Tagging a competitor price change", 0],
-      ["Summarising 4 items for sales", 0],
-    ],
-  },
-  {
-    name: "Zara",
-    role: "Marketing",
-    h: 110,
-    tasks: [
-      ["Drafting this week’s posts", 0],
-      [
-        "Occupancy dipped: preparing a discount",
-        1,
-        "Midweek 15% discount for October",
-      ],
-      [
-        "Scheduling LinkedIn carousel",
-        1,
-        "Publish LinkedIn carousel on Thursday",
+        '"Anything coming up?" to 8 past clients',
       ],
     ],
   },
@@ -128,10 +136,15 @@ const INITIAL_INBOX: InboxItem[] = [
   {
     id: 1,
     a: 3,
-    text: "Refund request, unit 14: approve AED 350?",
+    text: "Proposal for a 120-cover kitchen, AED 84,000",
     st: "pending",
   },
-  { id: 2, a: 1, text: "Follow-up to Al Noor Properties", st: "pending" },
+  {
+    id: 2,
+    a: 1,
+    text: "Day 1 emails to 12 new DIFC firms",
+    st: "pending",
+  },
 ];
 
 function gstClock(now: Date): string {
@@ -225,7 +238,7 @@ export function OfficePanel({ speed = 1 }: { speed?: number }) {
               <div className="pl-agent" key={a.name}>
                 <div className="pl-agent-top">
                   <div className="pl-avatar" style={{ background: c }}>
-                    {a.name[0]}
+                    {a.ini}
                   </div>
                   <div className="pl-agent-id">
                     <div className="pl-agent-name">{a.name}</div>

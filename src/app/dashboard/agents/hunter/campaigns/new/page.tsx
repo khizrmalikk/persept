@@ -6,8 +6,16 @@ import "../../../../hunter.css";
 
 export const dynamic = "force-dynamic";
 
-export default async function NewCampaignPage() {
-  const { stats, pending } = await getHunterHeaderStats();
+export default async function NewCampaignPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ owner?: string }>;
+}) {
+  const [{ stats, pending }, sp] = await Promise.all([
+    getHunterHeaderStats(),
+    searchParams,
+  ]);
+  const owner = sp.owner === "muse" ? "muse" : "hunter";
   return (
     <div className="wf-hn">
       <HunterHeader stats={stats} pending={pending} />
@@ -16,6 +24,7 @@ export default async function NewCampaignPage() {
           id: "",
           name: "",
           status: "active",
+          owner,
           goal: "",
           audience: "",
           offer: "",
@@ -23,6 +32,10 @@ export default async function NewCampaignPage() {
           channels: [...DEFAULT_RULES.channels],
           daily_cap: DEFAULT_RULES.daily_cap,
           follow_up_days: [...DEFAULT_RULES.follow_up_days],
+          search_queries: [],
+          platforms: [],
+          starts: "",
+          ends: "",
           assets: [],
           slug: "",
         }}

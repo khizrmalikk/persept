@@ -85,6 +85,12 @@ export function ChatPane({
   const [dragOver, setDragOver] = useState(false);
   const [attachNote, setAttachNote] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+  // Optimistic sends: a message you send is an `actions` row that only echoes back
+  // as an `events` row minutes later (bridge + agent), so we show it instantly as a
+  // pending bubble and a "typing…" line, then drop it once the real message arrives.
+  const [pending, setPending] = useState<string[]>([]);
+  const [typing, setTyping] = useState(false);
+  const prevLastId = useRef(0);
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = "auto") => {
     const el = scrollRef.current;
@@ -119,6 +125,21 @@ export function ChatPane({
   useEffect(() => {
     if (atBottomRef.current) scrollToBottom("smooth");
   }, [lastId, messages.length, scrollToBottom]);
+
+  // Reconcile optimistic sends against the refreshed server transcript: drop any
+  // pending bubble the server has now echoed back as one of my messages, and stop
+  // the "typing…" line once a NEW agent reply lands.
+  useEffect(() => {
+    const mine = new Set(
+      messages.filter((m) => m.mine).map((m) => m.text.trim()),
+    );
+    setPending((prev) => prev.filter((t) => !mine.has(t)));
+    if (lastId !== prevLastId.current) {
+      const last = messages[messages.length - 1];
+      if (last && !last.mine) setTyping(false);
+      prevLastId.current = lastId;
+    }
+  }, [messages, lastId]);
 
   // Auto-grow the composer up to a cap, then let it scroll internally.
   const autosize = useCallback(() => {
@@ -205,12 +226,24 @@ export function ChatPane({
     }
   };
 
-  // After a send, clear + reset the composer and snap to the newest line.
+  // After a send, show the message immediately (optimistic bubble + typing line),
+  // then clear + reset the composer and snap to the newest line. React captures the
+  // form data synchronously on submit, so clearing the textarea next frame is safe.
   const onSubmit = () => {
     atBottomRef.current = true;
     const ta = textRef.current;
+    const text = (ta?.value ?? "").trim();
     setHasText(false);
     setAttachNote("");
+    if (text) {
+      setPending((p) => [...p, text]);
+      setTyping(true);
+      // Safety cap so the bubble can't spin forever if the reply is never detected
+      // (e.g. the agent acts without messaging). While the agent is "working" the
+      // bubble stays up via statusKey regardless; this only bounds the send-driven
+      // case. Cleared the moment a new agent message arrives (reconcile effect).
+      window.setTimeout(() => setTyping(false), 120000);
+    }
     requestAnimationFrame(() => {
       if (ta) {
         ta.value = "";
@@ -219,6 +252,21 @@ export function ChatPane({
       scrollToBottom("smooth");
     });
   };
+
+  // Show the "waiting for a reply" bubble while a send is in flight OR while the
+  // agent is actively working — but ONLY while the last thing in the thread is
+  // yours (or a pending send), i.e. we're genuinely waiting on the agent. That
+  // keeps it up for the whole wait, yet hides it the instant a reply lands (even
+  // if the agent's "working" status is briefly stale until the next refresh).
+  const lastMsg = messages[messages.length - 1];
+  const awaitingAgent = pending.length > 0 || (lastMsg ? lastMsg.mine : false);
+  const showWaiting = awaitingAgent && (typing || statusKey === "working");
+
+  // Keep the newest optimistic bubble / waiting line in view as they appear.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: pending + waiting state are the intended scroll triggers
+  useEffect(() => {
+    if (atBottomRef.current) scrollToBottom("smooth");
+  }, [pending.length, showWaiting, scrollToBottom]);
 
   const dotKey = statusKey ?? "idle";
 
@@ -266,7 +314,7 @@ export function ChatPane({
           aria-live="polite"
           aria-label={`conversation with ${agentName}`}
         >
-          {!messages.length ? (
+          {!messages.length && !pending.length ? (
             <div className="chat-empty">
               <span className="ce-avatar" aria-hidden="true">
                 {agentEmoji}
@@ -319,6 +367,49 @@ export function ChatPane({
                 </div>
               );
             })
+          )}
+
+          {pending.map((t, i) => (
+            <div
+              key={`pending-${i}-${t.slice(0, 24)}`}
+              className={`bubble-row mine is-pending${
+                i > 0 || (messages.length && messages[messages.length - 1].mine)
+                  ? " grouped"
+                  : ""
+              }`}
+            >
+              <div className="bubble-col">
+                <div className="bubble">
+                  <span className="bubble-text">{t}</span>
+                </div>
+                <span className="bubble-meta">
+                  <span className="bubble-t">sending…</span>
+                </span>
+              </div>
+            </div>
+          ))}
+
+          {showWaiting && (
+            <div className="bubble-row theirs typing-row">
+              <span className="bubble-avatar" aria-hidden="true">
+                {agentEmoji}
+              </span>
+              <div className="bubble-col">
+                <div className="bubble typing-bubble">
+                  <span className="sr-only">
+                    waiting for {agentName} to reply
+                  </span>
+                  <span className="typing-dots" aria-hidden="true">
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                </div>
+                <span className="bubble-meta">
+                  <span className="bubble-t">waiting for a reply…</span>
+                </span>
+              </div>
+            </div>
           )}
         </div>
 

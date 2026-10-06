@@ -1,5 +1,6 @@
 "use client";
 
+import { diffWords } from "diff";
 import { useEffect, useState } from "react";
 
 // The approvals inbox — the core of the product. Server page builds serializable
@@ -26,6 +27,8 @@ export type ApprovalVM = {
   context: string;
   body: string;
   held: boolean;
+  // true when Scribe raised a "question about …" approval (ask, don't send).
+  isQuestion: boolean;
 };
 
 export type DecidedVM = {
@@ -36,10 +39,148 @@ export type DecidedVM = {
   action: string;
   status: string;
   bad: boolean;
+  versions: number;
+};
+
+// One row of a message's draft history (serialized server-side, ready to render).
+export type VersionVM = {
+  id: string;
+  n: number;
+  author: string;
+  authorLabel: string;
+  kind: string;
+  kindLabel: string;
+  when: string;
+  note: string;
+  subject: string;
+  body: string;
+  diffable: boolean; // revision | edited → show a diff vs the previous body
+};
+
+// copy_request meta shown above a question (company · kind · channel).
+export type CopyMetaVM = {
+  company: string;
+  kind: string;
+  channel: string;
 };
 
 type Action = (fd: FormData) => void | Promise<void>;
 type Tab = "waiting" | "held" | "decided";
+
+// The draft history for one message: a collapsible list of versions; click one to
+// see its subject/body, with a word diff for revisions / edits. Open by default
+// when there's more than one version.
+function HistoryPanel({ versions }: { versions: VersionVM[] }) {
+  const [open, setOpen] = useState(versions.length > 1);
+  const [sel, setSel] = useState<number | null>(null);
+  if (!versions.length) return null;
+
+  const prevBody = (i: number) => {
+    for (let j = i - 1; j >= 0; j--)
+      if (versions[j].body.trim()) return versions[j].body;
+    return "";
+  };
+
+  return (
+    <div className="wf-apx-history">
+      <button
+        type="button"
+        className="wf-apx-history-toggle"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+      >
+        history <span className="wf-apx-history-ct">{versions.length}</span>
+      </button>
+      {open && (
+        <ol className="wf-apx-history-list">
+          {versions.map((v, i) => (
+            <li key={v.id}>
+              <button
+                type="button"
+                className={`wf-apx-history-row${sel === i ? " is-sel" : ""}`}
+                onClick={() => setSel(sel === i ? null : i)}
+              >
+                <span className="wf-apx-history-n">v{v.n}</span>
+                <span className={`wf-apx-history-author is-${v.author}`}>
+                  {v.authorLabel}
+                </span>
+                <span className="wf-apx-history-kind">{v.kindLabel}</span>
+                <span className="wf-apx-history-when">{v.when}</span>
+              </button>
+              {v.note && <div className="wf-apx-history-note">{v.note}</div>}
+              {sel === i && (v.subject || v.body) && (
+                <div className="wf-apx-history-detail">
+                  {v.subject && (
+                    <div className="wf-apx-history-subject">{v.subject}</div>
+                  )}
+                  {v.diffable && prevBody(i) ? (
+                    <WordDiff prev={prevBody(i)} next={v.body} />
+                  ) : (
+                    v.body && (
+                      <div className="wf-apx-history-body">{v.body}</div>
+                    )
+                  )}
+                </div>
+              )}
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
+  );
+}
+
+// Word-level diff of two bodies: additions green, removals struck-through.
+function WordDiff({ prev, next }: { prev: string; next: string }) {
+  const parts = diffWords(prev, next);
+  return (
+    <div className="wf-apx-diff">
+      {parts.map((p, i) => {
+        // diff segments are positional + render-stable, so the index is a fine key
+        const key = `d${i}`;
+        if (p.added)
+          return (
+            <ins key={key} className="wf-apx-diff-add">
+              {p.value}
+            </ins>
+          );
+        if (p.removed)
+          return (
+            <del key={key} className="wf-apx-diff-del">
+              {p.value}
+            </del>
+          );
+        return <span key={key}>{p.value}</span>;
+      })}
+    </div>
+  );
+}
+
+// whatsapp / instagram drafts are sent by the owner from his phone: give him a
+// one-tap open link right in the detail (digits only for wa.me; a handle for ig).
+function manualSendHref(
+  channel: string,
+  to: string,
+  body: string,
+): { label: string; href: string } | null {
+  const ch = channel.toLowerCase();
+  if (ch === "whatsapp") {
+    const m = to.match(/wa\.me\/(\+?\d+)/i);
+    const digits = (m ? m[1] : to).replace(/\D/g, "");
+    if (!digits) return null;
+    return {
+      label: "open in whatsapp",
+      href: `https://wa.me/${digits}?text=${encodeURIComponent(body)}`,
+    };
+  }
+  if (ch === "instagram") {
+    const urlMatch = to.match(/instagram\.com\/([A-Za-z0-9._]+)/i);
+    const handle = urlMatch ? urlMatch[1] : to.trim().replace(/^@/, "");
+    if (!/^[A-Za-z0-9._]{2,30}$/.test(handle)) return null;
+    return { label: "open instagram", href: `https://instagram.com/${handle}` };
+  }
+  return null;
+}
 
 export function ApprovalsView({
   waiting,
@@ -48,6 +189,10 @@ export function ApprovalsView({
   approveAction,
   rejectAction,
   sendEditAction,
+  returnAction,
+  embedded = false,
+  history = {},
+  copyMeta = {},
 }: {
   waiting: ApprovalVM[];
   held: ApprovalVM[];
@@ -55,6 +200,13 @@ export function ApprovalsView({
   approveAction: Action;
   rejectAction: Action;
   sendEditAction: Action;
+  returnAction: Action;
+  // Rendered inside another page (e.g. the Hunter approvals tab): drop the big
+  // page title block and keep just the tabs, since the host already has a header.
+  embedded?: boolean;
+  // Draft-version chains + copy-request meta, keyed by approval id.
+  history?: Record<number, VersionVM[]>;
+  copyMeta?: Record<number, CopyMetaVM>;
 }) {
   const [tab, setTab] = useState<Tab>("waiting");
   const [selId, setSelId] = useState<number | null>(waiting[0]?.id ?? null);
@@ -107,15 +259,17 @@ export function ApprovalsView({
       : "nothing waiting. the agents are working inside their limits.";
 
   return (
-    <div className="wf-apx">
+    <div className={`wf-apx${embedded ? " is-embedded" : ""}`}>
       <header className="wf-apx-head">
-        <div>
-          <div className="wf-apx-eyebrow">approvals</div>
-          <h1 className="wf-apx-title">waiting for you</h1>
-          <p className="wf-apx-lede">
-            agents draft and prepare. you press send, merge, publish and pay.
-          </p>
-        </div>
+        {!embedded && (
+          <div>
+            <div className="wf-apx-eyebrow">approvals</div>
+            <h1 className="wf-apx-title">waiting for you</h1>
+            <p className="wf-apx-lede">
+              agents draft and prepare. you press send, merge, publish and pay.
+            </p>
+          </div>
+        )}
         <div className="wf-apx-tabs">
           {tabs.map(([k, label, count]) => (
             <button
@@ -194,13 +348,15 @@ export function ApprovalsView({
                     {sel.risk} risk
                   </span>
                 </div>
-                <div className="wf-apx-detail-action">{sel.action}</div>
+                <div className="wf-apx-detail-action">
+                  {sel.isQuestion ? "scribe asks" : sel.action}
+                </div>
                 <div className="wf-apx-detail-why">
                   why it needs you: {sel.reason}
                 </div>
               </div>
 
-              {sel.outbound && (
+              {sel.outbound && !sel.isQuestion && (
                 <dl className="wf-apx-meta">
                   <dt>channel</dt>
                   <dd>
@@ -218,6 +374,29 @@ export function ApprovalsView({
                     <>
                       <dt>context</dt>
                       <dd className="muted">{sel.context}</dd>
+                    </>
+                  )}
+                </dl>
+              )}
+
+              {sel.isQuestion && copyMeta[sel.id] && (
+                <dl className="wf-apx-meta">
+                  <dt>request</dt>
+                  <dd className="strong">{copyMeta[sel.id].company || "—"}</dd>
+                  {copyMeta[sel.id].kind && (
+                    <>
+                      <dt>kind</dt>
+                      <dd>{copyMeta[sel.id].kind}</dd>
+                    </>
+                  )}
+                  {copyMeta[sel.id].channel && (
+                    <>
+                      <dt>channel</dt>
+                      <dd>
+                        <span className="wf-apx-chip">
+                          {copyMeta[sel.id].channel}
+                        </span>
+                      </dd>
                     </>
                   )}
                 </dl>
@@ -241,99 +420,180 @@ export function ApprovalsView({
                 )}
               </div>
 
-              <div className="wf-apx-foot">
-                <input
-                  className="wf-apx-note"
-                  name="note"
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder={`note to ${sel.agentName.toLowerCase()} (optional) · e.g. softer opening`}
-                />
-                <div className="wf-apx-actions">
-                  {editing ? (
-                    <>
-                      <button
-                        type="submit"
-                        className="wf-apx-btn primary"
-                        formAction={sendEditAction}
-                      >
-                        {sel.outbound
-                          ? "send edited version"
-                          : "approve edited"}
-                      </button>
-                      <button
-                        type="button"
-                        className="wf-apx-btn ghost"
-                        onClick={() => setEditing(false)}
-                      >
-                        cancel edit
-                      </button>
-                    </>
-                  ) : sel.held ? (
-                    <>
-                      <button
-                        type="submit"
-                        className="wf-apx-btn primary"
-                        formAction={approveAction}
-                      >
-                        release
-                      </button>
-                      <button
-                        type="button"
-                        className="wf-apx-btn ghost"
-                        onClick={startEdit}
-                      >
-                        edit first
-                      </button>
-                    </>
-                  ) : sel.outbound ? (
-                    <>
-                      <button
-                        type="submit"
-                        className="wf-apx-btn primary"
-                        formAction={approveAction}
-                      >
-                        {sel.channel === "linkedin" ? "publish" : "send"}
-                      </button>
-                      <button
-                        type="button"
-                        className="wf-apx-btn ghost"
-                        onClick={startEdit}
-                      >
-                        edit &amp; send
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        type="submit"
-                        className="wf-apx-btn primary"
-                        formAction={approveAction}
-                      >
-                        approve
-                      </button>
-                      <button
-                        type="button"
-                        className="wf-apx-btn ghost"
-                        onClick={startEdit}
-                      >
-                        edit
-                      </button>
-                    </>
-                  )}
-                  <button
-                    type="submit"
-                    className="wf-apx-btn danger"
-                    formAction={rejectAction}
+              {(() => {
+                const ms =
+                  sel.outbound && !editing
+                    ? manualSendHref(sel.channel, sel.to, sel.body)
+                    : null;
+                return ms ? (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      flexWrap: "wrap",
+                      padding: "0 20px 4px",
+                    }}
                   >
-                    reject
-                  </button>
-                  <span className="wf-apx-hint">
-                    nothing leaves until you press it. the bridge acts within a
-                    minute.
-                  </span>
+                    <span className="wf-apx-hint">
+                      you send this one from your phone —
+                    </span>
+                    <a
+                      className="wf-apx-btn primary"
+                      href={ms.href}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                    >
+                      {ms.label}
+                    </a>
+                  </div>
+                ) : null;
+              })()}
+
+              {(history[sel.id]?.length ?? 0) > 0 && (
+                <div className="wf-apx-history-wrap">
+                  <HistoryPanel versions={history[sel.id]} />
                 </div>
-              </div>
+              )}
+
+              {sel.isQuestion ? (
+                <div className="wf-apx-foot">
+                  <textarea
+                    className="wf-apx-note"
+                    name="note"
+                    rows={3}
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="your answer — scribe uses it to continue the draft…"
+                  />
+                  <div className="wf-apx-actions">
+                    <button
+                      type="submit"
+                      className="wf-apx-btn primary"
+                      formAction={returnAction}
+                    >
+                      answer and continue
+                    </button>
+                    <button
+                      type="submit"
+                      className="wf-apx-btn danger"
+                      formAction={rejectAction}
+                    >
+                      drop this request
+                    </button>
+                    <span className="wf-apx-hint">
+                      your answer goes back to scribe; it continues the draft
+                      and re-raises it here.
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="wf-apx-foot">
+                  <textarea
+                    className="wf-apx-note"
+                    name="note"
+                    rows={3}
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder={`note to ${sel.agentName.toLowerCase()} (optional) · e.g. softer opening`}
+                  />
+                  <div className="wf-apx-actions">
+                    {editing ? (
+                      <>
+                        <button
+                          type="submit"
+                          className="wf-apx-btn primary"
+                          formAction={sendEditAction}
+                        >
+                          {sel.outbound
+                            ? "send edited version"
+                            : "approve edited"}
+                        </button>
+                        <button
+                          type="button"
+                          className="wf-apx-btn ghost"
+                          onClick={() => setEditing(false)}
+                        >
+                          cancel edit
+                        </button>
+                      </>
+                    ) : sel.held ? (
+                      <>
+                        <button
+                          type="submit"
+                          className="wf-apx-btn primary"
+                          formAction={approveAction}
+                        >
+                          release
+                        </button>
+                        <button
+                          type="button"
+                          className="wf-apx-btn ghost"
+                          onClick={startEdit}
+                        >
+                          edit first
+                        </button>
+                      </>
+                    ) : sel.outbound ? (
+                      <>
+                        <button
+                          type="submit"
+                          className="wf-apx-btn primary"
+                          formAction={approveAction}
+                        >
+                          {sel.channel === "linkedin" ? "publish" : "send"}
+                        </button>
+                        <button
+                          type="button"
+                          className="wf-apx-btn ghost"
+                          onClick={startEdit}
+                        >
+                          edit &amp; send
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          type="submit"
+                          className="wf-apx-btn primary"
+                          formAction={approveAction}
+                        >
+                          approve
+                        </button>
+                        <button
+                          type="button"
+                          className="wf-apx-btn ghost"
+                          onClick={startEdit}
+                        >
+                          edit
+                        </button>
+                      </>
+                    )}
+                    {!editing && sel.body.trim().length > 0 && (
+                      <button
+                        type="submit"
+                        className="wf-apx-btn ghost"
+                        formAction={returnAction}
+                        title="send the draft + your note to scribe to rewrite; the revised version returns here for approval"
+                      >
+                        send to scribe
+                      </button>
+                    )}
+                    <button
+                      type="submit"
+                      className="wf-apx-btn danger"
+                      formAction={rejectAction}
+                    >
+                      reject
+                    </button>
+                    <span className="wf-apx-hint">
+                      {sel.body.trim().length > 0
+                        ? "send to scribe puts your note + this draft back to scribe; the rewrite returns here. reject just closes it."
+                        : "nothing leaves until you press it. the bridge acts within a minute."}
+                    </span>
+                  </div>
+                </div>
+              )}
             </form>
           )}
         </div>
@@ -355,12 +615,25 @@ export function ApprovalsView({
                   <span>{d.emoji}</span>
                   <span className="strong">{d.agentName}</span>
                 </span>
-                <span className="wf-apx-decided-action">{d.action}</span>
+                <span className="wf-apx-decided-action">
+                  {d.action}
+                  {d.versions > 1 && (
+                    <span className="wf-apx-versions-tag">
+                      {d.versions} versions
+                    </span>
+                  )}
+                </span>
                 <span>
                   <span
-                    className={`wf-apx-decision${d.bad ? " is-bad" : " is-good"}`}
+                    className={`wf-apx-decision${
+                      d.bad
+                        ? " is-bad"
+                        : d.status === "returned"
+                          ? " is-info"
+                          : " is-good"
+                    }`}
                   >
-                    {d.status}
+                    {d.status === "returned" ? "sent to scribe" : d.status}
                   </span>
                 </span>
               </div>

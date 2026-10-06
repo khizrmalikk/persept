@@ -35,6 +35,7 @@ import "../../mobile-chat.css";
 import { CallPanel } from "../../_components/CallPanel";
 import { type ChatMessage, ChatPane } from "../../_components/ChatPane";
 import { HunterHeader, type HunterStats } from "../../_components/HunterHeader";
+import { ManualSend } from "../../_components/ManualSend";
 import { type ChatChip, MobileChat } from "../../_components/MobileChat";
 import { AgentPanels } from "../../_components/panels/AgentPanels";
 import { dueState } from "../../_components/panels/dates";
@@ -55,6 +56,7 @@ export default async function AgentPage({
     { data: roster },
     workerRows,
     { data: allPending },
+    { data: warningRows },
   ] = await Promise.all([
     db.from("agents").select("*").eq("id", id).maybeSingle(),
     db
@@ -79,7 +81,15 @@ export default async function AgentPage({
     db.from("agents").select("*").order("id"),
     getActiveSubagents(),
     db.from("approvals").select("agent_id").eq("status", "pending"),
+    db
+      .from("events")
+      .select("*")
+      .eq("agent_id", id)
+      .eq("kind", "warning")
+      .order("ts", { ascending: false })
+      .limit(10),
   ]);
+  const warnings = (warningRows as WfEvent[] | null) ?? [];
 
   // ── mobile chat chip roster: every agent + its status (shared by all branches) ──
   const liveById = new Map(
@@ -229,7 +239,7 @@ export default async function AgentPage({
       <>
         {mchat}
         <div className="wf-only-desktop">
-          {await buildHunterChat(a, agentName, chat)}
+          {await buildHunterChat(a, agentName, chat, warnings)}
         </div>
       </>
     );
@@ -313,6 +323,7 @@ export default async function AgentPage({
             </section>
 
             <aside className="wf-ag-rail" aria-label="approvals and workers">
+              <AgentWarnings warnings={warnings} />
               <div className="wf-ag-card">
                 <div className="wf-ag-card-title">waiting for you</div>
                 {pendingList.length ? (
@@ -444,6 +455,42 @@ export default async function AgentPage({
   );
 }
 
+// `events.kind = 'warning'` rows — a small amber dot and the summary, nothing
+// else. Rendered on the agent's page (and mirrored in the activity feed).
+function AgentWarnings({ warnings }: { warnings: WfEvent[] }) {
+  if (!warnings.length) return null;
+  return (
+    <div className="wf-ag-card">
+      <div className="wf-ag-card-title">warnings</div>
+      {warnings.map((w) => (
+        <div
+          key={w.id}
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 8,
+            padding: "6px 0",
+            fontSize: 13,
+            lineHeight: 1.45,
+          }}
+        >
+          <span
+            style={{
+              flex: "0 0 auto",
+              width: 7,
+              height: 7,
+              marginTop: 5,
+              borderRadius: "50%",
+              background: "var(--accent)",
+            }}
+          />
+          <span>{w.summary ?? "warning"}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // per-agent tagline for the identity header (from the design)
 const TAGLINES: Record<string, string> = {
   chief:
@@ -549,6 +596,7 @@ async function buildHunterChat(
   _a: Agent,
   _agentName: string,
   chat: React.ReactNode,
+  warnings: WfEvent[] = [],
 ) {
   const [messages, handoffsOpen, prospectsFile, apRes, leads, workerRows] =
     await Promise.all([
@@ -568,6 +616,13 @@ async function buildHunterChat(
   const rows = parseMarkdownTable(prospectsFile?.content).rows as ProspectRow[];
   const approvals = (apRes.data as Approval[] | null) ?? [];
   const threads = groupThreads(messages);
+  // approved-manual whatsapp / instagram messages the owner still sends himself
+  const manualSends = messages.filter(
+    (m) =>
+      m.direction === "out" &&
+      m.status === "approved_manual" &&
+      ["whatsapp", "instagram"].includes((m.channel ?? "").toLowerCase()),
+  );
   const replied = threads.filter((t) =>
     t.messages.some((m) => m.direction === "in"),
   ).length;
@@ -715,6 +770,36 @@ async function buildHunterChat(
 
         {/* right flank: approvals · workers · conversations · new leads */}
         <section className="wf-hn-flank">
+          {warnings.length > 0 && (
+            <div className="wf-hn-panel">
+              <div className="wf-hn-panel-title">warnings</div>
+              {warnings.map((w) => (
+                <div
+                  key={w.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 8,
+                    padding: "6px 0",
+                    fontSize: 13,
+                    lineHeight: 1.45,
+                  }}
+                >
+                  <span
+                    style={{
+                      flex: "0 0 auto",
+                      width: 7,
+                      height: 7,
+                      marginTop: 5,
+                      borderRadius: "50%",
+                      background: "var(--accent)",
+                    }}
+                  />
+                  <span>{w.summary ?? "warning"}</span>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="wf-hn-panel">
             <div className="wf-hn-panel-head">
               <span className="wf-hn-panel-title">
@@ -791,6 +876,38 @@ async function buildHunterChat(
               ))
             )}
           </div>
+
+          {manualSends.length > 0 && (
+            <div className="wf-hn-panel">
+              <div className="wf-hn-panel-head">
+                <span className="wf-hn-panel-title">
+                  to send from your phone
+                </span>
+                <span className="wf-hn-note">{manualSends.length}</span>
+              </div>
+              {manualSends.slice(0, 5).map((m) => (
+                <div key={m.id} className="wf-hn-mini">
+                  <div className="wf-hn-mini-tags">
+                    <span className="wf-chip-mono">{m.channel}</span>
+                  </div>
+                  <div className="wf-hn-mini-to">
+                    {m.company || m.contact || "outbound"}
+                  </div>
+                  <div className="wf-hn-thread-last">
+                    {(m.body ?? "").split("\n")[0]}
+                  </div>
+                  <ManualSend
+                    messageId={m.id}
+                    agentId="hunter"
+                    company={m.company ?? ""}
+                    channel={m.channel ?? ""}
+                    contact={m.contact ?? ""}
+                    body={m.body ?? ""}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="wf-hn-panel">
             <div className="wf-hn-panel-head">

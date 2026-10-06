@@ -30,6 +30,12 @@ const NAV = [
     glyph: "◔",
     href: "/dashboard/insights",
   },
+  {
+    key: "knowledge",
+    label: "knowledge",
+    glyph: "▤",
+    href: "/dashboard/knowledge",
+  },
 ];
 
 function gst(now: Date): string {

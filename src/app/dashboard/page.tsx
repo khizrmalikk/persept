@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { approveFromForm, rejectFromForm } from "@/lib/workforce/actions";
 import { getOpenBacklog, parseHealth } from "@/lib/workforce/backlog";
 import { getAgentFile } from "@/lib/workforce/files";
+import { getOpenIdeaCount } from "@/lib/workforce/ideas";
 import { getHealth } from "@/lib/workforce/metrics";
 import { getHandoffs, parseOutbound } from "@/lib/workforce/outreach";
 import { agentColor, ROSTER, rosterById } from "@/lib/workforce/roster";
@@ -84,6 +85,7 @@ export default async function Office() {
     handoffs,
     openBacklog,
     chiefState,
+    openIdeaCount,
   ] = await Promise.all([
     db.from("agents").select("*").order("id"),
     db
@@ -102,6 +104,7 @@ export default async function Office() {
     getHandoffs("hunter", ["open"]),
     getOpenBacklog(),
     getAgentFile("chief", "STATE.md"),
+    getOpenIdeaCount(),
   ]);
 
   const dbAgents = (agentRows as Agent[] | null) ?? [];
@@ -425,6 +428,15 @@ export default async function Office() {
               <div className="of-eyebrow">office · {dateLine}</div>
               <h1 className="of-h1">good {partOfDay}, khizr</h1>
               <p className="of-sum">{summaryLine}</p>
+              {openIdeaCount > 0 && (
+                <Link
+                  href="/dashboard/agents/chief#wf-ideas"
+                  className="of-ideas-line"
+                >
+                  {openIdeaCount} idea{openIdeaCount === 1 ? "" : "s"} waiting
+                  for chief →
+                </Link>
+              )}
             </div>
           </div>
           <div className="of-stats">
