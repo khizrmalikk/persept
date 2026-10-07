@@ -5,6 +5,7 @@ import { ExpandableText } from "@/app/dashboard/_components/ExpandableText";
 import { HunterCandidatesPanel } from "@/app/dashboard/_components/HunterCandidatesPanel";
 import { HunterHeader } from "@/app/dashboard/_components/HunterHeader";
 import { dueState } from "@/app/dashboard/_components/panels/dates";
+import { setCampaignStatus } from "@/lib/workforce/actions";
 import { getAgentFile, parseMarkdownTable } from "@/lib/workforce/files";
 import {
   getCampaign,
@@ -135,6 +136,19 @@ export default async function CampaignViewPage({
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {campaign.status !== "archived" && (
+            <form action={setCampaignStatus}>
+              <input type="hidden" name="id" value={campaign.id} />
+              <input
+                type="hidden"
+                name="status"
+                value={campaign.status === "active" ? "paused" : "active"}
+              />
+              <button type="submit" className="wf-hn-btn ghost">
+                {campaign.status === "active" ? "pause" : "activate"}
+              </button>
+            </form>
+          )}
           <Link href={`./${id}/edit`} className="wf-hn-btn ghost">
             edit
           </Link>

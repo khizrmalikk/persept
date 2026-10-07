@@ -583,3 +583,136 @@
   color: var(--ink-faint);
   white-space: nowrap;
 }
+
+/* ── Multi-select + bulk actions + send-back recipients ─────────────────── */
+.wf .wf-apx-listbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 2px 4px;
+}
+.wf .wf-apx-selall {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-mut);
+}
+.wf .wf-apx-selall input,
+.wf .wf-apx-check {
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  flex: none;
+}
+.wf .wf-apx-selclear {
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: none;
+  border: 0;
+  color: var(--ink-faint);
+  cursor: pointer;
+}
+.wf .wf-apx-selclear:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+.wf .wf-apx-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.wf .wf-apx-row .wf-apx-card {
+  flex: 1;
+  min-width: 0;
+}
+.wf .wf-apx-check {
+  margin-top: 16px;
+}
+.wf .wf-apx-row.is-picked .wf-apx-card {
+  border-color: var(--accent);
+  background: var(--surface-2);
+}
+
+/* the floating bulk action bar (shown when ≥1 item is selected) */
+.wf .wf-apx-bulkbar {
+  position: sticky;
+  bottom: 12px;
+  z-index: 5;
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+.wf .wf-apx-bulk-count {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.wf .wf-apx-bulk-note {
+  flex: 1 1 200px;
+  min-width: 160px;
+  min-height: 40px;
+  resize: vertical;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 11px;
+}
+.wf .wf-apx-bulk-note::placeholder {
+  color: var(--ink-faint);
+}
+.wf .wf-apx-bulk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-left: auto;
+}
+
+/* send-to recipient chips (shared by a single approval and the bulk bar) */
+.wf .wf-apx-recips {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.wf .wf-apx-recips-lbl {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.wf .wf-apx-recip {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 13px;
+  border-radius: 999px;
+  cursor: pointer;
+  color: var(--ink-mut);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.wf .wf-apx-recip.is-on {
+  background: var(--accent);
+  color: var(--accent-ink-on);
+  border-color: var(--accent);
+}

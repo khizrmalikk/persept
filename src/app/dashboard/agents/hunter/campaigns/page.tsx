@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { DeleteCampaignButton } from "@/app/dashboard/_components/DeleteCampaignButton";
 import { HunterHeader } from "@/app/dashboard/_components/HunterHeader";
+import { setCampaignStatus } from "@/lib/workforce/actions";
 import { getAgentFile, parseMarkdownTable } from "@/lib/workforce/files";
 import {
   type Campaign,
@@ -116,6 +117,28 @@ export default async function CampaignsPage() {
                   <span className="wf-hn-stpill" style={stPill(c.status)}>
                     {c.status}
                   </span>
+                  {c.status !== "archived" && (
+                    <form action={setCampaignStatus}>
+                      <input type="hidden" name="id" value={c.id} />
+                      <input
+                        type="hidden"
+                        name="status"
+                        value={c.status === "active" ? "paused" : "active"}
+                      />
+                      <button
+                        type="submit"
+                        className="wf-hn-editbtn"
+                        title={
+                          c.status === "active"
+                            ? "pause campaign"
+                            : "activate campaign"
+                        }
+                        style={{ display: "grid", placeItems: "center" }}
+                      >
+                        {c.status === "active" ? "⏸" : "▶"}
+                      </button>
+                    </form>
+                  )}
                   <Link
                     href={`./campaigns/${c.id}/edit`}
                     title="edit"
