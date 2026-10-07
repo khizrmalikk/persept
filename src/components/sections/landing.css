@@ -2429,3 +2429,17 @@
     top: 12px;
   }
 }
+
+/* ── Legal pages (privacy / terms) — small additions on the trust layout ─── */
+.pl-legal-meta {
+  margin-top: 24px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--mut2);
+}
+.pl-trust-p strong,
+.pl-trust-list li strong {
+  color: var(--tx);
+  font-weight: 600;
+}
