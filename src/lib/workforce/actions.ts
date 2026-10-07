@@ -72,26 +72,29 @@ export async function sendAgentCommandFromForm(fd: FormData) {
 // own action via `formAction`, so it is decided by WHICH button submitted, never
 // inferred from a submit-button value (that was fragile with two same-named
 // submitters and silently defaulted to "reject", so approvals recorded as rejects).
-async function decide(fd: FormData, decision: "approve" | "reject") {
-  await guard();
-  const id = Number(fd.get("id"));
-  const agentId = String(fd.get("agent") ?? "chief");
-  const note = String(fd.get("note") ?? "").trim() || null;
-  if (!id) return;
-  const db = supabaseAdmin();
+type DbClient = ReturnType<typeof supabaseAdmin>;
 
-  // On approve, read the approval's action first: a "send proposal to <company>"
-  // approval flips the matching proposal to `approved` (the only proposals write
-  // the dashboard makes besides status/view fields).
-  let action = "";
-  if (decision === "approve") {
-    const { data: ap } = await db
-      .from("approvals")
-      .select("action")
-      .eq("id", id)
-      .maybeSingle();
-    action = String((ap as { action?: string } | null)?.action ?? "");
-  }
+// Core approve/reject for ONE approval, reusable by the single-item forms and by
+// bulkApprovals. Reads the approval row for its owning agent + action text (so
+// callers don't have to pass them), inserts the decision `action`, flips the
+// approval status, and — on approving a "send proposal to <company>" — flips the
+// matching proposal to `approved`. Returns the owning agent id for revalidation.
+async function decideOne(
+  db: DbClient,
+  id: number,
+  decision: "approve" | "reject",
+  note: string | null,
+  agentHint?: string,
+): Promise<string> {
+  const { data: ap } = await db
+    .from("approvals")
+    .select("action, agent_id")
+    .eq("id", id)
+    .maybeSingle();
+  const row = ap as { action?: string | null; agent_id?: string | null } | null;
+  const action = String(row?.action ?? "");
+  const agentId =
+    (agentHint || "").trim() || (row?.agent_id ?? "").trim() || "chief";
 
   await db
     .from("actions")
@@ -124,13 +127,24 @@ async function decide(fd: FormData, decision: "approve" | "reject") {
           .from("proposals")
           .update({ status: "approved" })
           .eq("id", match.id);
-        revalidatePath("/dashboard/agents/scribe");
       }
     }
   }
+  return agentId;
+}
+
+async function decide(fd: FormData, decision: "approve" | "reject") {
+  await guard();
+  const id = Number(fd.get("id"));
+  const agentHint = String(fd.get("agent") ?? "");
+  const note = String(fd.get("note") ?? "").trim() || null;
+  if (!id) return;
+  const db = supabaseAdmin();
+  const agentId = await decideOne(db, id, decision, note, agentHint);
 
   revalidatePath("/dashboard/approvals");
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/agents/scribe");
   revalidatePath(`/dashboard/agents/${agentId}`);
 }
 
@@ -310,6 +324,27 @@ export async function deleteCampaign(id: string): Promise<void> {
   redirect("/dashboard/agents/hunter/campaigns");
 }
 
+// Turn a campaign on or off without deleting it. Dashboard-owned write (like
+// saveCampaign): flips `status` between active and paused (archived stays reachable
+// via the editor). The bridge mirrors the new status into the agent's workspace
+// within a minute, pausing/resuming its runs. Stays on the current page.
+export async function setCampaignStatus(fd: FormData): Promise<void> {
+  await guard();
+  const id = String(fd.get("id") ?? "").trim();
+  const statusRaw = String(fd.get("status") ?? "");
+  const status = ["active", "paused", "archived"].includes(statusRaw)
+    ? statusRaw
+    : "paused";
+  if (!id) return;
+  await supabaseAdmin()
+    .from("campaigns")
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  revalidatePath("/dashboard/agents/hunter");
+  revalidatePath("/dashboard/agents/hunter/campaigns");
+  revalidatePath(`/dashboard/agents/hunter/campaigns/${id}`);
+}
+
 // Stream a campaign asset into the public `campaign-assets` bucket and return its
 // public URL. The client adds {title,type,use,url} to the campaign's assets list
 // and saves via saveCampaign. Create the bucket once from the Supabase dashboard.
@@ -391,28 +426,27 @@ export async function sendApprovedEdit(fd: FormData): Promise<void> {
   revalidatePath(`/dashboard/agents/${agentId}`);
 }
 
-// "send back to scribe": the owner wants the draft rewritten with his notes, then
-// returned to the inbox for approval. We hand Scribe the current draft + notes as a
-// `message` action (Scribe rewrites and re-raises a fresh approval for the owning
-// agent), and mark THIS approval `returned` so it leaves the queue and shows in the
-// decided tab as a record that it was sent back. The revised draft arrives as a new
-// pending approval when Scribe is done.
-export async function returnApprovalToScribe(fd: FormData): Promise<void> {
-  await guard();
-  const id = Number(fd.get("id"));
-  const note = String(fd.get("note") ?? "").trim();
-  if (!id) return;
-  const db = supabaseAdmin();
+// "send back": the owner returns an approval to one or both of the agents that can
+// act on it — Scribe (rewrite the draft) and/or Hunter (act on the prospect, e.g.
+// move it in the CRM). Each selected agent gets a tailored `message` directive; the
+// approval is marked `returned` so it leaves the queue and shows in the decided tab.
+// Scribe's revised draft arrives as a fresh pending approval when it is done.
+const RETURN_AGENTS = ["scribe", "hunter"] as const;
+type ReturnAgent = (typeof RETURN_AGENTS)[number];
+
+async function returnOne(
+  db: DbClient,
+  id: number,
+  recipients: string[],
+  note: string,
+): Promise<string> {
   const { data } = await db
     .from("approvals")
     .select("*")
     .eq("id", id)
     .maybeSingle();
-  const ap = data as {
-    agent_id?: string | null;
-    draft?: string | null;
-  } | null;
-  if (!ap) return;
+  const ap = data as { agent_id?: string | null; draft?: string | null } | null;
+  if (!ap) return "hunter";
 
   const forAgent = (ap.agent_id ?? "hunter").trim() || "hunter";
   const ob = parseOutbound(ap.draft);
@@ -426,39 +460,133 @@ export async function returnApprovalToScribe(fd: FormData): Promise<void> {
     .join(", ");
   const body = (ob ? ob.body : (ap.draft ?? "")).trim();
 
-  // A directive, unambiguous revise request. The point is that Scribe APPLIES the
-  // owner's note and re-raises the fixed draft — not that it asks the owner
-  // clarifying questions. Keep the same approval (#id) and owning agent.
-  const parts: string[] = [
-    `the owner reviewed approval #${id} and wants it revised. apply the note below to the draft — change exactly what it asks and leave the rest.`,
-    "",
-    "owner's note:",
-    note || "(no note — tighten the writing and fix any grammar.)",
-    "",
-  ];
-  if (meta) parts.push(`draft meta: ${meta}`);
-  parts.push(
-    "current draft:",
-    body,
-    "",
-    `make the edit now and re-raise the revised draft as a new approval for ${forAgent} (this replaces approval #${id}). do not reply with questions — apply the note and re-raise. if the note is genuinely impossible, raise the approval anyway with a one-line reason.`,
-  );
-  const text = parts.join("\n");
-  await sendAgentCommand("scribe", text);
+  // keep only known recipients; default to scribe (the old behaviour) if none given
+  const recips = RETURN_AGENTS.filter((a) =>
+    recipients.includes(a),
+  ) as ReturnAgent[];
+  if (recips.length === 0) recips.push("scribe");
+
+  if (recips.includes("scribe")) {
+    // Directive, unambiguous revise request: Scribe APPLIES the note and re-raises
+    // the fixed draft (it does not ask clarifying questions). Same approval + owner.
+    const parts: string[] = [
+      `the owner reviewed approval #${id} and wants it revised. apply the note below to the draft — change exactly what it asks and leave the rest.`,
+      "",
+      "owner's note:",
+      note || "(no note — tighten the writing and fix any grammar.)",
+      "",
+    ];
+    if (meta) parts.push(`draft meta: ${meta}`);
+    parts.push(
+      "current draft:",
+      body,
+      "",
+      `make the edit now and re-raise the revised draft as a new approval for ${forAgent} (this replaces approval #${id}). do not reply with questions — apply the note and re-raise. if the note is genuinely impossible, raise the approval anyway with a one-line reason.`,
+    );
+    await sendAgentCommand("scribe", parts.join("\n"));
+  }
+
+  if (recips.includes("hunter")) {
+    // Hunter acts on the pipeline/CRM per the note (move the prospect, update stage,
+    // re-qualify). Not a rewrite — do the thing the note asks, then confirm.
+    const parts: string[] = [
+      `the owner reviewed approval #${id} and needs you to act on it in the pipeline. do exactly what the note below asks — for example move the prospect to a different stage, re-qualify it, or update its details in the CRM.`,
+      "",
+      "owner's note:",
+      note ||
+        "(no note — re-check this prospect and move it to the right stage.)",
+      "",
+    ];
+    if (meta) parts.push(`context: ${meta}`);
+    if (body) parts.push("the draft this relates to:", body, "");
+    parts.push(
+      "make the change now and confirm what you did in one line. do not send anything outbound — that still waits for the owner.",
+    );
+    await sendAgentCommand("hunter", parts.join("\n"));
+  }
 
   await db
     .from("approvals")
     .update({
       status: "returned",
-      decision_note: note || "sent back to scribe",
+      decision_note: note || `sent back to ${recips.join(" & ")}`,
       decided_at: new Date().toISOString(),
     })
     .eq("id", id);
+
+  return forAgent;
+}
+
+export async function returnApproval(fd: FormData): Promise<void> {
+  await guard();
+  const id = Number(fd.get("id"));
+  const recipients = fd.getAll("recipients").map(String);
+  const note = String(fd.get("note") ?? "").trim();
+  if (!id) return;
+  const db = supabaseAdmin();
+  const forAgent = await returnOne(db, id, recipients, note);
 
   revalidatePath("/dashboard/approvals");
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/agents/${forAgent}`);
   revalidatePath("/dashboard/agents/scribe");
+  revalidatePath("/dashboard/agents/hunter");
+}
+
+// Back-compat: the old single-destination entry point (always Scribe).
+export async function returnApprovalToScribe(fd: FormData): Promise<void> {
+  await guard();
+  const id = Number(fd.get("id"));
+  const note = String(fd.get("note") ?? "").trim();
+  if (!id) return;
+  const db = supabaseAdmin();
+  const forAgent = await returnOne(db, id, ["scribe"], note);
+  revalidatePath("/dashboard/approvals");
+  revalidatePath("/dashboard");
+  revalidatePath(`/dashboard/agents/${forAgent}`);
+  revalidatePath("/dashboard/agents/scribe");
+}
+
+// Bulk actions over many selected approvals. `op` is one of approve | reject |
+// hold | unhold | return. hold/unhold just move the queue state (pending ⇄ held)
+// without deciding; the bridge only sends on an explicit approve, so parking an
+// item as held simply defers it and un-holding returns it to the waiting queue.
+export async function bulkApprovals(fd: FormData): Promise<void> {
+  await guard();
+  const ids = fd
+    .getAll("ids")
+    .map((v) => Number(v))
+    .filter((n) => Number.isFinite(n) && n > 0);
+  const op = String(fd.get("op") ?? "");
+  const note = String(fd.get("note") ?? "").trim();
+  const recipients = fd.getAll("recipients").map(String);
+  if (!ids.length) return;
+  const db = supabaseAdmin();
+
+  for (const id of ids) {
+    if (op === "approve" || op === "reject") {
+      await decideOne(db, id, op, note || null);
+    } else if (op === "return") {
+      await returnOne(db, id, recipients, note);
+    } else if (op === "hold") {
+      await db
+        .from("approvals")
+        .update({ status: "held" })
+        .eq("id", id)
+        .eq("status", "pending");
+    } else if (op === "unhold") {
+      await db
+        .from("approvals")
+        .update({ status: "pending" })
+        .eq("id", id)
+        .eq("status", "held");
+    }
+  }
+
+  revalidatePath("/dashboard/approvals");
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/agents/scribe");
+  revalidatePath("/dashboard/agents/hunter");
 }
 
 // ── Manual-channel sends (whatsapp / instagram) ───────────────────────────────

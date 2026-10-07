@@ -2,8 +2,9 @@ import { HunterHeader } from "@/app/dashboard/_components/HunterHeader";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import {
   approveFromForm,
+  bulkApprovals,
   rejectFromForm,
-  returnApprovalToScribe,
+  returnApproval,
   sendApprovedEdit,
 } from "@/lib/workforce/actions";
 import { getApprovalChains } from "@/lib/workforce/drafts";
@@ -84,7 +85,8 @@ export default async function HunterApprovalsPage() {
         approveAction={approveFromForm}
         rejectAction={rejectFromForm}
         sendEditAction={sendApprovedEdit}
-        returnAction={returnApprovalToScribe}
+        returnAction={returnApproval}
+        bulkAction={bulkApprovals}
         history={history}
         copyMeta={copyMeta}
       />

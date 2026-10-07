@@ -182,6 +182,38 @@ function manualSendHref(
   return null;
 }
 
+// recipient picker for "send back": scribe rewrites the draft, hunter acts on the
+// prospect/CRM. Renders toggle chips plus the hidden <input name="recipients"> the
+// server action reads. Used both on a single approval and in the bulk bar.
+type Recip = { scribe: boolean; hunter: boolean };
+function RecipientChips({
+  value,
+  onChange,
+}: {
+  value: Recip;
+  onChange: (v: Recip) => void;
+}) {
+  const chip = (key: keyof Recip, label: string) => (
+    <button
+      type="button"
+      className={`wf-apx-recip${value[key] ? " is-on" : ""}`}
+      aria-pressed={value[key]}
+      onClick={() => onChange({ ...value, [key]: !value[key] })}
+    >
+      {label}
+    </button>
+  );
+  return (
+    <span className="wf-apx-recips">
+      <span className="wf-apx-recips-lbl">send to</span>
+      {chip("scribe", "scribe")}
+      {chip("hunter", "hunter")}
+      {value.scribe && <input type="hidden" name="recipients" value="scribe" />}
+      {value.hunter && <input type="hidden" name="recipients" value="hunter" />}
+    </span>
+  );
+}
+
 export function ApprovalsView({
   waiting,
   held,
@@ -190,6 +222,7 @@ export function ApprovalsView({
   rejectAction,
   sendEditAction,
   returnAction,
+  bulkAction,
   embedded = false,
   history = {},
   copyMeta = {},
@@ -201,6 +234,7 @@ export function ApprovalsView({
   rejectAction: Action;
   sendEditAction: Action;
   returnAction: Action;
+  bulkAction: Action;
   // Rendered inside another page (e.g. the Hunter approvals tab): drop the big
   // page title block and keep just the tabs, since the host already has a header.
   embedded?: boolean;
@@ -213,6 +247,14 @@ export function ApprovalsView({
   const [editing, setEditing] = useState(false);
   const [note, setNote] = useState("");
   const [draft, setDraft] = useState("");
+  // bulk multi-select + its note/recipients; per-approval send-back recipients.
+  const [picked, setPicked] = useState<Set<number>>(new Set());
+  const [bulkNote, setBulkNote] = useState("");
+  const [bulkRecip, setBulkRecip] = useState<Recip>({
+    scribe: true,
+    hunter: false,
+  });
+  const [recip, setRecip] = useState<Recip>({ scribe: true, hunter: false });
 
   // reset edit state whenever the pending set changes (i.e. after a decision)
   const listKey = `${waiting.map((x) => x.id).join(",")}|${held
@@ -223,6 +265,9 @@ export function ApprovalsView({
     setEditing(false);
     setNote("");
     setDraft("");
+    setPicked(new Set());
+    setBulkNote("");
+    setRecip({ scribe: true, hunter: false });
   }, [listKey]);
 
   const list = tab === "held" ? held : waiting;
@@ -233,6 +278,8 @@ export function ApprovalsView({
     setEditing(false);
     setNote("");
     setDraft("");
+    setPicked(new Set());
+    setBulkNote("");
     if (t !== "decided")
       setSelId((t === "held" ? held : waiting)[0]?.id ?? null);
   };
@@ -241,7 +288,19 @@ export function ApprovalsView({
     setEditing(false);
     setNote("");
     setDraft("");
+    setRecip({ scribe: true, hunter: false });
   };
+  const togglePick = (id: number) =>
+    setPicked((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const allPicked = list.length > 0 && list.every((x) => picked.has(x.id));
+  const toggleAll = () =>
+    setPicked(allPicked ? new Set() : new Set(list.map((x) => x.id)));
+  const pickedIds = list.filter((x) => picked.has(x.id)).map((x) => x.id);
   const startEdit = () => {
     if (sel) setDraft(sel.body);
     setEditing(true);
@@ -285,318 +344,444 @@ export function ApprovalsView({
       </header>
 
       {tab !== "decided" ? (
-        <div className="wf-apx-body">
-          <div className="wf-apx-list">
-            {list.length === 0 ? (
-              <div className="wf-apx-empty">{emptyText}</div>
-            ) : (
-              list.map((q) => {
-                const active = sel?.id === q.id;
-                return (
-                  <button
-                    key={q.id}
-                    type="button"
-                    className={`wf-apx-card${active ? " is-sel" : ""}`}
-                    onClick={() => select(q.id)}
-                    style={active ? { borderColor: q.selBorder } : undefined}
-                  >
-                    <span className="wf-apx-card-top">
-                      <span
-                        className="wf-apx-tile sm"
-                        style={{ background: q.tint }}
-                      >
-                        {q.emoji}
-                      </span>
-                      <span className="wf-apx-card-name">{q.agentName}</span>
-                      <span className="wf-apx-card-ch">{q.channel}</span>
-                      <span className="wf-apx-card-when">{q.when}</span>
-                    </span>
-                    <span className="wf-apx-card-action">{q.action}</span>
-                    <span className="wf-apx-card-pills">
-                      <span className={`wf-apx-risk is-${q.risk}`}>
-                        {q.risk} risk
-                      </span>
-                      {q.held && <span className="wf-apx-held">held</span>}
-                    </span>
-                  </button>
-                );
-              })
-            )}
-          </div>
-
-          {sel && (
-            <form className="wf-apx-detail" action={approveAction} key={sel.id}>
-              <input type="hidden" name="id" value={sel.id} />
-              <input type="hidden" name="agent" value={sel.agentId} />
-
-              <div
-                className="wf-apx-detail-head"
-                style={{
-                  background: `linear-gradient(180deg, ${sel.tintHead}, transparent)`,
-                }}
-              >
-                <div className="wf-apx-detail-id">
-                  <span
-                    className="wf-apx-tile"
-                    style={{ background: sel.tint }}
-                  >
-                    {sel.emoji}
-                  </span>
-                  <span className="wf-apx-detail-name">{sel.agentName}</span>
-                  <span className="wf-apx-detail-when">drafted {sel.when}</span>
-                  <span className={`wf-apx-risk lg is-${sel.risk}`}>
-                    {sel.risk} risk
-                  </span>
-                </div>
-                <div className="wf-apx-detail-action">
-                  {sel.isQuestion ? "scribe asks" : sel.action}
-                </div>
-                <div className="wf-apx-detail-why">
-                  why it needs you: {sel.reason}
-                </div>
-              </div>
-
-              {sel.outbound && !sel.isQuestion && (
-                <dl className="wf-apx-meta">
-                  <dt>channel</dt>
-                  <dd>
-                    <span className="wf-apx-chip">{sel.channel}</span>
-                  </dd>
-                  <dt>to</dt>
-                  <dd>{sel.to}</dd>
-                  {sel.subject && (
-                    <>
-                      <dt>subject</dt>
-                      <dd className="strong">{sel.subject}</dd>
-                    </>
-                  )}
-                  {sel.context && (
-                    <>
-                      <dt>context</dt>
-                      <dd className="muted">{sel.context}</dd>
-                    </>
-                  )}
-                </dl>
-              )}
-
-              {sel.isQuestion && copyMeta[sel.id] && (
-                <dl className="wf-apx-meta">
-                  <dt>request</dt>
-                  <dd className="strong">{copyMeta[sel.id].company || "—"}</dd>
-                  {copyMeta[sel.id].kind && (
-                    <>
-                      <dt>kind</dt>
-                      <dd>{copyMeta[sel.id].kind}</dd>
-                    </>
-                  )}
-                  {copyMeta[sel.id].channel && (
-                    <>
-                      <dt>channel</dt>
-                      <dd>
-                        <span className="wf-apx-chip">
-                          {copyMeta[sel.id].channel}
-                        </span>
-                      </dd>
-                    </>
-                  )}
-                </dl>
-              )}
-
-              <div className="wf-apx-doc-wrap">
-                {editing ? (
-                  <div className="wf-apx-editing">
-                    <div className="wf-apx-editing-label">
-                      editing · your version is what gets sent
-                    </div>
-                    <textarea
-                      name="text"
-                      className="wf-apx-textarea"
-                      value={draft}
-                      onChange={(e) => setDraft(e.target.value)}
+        <>
+          <div className="wf-apx-body">
+            <div className="wf-apx-list">
+              {list.length > 0 && (
+                <div className="wf-apx-listbar">
+                  <label className="wf-apx-selall">
+                    <input
+                      type="checkbox"
+                      checked={allPicked}
+                      onChange={toggleAll}
                     />
-                  </div>
-                ) : (
-                  <div className="wf-apx-doc">{sel.body}</div>
-                )}
-              </div>
-
-              {(() => {
-                const ms =
-                  sel.outbound && !editing
-                    ? manualSendHref(sel.channel, sel.to, sel.body)
-                    : null;
-                return ms ? (
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 10,
-                      flexWrap: "wrap",
-                      padding: "0 20px 4px",
-                    }}
-                  >
-                    <span className="wf-apx-hint">
-                      you send this one from your phone —
+                    <span>
+                      {pickedIds.length > 0
+                        ? `${pickedIds.length} selected`
+                        : "select all"}
                     </span>
-                    <a
-                      className="wf-apx-btn primary"
-                      href={ms.href}
-                      target="_blank"
-                      rel="noreferrer noopener"
+                  </label>
+                  {pickedIds.length > 0 && (
+                    <button
+                      type="button"
+                      className="wf-apx-selclear"
+                      onClick={() => setPicked(new Set())}
                     >
-                      {ms.label}
-                    </a>
-                  </div>
-                ) : null;
-              })()}
-
-              {(history[sel.id]?.length ?? 0) > 0 && (
-                <div className="wf-apx-history-wrap">
-                  <HistoryPanel versions={history[sel.id]} />
+                      clear
+                    </button>
+                  )}
                 </div>
               )}
+              {list.length === 0 ? (
+                <div className="wf-apx-empty">{emptyText}</div>
+              ) : (
+                list.map((q) => {
+                  const active = sel?.id === q.id;
+                  const checked = picked.has(q.id);
+                  return (
+                    <div
+                      className={`wf-apx-row${checked ? " is-picked" : ""}`}
+                      key={q.id}
+                    >
+                      <input
+                        type="checkbox"
+                        className="wf-apx-check"
+                        checked={checked}
+                        onChange={() => togglePick(q.id)}
+                        aria-label={`select ${q.agentName} · ${q.action}`}
+                      />
+                      <button
+                        type="button"
+                        className={`wf-apx-card${active ? " is-sel" : ""}`}
+                        onClick={() => select(q.id)}
+                        style={
+                          active ? { borderColor: q.selBorder } : undefined
+                        }
+                      >
+                        <span className="wf-apx-card-top">
+                          <span
+                            className="wf-apx-tile sm"
+                            style={{ background: q.tint }}
+                          >
+                            {q.emoji}
+                          </span>
+                          <span className="wf-apx-card-name">
+                            {q.agentName}
+                          </span>
+                          <span className="wf-apx-card-ch">{q.channel}</span>
+                          <span className="wf-apx-card-when">{q.when}</span>
+                        </span>
+                        <span className="wf-apx-card-action">{q.action}</span>
+                        <span className="wf-apx-card-pills">
+                          <span className={`wf-apx-risk is-${q.risk}`}>
+                            {q.risk} risk
+                          </span>
+                          {q.held && <span className="wf-apx-held">held</span>}
+                        </span>
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
 
-              {sel.isQuestion ? (
-                <div className="wf-apx-foot">
-                  <textarea
-                    className="wf-apx-note"
-                    name="note"
-                    rows={3}
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    placeholder="your answer — scribe uses it to continue the draft…"
-                  />
-                  <div className="wf-apx-actions">
-                    <button
-                      type="submit"
-                      className="wf-apx-btn primary"
-                      formAction={returnAction}
+            {sel && (
+              <form
+                className="wf-apx-detail"
+                action={approveAction}
+                key={sel.id}
+              >
+                <input type="hidden" name="id" value={sel.id} />
+                <input type="hidden" name="agent" value={sel.agentId} />
+
+                <div
+                  className="wf-apx-detail-head"
+                  style={{
+                    background: `linear-gradient(180deg, ${sel.tintHead}, transparent)`,
+                  }}
+                >
+                  <div className="wf-apx-detail-id">
+                    <span
+                      className="wf-apx-tile"
+                      style={{ background: sel.tint }}
                     >
-                      answer and continue
-                    </button>
-                    <button
-                      type="submit"
-                      className="wf-apx-btn danger"
-                      formAction={rejectAction}
-                    >
-                      drop this request
-                    </button>
-                    <span className="wf-apx-hint">
-                      your answer goes back to scribe; it continues the draft
-                      and re-raises it here.
+                      {sel.emoji}
+                    </span>
+                    <span className="wf-apx-detail-name">{sel.agentName}</span>
+                    <span className="wf-apx-detail-when">
+                      drafted {sel.when}
+                    </span>
+                    <span className={`wf-apx-risk lg is-${sel.risk}`}>
+                      {sel.risk} risk
                     </span>
                   </div>
+                  <div className="wf-apx-detail-action">
+                    {sel.isQuestion ? "scribe asks" : sel.action}
+                  </div>
+                  <div className="wf-apx-detail-why">
+                    why it needs you: {sel.reason}
+                  </div>
                 </div>
-              ) : (
-                <div className="wf-apx-foot">
-                  <textarea
-                    className="wf-apx-note"
-                    name="note"
-                    rows={3}
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    placeholder={`note to ${sel.agentName.toLowerCase()} (optional) · e.g. softer opening`}
-                  />
-                  <div className="wf-apx-actions">
-                    {editing ? (
+
+                {sel.outbound && !sel.isQuestion && (
+                  <dl className="wf-apx-meta">
+                    <dt>channel</dt>
+                    <dd>
+                      <span className="wf-apx-chip">{sel.channel}</span>
+                    </dd>
+                    <dt>to</dt>
+                    <dd>{sel.to}</dd>
+                    {sel.subject && (
                       <>
-                        <button
-                          type="submit"
-                          className="wf-apx-btn primary"
-                          formAction={sendEditAction}
-                        >
-                          {sel.outbound
-                            ? "send edited version"
-                            : "approve edited"}
-                        </button>
-                        <button
-                          type="button"
-                          className="wf-apx-btn ghost"
-                          onClick={() => setEditing(false)}
-                        >
-                          cancel edit
-                        </button>
-                      </>
-                    ) : sel.held ? (
-                      <>
-                        <button
-                          type="submit"
-                          className="wf-apx-btn primary"
-                          formAction={approveAction}
-                        >
-                          release
-                        </button>
-                        <button
-                          type="button"
-                          className="wf-apx-btn ghost"
-                          onClick={startEdit}
-                        >
-                          edit first
-                        </button>
-                      </>
-                    ) : sel.outbound ? (
-                      <>
-                        <button
-                          type="submit"
-                          className="wf-apx-btn primary"
-                          formAction={approveAction}
-                        >
-                          {sel.channel === "linkedin" ? "publish" : "send"}
-                        </button>
-                        <button
-                          type="button"
-                          className="wf-apx-btn ghost"
-                          onClick={startEdit}
-                        >
-                          edit &amp; send
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          type="submit"
-                          className="wf-apx-btn primary"
-                          formAction={approveAction}
-                        >
-                          approve
-                        </button>
-                        <button
-                          type="button"
-                          className="wf-apx-btn ghost"
-                          onClick={startEdit}
-                        >
-                          edit
-                        </button>
+                        <dt>subject</dt>
+                        <dd className="strong">{sel.subject}</dd>
                       </>
                     )}
-                    {!editing && sel.body.trim().length > 0 && (
+                    {sel.context && (
+                      <>
+                        <dt>context</dt>
+                        <dd className="muted">{sel.context}</dd>
+                      </>
+                    )}
+                  </dl>
+                )}
+
+                {sel.isQuestion && copyMeta[sel.id] && (
+                  <dl className="wf-apx-meta">
+                    <dt>request</dt>
+                    <dd className="strong">
+                      {copyMeta[sel.id].company || "—"}
+                    </dd>
+                    {copyMeta[sel.id].kind && (
+                      <>
+                        <dt>kind</dt>
+                        <dd>{copyMeta[sel.id].kind}</dd>
+                      </>
+                    )}
+                    {copyMeta[sel.id].channel && (
+                      <>
+                        <dt>channel</dt>
+                        <dd>
+                          <span className="wf-apx-chip">
+                            {copyMeta[sel.id].channel}
+                          </span>
+                        </dd>
+                      </>
+                    )}
+                  </dl>
+                )}
+
+                <div className="wf-apx-doc-wrap">
+                  {editing ? (
+                    <div className="wf-apx-editing">
+                      <div className="wf-apx-editing-label">
+                        editing · your version is what gets sent
+                      </div>
+                      <textarea
+                        name="text"
+                        className="wf-apx-textarea"
+                        value={draft}
+                        onChange={(e) => setDraft(e.target.value)}
+                      />
+                    </div>
+                  ) : (
+                    <div className="wf-apx-doc">{sel.body}</div>
+                  )}
+                </div>
+
+                {(() => {
+                  const ms =
+                    sel.outbound && !editing
+                      ? manualSendHref(sel.channel, sel.to, sel.body)
+                      : null;
+                  return ms ? (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        flexWrap: "wrap",
+                        padding: "0 20px 4px",
+                      }}
+                    >
+                      <span className="wf-apx-hint">
+                        you send this one from your phone —
+                      </span>
+                      <a
+                        className="wf-apx-btn primary"
+                        href={ms.href}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                      >
+                        {ms.label}
+                      </a>
+                    </div>
+                  ) : null;
+                })()}
+
+                {(history[sel.id]?.length ?? 0) > 0 && (
+                  <div className="wf-apx-history-wrap">
+                    <HistoryPanel versions={history[sel.id]} />
+                  </div>
+                )}
+
+                {sel.isQuestion ? (
+                  <div className="wf-apx-foot">
+                    <textarea
+                      className="wf-apx-note"
+                      name="note"
+                      rows={3}
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      placeholder="your answer — scribe uses it to continue the draft…"
+                    />
+                    <div className="wf-apx-actions">
                       <button
                         type="submit"
-                        className="wf-apx-btn ghost"
+                        className="wf-apx-btn primary"
                         formAction={returnAction}
-                        title="send the draft + your note to scribe to rewrite; the revised version returns here for approval"
                       >
-                        send to scribe
+                        answer and continue
                       </button>
-                    )}
-                    <button
-                      type="submit"
-                      className="wf-apx-btn danger"
-                      formAction={rejectAction}
-                    >
-                      reject
-                    </button>
-                    <span className="wf-apx-hint">
-                      {sel.body.trim().length > 0
-                        ? "send to scribe puts your note + this draft back to scribe; the rewrite returns here. reject just closes it."
-                        : "nothing leaves until you press it. the bridge acts within a minute."}
-                    </span>
+                      <button
+                        type="submit"
+                        className="wf-apx-btn danger"
+                        formAction={rejectAction}
+                      >
+                        drop this request
+                      </button>
+                      <span className="wf-apx-hint">
+                        your answer goes back to scribe; it continues the draft
+                        and re-raises it here.
+                      </span>
+                    </div>
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="wf-apx-foot">
+                    <textarea
+                      className="wf-apx-note"
+                      name="note"
+                      rows={3}
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      placeholder={`note to ${sel.agentName.toLowerCase()} (optional) · e.g. softer opening`}
+                    />
+                    <div className="wf-apx-actions">
+                      {editing ? (
+                        <>
+                          <button
+                            type="submit"
+                            className="wf-apx-btn primary"
+                            formAction={sendEditAction}
+                          >
+                            {sel.outbound
+                              ? "send edited version"
+                              : "approve edited"}
+                          </button>
+                          <button
+                            type="button"
+                            className="wf-apx-btn ghost"
+                            onClick={() => setEditing(false)}
+                          >
+                            cancel edit
+                          </button>
+                        </>
+                      ) : sel.held ? (
+                        <>
+                          <button
+                            type="submit"
+                            className="wf-apx-btn primary"
+                            formAction={approveAction}
+                          >
+                            release
+                          </button>
+                          <button
+                            type="button"
+                            className="wf-apx-btn ghost"
+                            onClick={startEdit}
+                          >
+                            edit first
+                          </button>
+                        </>
+                      ) : sel.outbound ? (
+                        <>
+                          <button
+                            type="submit"
+                            className="wf-apx-btn primary"
+                            formAction={approveAction}
+                          >
+                            {sel.channel === "linkedin" ? "publish" : "send"}
+                          </button>
+                          <button
+                            type="button"
+                            className="wf-apx-btn ghost"
+                            onClick={startEdit}
+                          >
+                            edit &amp; send
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            type="submit"
+                            className="wf-apx-btn primary"
+                            formAction={approveAction}
+                          >
+                            approve
+                          </button>
+                          <button
+                            type="button"
+                            className="wf-apx-btn ghost"
+                            onClick={startEdit}
+                          >
+                            edit
+                          </button>
+                        </>
+                      )}
+                      {!editing && sel.body.trim().length > 0 && (
+                        <>
+                          <RecipientChips value={recip} onChange={setRecip} />
+                          <button
+                            type="submit"
+                            className="wf-apx-btn ghost"
+                            formAction={returnAction}
+                            title="send your note + this draft back: scribe rewrites and re-raises it; hunter acts on the prospect in the CRM"
+                          >
+                            send back
+                          </button>
+                        </>
+                      )}
+                      <button
+                        type="submit"
+                        className="wf-apx-btn danger"
+                        formAction={rejectAction}
+                      >
+                        reject
+                      </button>
+                      <span className="wf-apx-hint">
+                        {sel.body.trim().length > 0
+                          ? "send back routes your note + draft to scribe (rewrite) and/or hunter (move the prospect). reject just closes it."
+                          : "nothing leaves until you press it. the bridge acts within a minute."}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </form>
+            )}
+          </div>
+          {pickedIds.length > 0 && (
+            <form className="wf-apx-bulkbar" action={bulkAction}>
+              {pickedIds.map((id) => (
+                <input key={id} type="hidden" name="ids" value={id} />
+              ))}
+              <span className="wf-apx-bulk-count">
+                {pickedIds.length} selected
+              </span>
+              <textarea
+                className="wf-apx-bulk-note"
+                name="note"
+                rows={1}
+                value={bulkNote}
+                onChange={(e) => setBulkNote(e.target.value)}
+                placeholder="note for send back / reject (optional)"
+              />
+              <RecipientChips value={bulkRecip} onChange={setBulkRecip} />
+              <div className="wf-apx-bulk-actions">
+                <button
+                  type="submit"
+                  name="op"
+                  value="return"
+                  className="wf-apx-btn ghost"
+                >
+                  send back
+                </button>
+                {tab === "held" ? (
+                  <button
+                    type="submit"
+                    name="op"
+                    value="unhold"
+                    className="wf-apx-btn ghost"
+                  >
+                    move to waiting
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    name="op"
+                    value="hold"
+                    className="wf-apx-btn ghost"
+                  >
+                    hold
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  name="op"
+                  value="reject"
+                  className="wf-apx-btn danger"
+                >
+                  reject
+                </button>
+                <button
+                  type="submit"
+                  name="op"
+                  value="approve"
+                  className="wf-apx-btn primary"
+                  onClick={(e) => {
+                    if (
+                      !window.confirm(
+                        `approve and send ${pickedIds.length} item(s) now? this fires everything outbound at once.`,
+                      )
+                    )
+                      e.preventDefault();
+                  }}
+                >
+                  approve all
+                </button>
+              </div>
             </form>
           )}
-        </div>
+        </>
       ) : (
         <div className="wf-apx-decided">
           <div className="wf-apx-decided-head">
