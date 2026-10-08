@@ -17,6 +17,22 @@ export function isQuestionApproval(action: string | null): boolean {
   return /^\s*question about\b/i.test(action ?? "");
 }
 
+// A "merge PR #n in <project>" approval → the PR number + project. On approve the
+// bridge merges; the inbox renders the fix's checks/screenshots instead of a send.
+export function parseMerge(action: string | null): {
+  isMerge: boolean;
+  prNumber: number | null;
+  project: string;
+} {
+  const m = (action ?? "").trim().match(/^merge PR #(\d+)(?:\s+in\s+(.+))?/i);
+  if (!m) return { isMerge: false, prNumber: null, project: "" };
+  return {
+    isMerge: true,
+    prNumber: Number(m[1]) || null,
+    project: (m[2] ?? "").trim(),
+  };
+}
+
 type RiskLevel = "low" | "medium" | "high";
 
 // "SEVERITY — reason" → a risk level + the reason text.
@@ -57,6 +73,7 @@ export function approvalToVM(ap: Approval): ApprovalVM {
   };
   const outbound = parseOutbound(ap.draft);
   const { level, reason } = parseRisk(ap.risk, ap.why);
+  const merge = parseMerge(ap.action);
   return {
     id: ap.id,
     agentId: r.id,
@@ -77,6 +94,9 @@ export function approvalToVM(ap: Approval): ApprovalVM {
     body: (outbound ? outbound.body : ap.draft) ?? "",
     held: ap.status === "held",
     isQuestion: isQuestionApproval(ap.action),
+    isMerge: merge.isMerge,
+    prNumber: merge.prNumber,
+    prProject: merge.project,
   };
 }
 

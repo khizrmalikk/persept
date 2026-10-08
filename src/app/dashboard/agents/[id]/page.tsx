@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import {
   acceptLead,
+  acceptLeads,
   approveFromForm,
   rejectFromForm,
   sendMessageFromForm,
@@ -953,12 +954,26 @@ async function buildHunterChat(
             <div className="wf-hn-panel">
               <div className="wf-hn-panel-head">
                 <span className="wf-hn-panel-title">new leads</span>
-                <Link
-                  href="/dashboard/agents/scout#wf-leads-anchor"
-                  className="wf-hn-link"
-                >
-                  from 🔭 scout
-                </Link>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  {leads.length > 1 && (
+                    <form
+                      action={acceptLeads.bind(
+                        null,
+                        leads.map((l) => l.id),
+                      )}
+                    >
+                      <button type="submit" className="wf-hn-btn ghost sm">
+                        add all ({leads.length})
+                      </button>
+                    </form>
+                  )}
+                  <Link
+                    href="/dashboard/agents/scout#wf-leads-anchor"
+                    className="wf-hn-link"
+                  >
+                    from 🔭 scout
+                  </Link>
+                </div>
               </div>
               {leads.slice(0, 3).map((l) => (
                 <div key={l.id} className="wf-hn-lead">

@@ -746,20 +746,14 @@ function revalidateLeads() {
   revalidatePath("/dashboard");
 }
 
-export async function acceptLead(id: string): Promise<void> {
-  await guard();
-  const rowId = id.trim();
-  if (!rowId) return;
-  const db = supabaseAdmin();
-
-  const { data } = await db
-    .from("leads")
-    .select("*")
-    .eq("id", rowId)
-    .maybeSingle();
-  const lead = data as Record<string, string> | null;
-  if (!lead || lead.status !== "suggested") return; // already handled / gone
-
+// Core accept: send Hunter the "add prospect:" message and flip the lead to
+// sent_to_hunter, stamped as an owner decision. Used by the owner's accept and by
+// undoing a Chief dismiss (which accepts regardless of current status).
+async function acceptLeadCore(
+  db: DbClient,
+  rowId: string,
+  lead: Record<string, string>,
+): Promise<void> {
   // campaign: the lead's own slug, else the first active Hunter campaign's slug.
   let slug = String(lead.campaign ?? "").trim();
   if (!slug) {
@@ -793,19 +787,98 @@ export async function acceptLead(id: string): Promise<void> {
     .trim();
 
   await sendAgentCommand("hunter", msg);
-  await db.from("leads").update({ status: "sent_to_hunter" }).eq("id", rowId);
+  await db
+    .from("leads")
+    .update({
+      status: "sent_to_hunter",
+      decided_by: "owner",
+      decided_at: new Date().toISOString(),
+    })
+    .eq("id", rowId);
   revalidateLeads();
 }
 
-export async function dismissLead(id: string): Promise<void> {
+export async function acceptLead(id: string): Promise<void> {
+  await guard();
+  const rowId = id.trim();
+  if (!rowId) return;
+  const db = supabaseAdmin();
+  const { data } = await db
+    .from("leads")
+    .select("*")
+    .eq("id", rowId)
+    .maybeSingle();
+  const lead = data as Record<string, string> | null;
+  if (!lead || lead.status !== "suggested") return; // already handled / gone
+  await acceptLeadCore(db, rowId, lead);
+}
+
+// "add all": accept every supplied lead in one go. acceptLead is a no-op for a
+// lead that is already handled, so this is safe to call with the whole list.
+export async function acceptLeads(ids: string[]): Promise<void> {
+  await guard();
+  for (const id of ids) {
+    await acceptLead(id);
+  }
+}
+
+export async function dismissLead(id: string, reason = ""): Promise<void> {
   await guard();
   const rowId = id.trim();
   if (!rowId) return;
   await supabaseAdmin()
     .from("leads")
-    .update({ status: "dismissed" })
+    .update({
+      status: "dismissed",
+      decided_by: "owner",
+      decided_at: new Date().toISOString(),
+      ...(reason.trim() ? { reason: reason.trim() } : {}),
+    })
     .eq("id", rowId);
   revalidateLeads();
+}
+
+// Undo a lead Chief ACCEPTED: dismiss it and tell Hunter to park it.
+export async function undoChiefAccept(
+  id: string,
+  company: string,
+): Promise<void> {
+  await guard();
+  const rowId = id.trim();
+  if (!rowId) return;
+  await supabaseAdmin()
+    .from("leads")
+    .update({
+      status: "dismissed",
+      decided_by: "owner",
+      decided_at: new Date().toISOString(),
+      reason: "undone by owner",
+    })
+    .eq("id", rowId);
+  const co = company.trim();
+  if (co)
+    await sendAgentCommand(
+      "hunter",
+      `park ${co}: the owner reversed chief's accept`,
+    );
+  revalidateLeads();
+}
+
+// Undo a lead Chief DISMISSED: accept it (same add-prospect path as a normal
+// owner accept), regardless of its current status.
+export async function undoChiefDismiss(id: string): Promise<void> {
+  await guard();
+  const rowId = id.trim();
+  if (!rowId) return;
+  const db = supabaseAdmin();
+  const { data } = await db
+    .from("leads")
+    .select("*")
+    .eq("id", rowId)
+    .maybeSingle();
+  const lead = data as Record<string, string> | null;
+  if (!lead) return;
+  await acceptLeadCore(db, rowId, lead);
 }
 
 // ── Scribe's proposals: mark accepted/declined, send via Hunter ───────────────
@@ -939,6 +1012,100 @@ export async function savePostStatsFromForm(fd: FormData): Promise<void> {
   revalidateMuse();
 }
 
+// ── Fixer: projects + fixes ───────────────────────────────────────────────────
+// `projects` is DASHBOARD-owned (like `campaigns`): the bridge watches updated_at
+// and rewrites the runner config + Fixer's PROJECTS.md within two minutes, so
+// EVERY write bumps updated_at. `fixes` stays bridge-owned (read only); the
+// dashboard only retries a failed one via a plain message.
+
+function linesToList(v: FormDataEntryValue | null): string[] {
+  return String(v ?? "")
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+}
+
+// accept "owner/name" or a GitHub URL; store as "owner/name".
+function normRepo(raw: string): string {
+  const r = raw.trim();
+  const m = r.match(/github\.com[/:]([^/]+\/[^/.\s]+)(?:\.git)?\/?$/i);
+  if (m) return m[1];
+  return r.replace(/\.git$/i, "");
+}
+
+export async function saveProject(fd: FormData): Promise<void> {
+  await guard();
+  const create = String(fd.get("create") ?? "") === "1";
+  const name = String(fd.get("name") ?? "").trim() || "untitled project";
+  const rawId = String(fd.get("id") ?? "").trim();
+  const id = (create ? rawId || slugify(name) : rawId).trim();
+  if (!id) return;
+
+  const deployRaw = String(fd.get("deploy") ?? "");
+  const deploy =
+    deployRaw === "vercel" ? "vercel" : deployRaw === "flag" ? "flag" : null;
+  const cadence =
+    String(fd.get("research_cadence") ?? "none") === "weekly"
+      ? "weekly"
+      : "none";
+
+  const row = {
+    name,
+    repo: normRepo(String(fd.get("repo") ?? "")),
+    default_branch: String(fd.get("default_branch") ?? "").trim(),
+    description: String(fd.get("description") ?? "").trim(),
+    notes: String(fd.get("notes") ?? "").trim(),
+    checks: linesToList(fd.get("checks")),
+    allowed_tools: linesToList(fd.get("allowed_tools")),
+    dev: String(fd.get("dev") ?? "").trim(),
+    url: String(fd.get("url") ?? "").trim(),
+    login: {
+      path: String(fd.get("login_path") ?? "").trim(),
+      email_selector: String(fd.get("login_email_selector") ?? "").trim(),
+      password_selector: String(fd.get("login_password_selector") ?? "").trim(),
+      submit_selector: String(fd.get("login_submit_selector") ?? "").trim(),
+      env: String(fd.get("login_env") ?? "").trim(),
+    },
+    deploy,
+    research_cadence: cadence,
+    enabled: String(fd.get("enabled") ?? "") === "on",
+    updated_at: new Date().toISOString(),
+  };
+
+  const db = supabaseAdmin();
+  if (create) {
+    await db
+      .from("projects")
+      .insert({ ...row, id, created_at: new Date().toISOString() });
+  } else {
+    await db.from("projects").update(row).eq("id", id);
+  }
+  revalidatePath("/dashboard/agents/fixer");
+  revalidatePath("/dashboard/knowledge");
+}
+
+// "research now": queue Fixer a research pass on the project.
+export async function researchProjectNow(
+  id: string,
+  name: string,
+): Promise<void> {
+  await guard();
+  const pid = id.trim();
+  if (!pid) return;
+  const spec =
+    "Survey the codebase: write docs/ARCHITECTURE.md and CLAUDE.md if they are missing; otherwise list the three most valuable improvements (dependency updates, better or cheaper APIs, architecture, user-visible gaps) with evidence and effort.";
+  const msg = `FIX REQUEST\nproject: ${pid}\nkind: research\ntitle: research pass on ${name.trim() || pid}\nspec: ${spec}`;
+  await sendAgentCommand("fixer", msg);
+}
+
+// retry a failed fix — a plain message the runner picks up.
+export async function retryFix(shortId: string): Promise<void> {
+  await guard();
+  const sid = shortId.trim();
+  if (!sid) return;
+  await sendAgentCommand("fixer", `retry fix ${sid}`);
+}
+
 // ── Knowledge base: upload / edit / remove ────────────────────────────────────
 // `knowledge_files` is DASHBOARD-owned; the bridge mirrors each row into every
 // listed agent's workspace as memory/knowledge/<slug>.md within two minutes and
@@ -946,7 +1113,14 @@ export async function savePostStatsFromForm(fd: FormData): Promise<void> {
 // HERE on upload (pdf-parse for pdf, mammoth for docx, plain read otherwise). The
 // file goes to the private `knowledge` bucket at <id>/<filename>.
 
-const KNOWLEDGE_AGENT_IDS = ["scribe", "hunter", "muse", "chief", "scout"];
+const KNOWLEDGE_AGENT_IDS = [
+  "scribe",
+  "hunter",
+  "muse",
+  "chief",
+  "scout",
+  "fixer",
+];
 const KNOWLEDGE_MAX_BYTES = 15 * 1024 * 1024;
 
 function knowledgeExt(name: string): string {
@@ -1013,7 +1187,14 @@ export async function uploadKnowledgeFile(
     .map(String)
     .map((a) => a.trim())
     .filter((a) => KNOWLEDGE_AGENT_IDS.includes(a));
-  const agentIds = agents.length ? [...new Set(agents)] : ["scribe"];
+  const project = String(fd.get("project") ?? "").trim();
+  // a file attached to a Fixer project defaults to the fixer agent if no agent
+  // was ticked; a general file defaults to scribe.
+  const agentIds = agents.length
+    ? [...new Set(agents)]
+    : project
+      ? ["fixer"]
+      : ["scribe"];
 
   const id = crypto.randomUUID();
   const safe = file.name.replace(/[^a-zA-Z0-9._-]+/g, "_");
@@ -1040,11 +1221,13 @@ export async function uploadKnowledgeFile(
     text,
     summary,
     agent_ids: agentIds,
+    project: project || null,
     created_at: now,
     updated_at: now,
   });
   if (insErr) return { error: insErr.message };
   revalidateKnowledge();
+  if (project) revalidatePath("/dashboard/agents/fixer");
   return { ok: true };
 }
 

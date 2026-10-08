@@ -43,7 +43,7 @@ export function HunterHeader({
     badge?: number;
   }[] = [
     { label: "chat", href: BASE, active: onChat },
-    { label: "prospects", href: `${BASE}/prospects`, active: onProspects },
+    { label: "CRM", href: `${BASE}/prospects`, active: onProspects },
     {
       label: "conversations",
       href: `${BASE}/conversations`,

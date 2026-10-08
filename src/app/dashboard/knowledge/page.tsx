@@ -1,13 +1,18 @@
 import { KnowledgeList } from "@/app/dashboard/_components/KnowledgeList";
 import { KnowledgeUploader } from "@/app/dashboard/_components/KnowledgeUploader";
 import { getKnowledgeFiles } from "@/lib/workforce/knowledge";
+import { getProjects } from "@/lib/workforce/projects";
 import "../hunter.css";
 import "../knowledge.css";
 
 export const dynamic = "force-dynamic";
 
 export default async function KnowledgePage() {
-  const files = await getKnowledgeFiles();
+  const [files, projects] = await Promise.all([
+    getKnowledgeFiles(),
+    getProjects(),
+  ]);
+  const projectOptions = projects.map((p) => ({ id: p.id, name: p.name }));
   return (
     <div className="wf-kb">
       <header className="wf-kb-head">
@@ -18,7 +23,7 @@ export default async function KnowledgePage() {
           lands in each agent&rsquo;s workspace within two minutes.
         </p>
       </header>
-      <KnowledgeUploader />
+      <KnowledgeUploader projects={projectOptions} />
       <KnowledgeList files={files} />
     </div>
   );

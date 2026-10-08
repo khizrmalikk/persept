@@ -19,6 +19,8 @@ function pill(status: string): { background: string; color: string } {
     };
   if (status === "question" || status === "refused")
     return { background: "oklch(0.8 0.14 70 / 0.16)", color: "var(--accent)" };
+  if (status === "stalled")
+    return { background: "oklch(0.72 0.17 25 / 0.16)", color: "var(--err)" };
   return { background: "rgba(255,255,255,0.07)", color: "var(--ink-soft)" };
 }
 
@@ -28,6 +30,7 @@ function Row({ req, nowMs }: { req: CopyRequest; nowMs: number }) {
   const startedMs = req.ts ? new Date(req.ts).getTime() : nowMs;
   const stuck = req.status === "writing" && nowMs - startedMs > STUCK_MS;
   const refused = req.status === "refused";
+  const stalled = req.status === "stalled";
   const label = req.company || req.context.split("\n")[0] || req.to || "—";
 
   const resend = () =>
@@ -39,7 +42,9 @@ function Row({ req, nowMs }: { req: CopyRequest; nowMs: number }) {
   return (
     <div className="wf-copy-row">
       <div className="wf-copy-top">
-        {(stuck || refused) && <span className="wf-copy-dot" />}
+        {(stuck || refused || stalled) && (
+          <span className={`wf-copy-dot${stalled ? " is-red" : ""}`} />
+        )}
         <span className="wf-chip-mono">{req.kind || "copy"}</span>
         {req.channel && <span className="wf-chip-mono">{req.channel}</span>}
         <span className="wf-copy-label">{label}</span>
@@ -61,9 +66,15 @@ function Row({ req, nowMs }: { req: CopyRequest; nowMs: number }) {
           )}
         </div>
       )}
-      {stuck && (
+      {(stuck || stalled) && (
         <div className="wf-copy-stuck">
-          <span className="wf-hn-note">stuck in writing over 15 min</span>
+          <span className="wf-hn-note">
+            {stalled
+              ? req.resent_at
+                ? `stalled · resent ${ago(req.resent_at)}`
+                : "writer stalled"
+              : "stuck in writing over 15 min"}
+          </span>
           <button
             type="button"
             className="wf-hn-btn ghost sm"

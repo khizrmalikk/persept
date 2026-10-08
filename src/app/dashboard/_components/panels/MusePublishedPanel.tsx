@@ -16,6 +16,8 @@ import type { PostChannel, PostStats, PostStatus } from "@/lib/workforce/posts";
 export type PublishedRow = {
   id: string;
   channel: PostChannel;
+  // linkedin only: true = company page (linkedin-page-post), false = profile.
+  page: boolean;
   firstLine: string;
   date: string; // preformatted
   url: string | null;
@@ -80,6 +82,11 @@ export function MusePublishedPanel({ rows }: { rows: PublishedRow[] }) {
         <li key={r.id} className="wf-muse-pub-row">
           <div className="wf-muse-pub-main">
             <span className={`wf-chip sm is-${r.channel}`}>{r.channel}</span>
+            {r.channel === "linkedin" && (
+              <span className="wf-chip sm ghost">
+                {r.page ? "page" : "profile"}
+              </span>
+            )}
             <span className="wf-muse-pub-line" title={r.firstLine}>
               {r.firstLine}
             </span>

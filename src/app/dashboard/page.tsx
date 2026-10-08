@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { approveFromForm, rejectFromForm } from "@/lib/workforce/actions";
 import { getOpenBacklog, parseHealth } from "@/lib/workforce/backlog";
 import { getAgentFile } from "@/lib/workforce/files";
+import { getFixes } from "@/lib/workforce/fixes";
 import { getOpenIdeaCount } from "@/lib/workforce/ideas";
 import { getHealth } from "@/lib/workforce/metrics";
 import { getHandoffs, parseOutbound } from "@/lib/workforce/outreach";
@@ -176,6 +177,10 @@ export default async function Office() {
   const doneToday = ((todays as unknown[] | null) ?? []).length;
 
   // ── rooms ──────────────────────────────────────────────────────────────
+  // Fixer's card shows a count of open PRs (fixes awaiting a merge approval).
+  const fixerOpenPRs = (await getFixes(200)).filter(
+    (f) => f.status === "pr_open",
+  ).length;
   const rooms: OfficeRoom[] = ROOM_ORDER.map((id) => {
     const a = rosterById(id);
     const hue = a?.hue ?? 70;
@@ -218,6 +223,10 @@ export default async function Office() {
       workerLine: ws.length
         ? `${ws.length} worker${ws.length > 1 ? "s" : ""}`
         : "",
+      badge:
+        id === "fixer" && fixerOpenPRs > 0
+          ? `${fixerOpenPRs} open PR${fixerOpenPRs > 1 ? "s" : ""}`
+          : "",
       waiting: waitN > 0,
       waitingText: `needs you · ${waitN}`,
       opacity: st === "soon" ? 0.6 : 1,

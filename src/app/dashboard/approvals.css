@@ -716,3 +716,53 @@
   color: var(--accent-ink-on);
   border-color: var(--accent);
 }
+
+/* ── Merge approval (Fixer PR) — PR link, checks, screenshots ────────────── */
+.wf .wf-apx-merge {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 20px 4px;
+}
+.wf .wf-apx-merge-checks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.wf .wf-apx-merge-checks .ok {
+  color: var(--ok);
+}
+.wf .wf-apx-merge-checks .bad {
+  color: var(--err);
+}
+.wf .wf-apx-merge-cmd {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.wf .wf-apx-merge-tail {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-mut);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 4px 0 0;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  max-height: 160px;
+}
+.wf .wf-apx-merge-shots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.wf .wf-apx-merge-shot {
+  width: 140px;
+  height: 92px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}

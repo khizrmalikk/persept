@@ -9,7 +9,9 @@ export type CopyStatus =
   | "writing"
   | "drafted"
   | "question"
-  | "refused";
+  | "refused"
+  // the writer went quiet; the bridge auto-resends and records resent_at.
+  | "stalled";
 
 export type CopyRequest = {
   id: string;
@@ -32,6 +34,7 @@ export type CopyRequest = {
   subject: string;
   body: string;
   drafted_at: string | null;
+  resent_at: string | null;
 };
 
 function norm(row: Record<string, unknown>): CopyRequest {
@@ -58,6 +61,7 @@ function norm(row: Record<string, unknown>): CopyRequest {
       "drafted",
       "question",
       "refused",
+      "stalled",
     ].includes(status)
       ? status
       : "requested") as CopyStatus,
@@ -66,6 +70,7 @@ function norm(row: Record<string, unknown>): CopyRequest {
     subject: String(row.subject ?? ""),
     body: String(row.body ?? ""),
     drafted_at: (row.drafted_at as string | null) ?? null,
+    resent_at: (row.resent_at as string | null) ?? null,
   };
 }
 

@@ -3,10 +3,14 @@
 import { useState, useTransition } from "react";
 import { markMessageSent } from "@/lib/workforce/actions";
 
-// A message the owner sends himself from his phone: status `approved_manual`,
-// channel whatsapp or instagram. We give him a one-tap link that opens the app
-// with the message prefilled, and a "mark sent" that tells the agent and flips
-// the row to `sent`. Bridge-owned message row; the dashboard only patches status.
+// A message the owner sends himself by hand: status `approved_manual`, channel
+// whatsapp, instagram or linkedin (LinkedIn has no permitted send API, so it is
+// always manual). We give him a one-tap link that opens the app/profile with the
+// message prefilled where possible, a copy button, and a "mark sent" that tells
+// the agent `sent <company>` and flips the row to `sent`. Bridge-owned message
+// row; the dashboard only patches status.
+
+const CONNECTION_NOTE_LIMIT = 300;
 
 // digits only, from a phone number or a wa.me/... link.
 function waNumber(contact: string): string {
@@ -24,6 +28,15 @@ function igHandle(contact: string): string {
   return /^[A-Za-z0-9._]{2,30}$/.test(handle) ? handle : "";
 }
 
+// a profile URL from the contact (the draft's `to:`). Accepts a full URL or a
+// bare linkedin.com/in/... path; returns "" when it isn't a usable link.
+function profileUrl(contact: string): string {
+  const c = contact.trim();
+  if (/^https?:\/\//i.test(c)) return c;
+  if (/linkedin\.com\//i.test(c)) return `https://${c.replace(/^\/+/, "")}`;
+  return "";
+}
+
 export function ManualSend({
   messageId,
   agentId,
@@ -31,6 +44,7 @@ export function ManualSend({
   channel,
   contact,
   body,
+  why = "",
 }: {
   messageId: string;
   agentId: string;
@@ -38,6 +52,8 @@ export function ManualSend({
   channel: string;
   contact: string;
   body: string;
+  // the draft's "why" line; a connection note is flagged from here or the body.
+  why?: string;
 }) {
   const [pending, start] = useTransition();
   const [sent, setSent] = useState(false);
@@ -46,7 +62,8 @@ export function ManualSend({
   const ch = channel.toLowerCase();
   const isWhatsapp = ch === "whatsapp";
   const isInstagram = ch === "instagram";
-  if (!isWhatsapp && !isInstagram) return null;
+  const isLinkedin = ch === "linkedin";
+  if (!isWhatsapp && !isInstagram && !isLinkedin) return null;
 
   const number = isWhatsapp ? waNumber(contact) : "";
   const waHref = number
@@ -54,6 +71,11 @@ export function ManualSend({
     : "";
   const handle = isInstagram ? igHandle(contact) : "";
   const igHref = handle ? `https://instagram.com/${handle}` : "";
+  const liHref = isLinkedin ? profileUrl(contact) : "";
+
+  // connection notes are capped at 300 chars; show a counter so the owner can
+  // trim before copying. Flagged when the why line or the body says so.
+  const isConnectionNote = /connection note/i.test(`${why}\n${body}`);
 
   const copy = async () => {
     try {
@@ -73,6 +95,16 @@ export function ManualSend({
 
   return (
     <div className="wf-manualsend">
+      {isConnectionNote && (
+        <div className="wf-ls-counter">
+          <span
+            className={body.length > CONNECTION_NOTE_LIMIT ? "over" : "amber"}
+          >
+            {body.length}
+          </span>{" "}
+          / {CONNECTION_NOTE_LIMIT} · connection note
+        </div>
+      )}
       {isWhatsapp && waHref && (
         <a
           className="wf-hn-btn amber sm"
@@ -83,22 +115,30 @@ export function ManualSend({
           open in whatsapp
         </a>
       )}
-      {isInstagram && (
-        <>
-          <button type="button" className="wf-hn-btn ghost sm" onClick={copy}>
-            {copied ? "copied" : "copy message"}
-          </button>
-          {igHref && (
-            <a
-              className="wf-hn-btn amber sm"
-              href={igHref}
-              target="_blank"
-              rel="noreferrer noopener"
-            >
-              open instagram
-            </a>
-          )}
-        </>
+      {(isInstagram || isLinkedin) && (
+        <button type="button" className="wf-hn-btn ghost sm" onClick={copy}>
+          {copied ? "copied" : "copy message"}
+        </button>
+      )}
+      {isInstagram && igHref && (
+        <a
+          className="wf-hn-btn amber sm"
+          href={igHref}
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          open instagram
+        </a>
+      )}
+      {isLinkedin && liHref && (
+        <a
+          className="wf-hn-btn amber sm"
+          href={liHref}
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          open profile
+        </a>
       )}
       <button
         type="button"
