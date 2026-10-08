@@ -24,6 +24,11 @@ export type Lead = {
   source_url: string;
   campaign: string; // slug
   status: LeadStatus;
+  // who decided this lead and why. `decided_by` is "chief" (auto-triage) or
+  // "owner"; "" while still suggested. `reason` is Chief's or the owner's note.
+  decided_by: string;
+  decided_at: string | null;
+  reason: string;
   raw: string;
 };
 
@@ -45,6 +50,9 @@ function norm(row: Record<string, unknown>): Lead {
     status: (["suggested", "sent_to_hunter", "dismissed"].includes(status)
       ? status
       : "suggested") as LeadStatus,
+    decided_by: String(row.decided_by ?? ""),
+    decided_at: (row.decided_at as string | null) ?? null,
+    reason: String(row.reason ?? ""),
     raw: String(row.raw ?? ""),
   };
 }
@@ -89,5 +97,52 @@ export async function getSuggestedLeadCount(): Promise<number> {
     return count ?? 0;
   } catch {
     return 0;
+  }
+}
+
+// Chief's triage decisions — `events` rows with kind 'triage' (newest first) in
+// the last `days` days. The company / decision / reason / lead id come from the
+// event payload, falling back to the summary text. Defensive like the rest.
+export type TriageEvent = {
+  id: number;
+  ts: string | null;
+  company: string;
+  decision: string; // "accept" | "dismiss" | ""
+  reason: string;
+  leadId: string;
+  summary: string;
+};
+
+export async function getTriageEvents(days = 7): Promise<TriageEvent[]> {
+  try {
+    const cutoff = new Date(Date.now() - days * 86400000).toISOString();
+    const { data, error } = await supabaseAdmin()
+      .from("events")
+      .select("*")
+      .eq("kind", "triage")
+      .gte("ts", cutoff)
+      .order("ts", { ascending: false })
+      .limit(200);
+    if (error) return [];
+    return ((data as Record<string, unknown>[] | null) ?? []).map((row) => {
+      const p = (row.payload ?? {}) as Record<string, unknown>;
+      const decisionRaw = String(p.decision ?? p.action ?? "").toLowerCase();
+      const decision = decisionRaw.includes("accept")
+        ? "accept"
+        : decisionRaw.includes("dismiss")
+          ? "dismiss"
+          : "";
+      return {
+        id: Number(row.id),
+        ts: (row.ts as string | null) ?? null,
+        company: String(p.company ?? ""),
+        decision,
+        reason: String(p.reason ?? ""),
+        leadId: String(p.lead_id ?? p.leadId ?? ""),
+        summary: String(row.summary ?? ""),
+      };
+    });
+  } catch {
+    return [];
   }
 }

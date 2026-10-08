@@ -14,6 +14,7 @@ export const KNOWLEDGE_AGENTS = [
   "muse",
   "chief",
   "scout",
+  "fixer",
 ] as const;
 
 export type KnowledgeFile = {
@@ -25,6 +26,9 @@ export type KnowledgeFile = {
   text: string | null;
   summary: string;
   agent_ids: string[];
+  // when set, the file is attached to a Fixer project (reaches Claude Code inside
+  // that repo as .fixer/context/<slug>.md). "" for a general knowledge file.
+  project: string;
   created_at: string | null;
   updated_at: string | null;
   deleted_at: string | null;
@@ -43,6 +47,7 @@ function norm(row: Record<string, unknown>): KnowledgeFile {
     agent_ids: Array.isArray(row.agent_ids)
       ? (row.agent_ids as unknown[]).map(String).filter(Boolean)
       : [],
+    project: String(row.project ?? ""),
     created_at: (row.created_at as string | null) ?? null,
     updated_at: (row.updated_at as string | null) ?? null,
     deleted_at: (row.deleted_at as string | null) ?? null,
@@ -58,6 +63,25 @@ export async function getKnowledgeFiles(limit = 200): Promise<KnowledgeFile[]> {
       .is("deleted_at", null)
       .order("created_at", { ascending: false })
       .limit(limit);
+    if (error) return [];
+    return ((data as Record<string, unknown>[] | null) ?? []).map(norm);
+  } catch {
+    return [];
+  }
+}
+
+// Live knowledge files attached to a Fixer project (project = id), newest first.
+export async function getKnowledgeForProject(
+  project: string,
+): Promise<KnowledgeFile[]> {
+  try {
+    const { data, error } = await supabaseAdmin()
+      .from("knowledge_files")
+      .select("*")
+      .is("deleted_at", null)
+      .eq("project", project)
+      .order("created_at", { ascending: false })
+      .limit(100);
     if (error) return [];
     return ((data as Record<string, unknown>[] | null) ?? []).map(norm);
   } catch {

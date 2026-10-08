@@ -32,6 +32,9 @@ export type Post = {
   ts: string;
   agent_id: string;
   channel: PostChannel;
+  // true for a company-page post (channel `linkedin-page-post`); false for the
+  // owner's profile (`linkedin-post`). Only meaningful when channel is linkedin.
+  page: boolean;
   text: string;
   image_url: string | null;
   status: PostStatus;
@@ -57,15 +60,16 @@ function asStats(v: unknown): PostStats {
 }
 
 function normPost(row: Record<string, unknown>): Post {
-  const channel = String(row.channel ?? "linkedin");
+  const channel = String(row.channel ?? "linkedin").toLowerCase();
   const status = String(row.status ?? "published");
   return {
     id: String(row.id),
     ts: String(row.ts ?? ""),
     agent_id: String(row.agent_id ?? "muse"),
-    channel: (channel === "instagram"
+    channel: (channel.startsWith("instagram")
       ? "instagram"
       : "linkedin") as PostChannel,
+    page: channel.includes("page"),
     text: String(row.text ?? ""),
     image_url: (row.image_url as string | null) ?? null,
     status: (["published", "approved_manual", "posted_by_owner"].includes(
@@ -138,6 +142,8 @@ export function slugFromPath(path: string): string {
 // Returns null when it does not look like a Muse post (channel not *-post).
 export type MusePost = {
   channel: PostChannel;
+  // true for `linkedin-page-post` (company page), false for `linkedin-post`.
+  page: boolean;
   image: string | null;
   comment: string | null;
   body: string;
@@ -163,6 +169,7 @@ export function parseMusePost(
   if (!channel || !/-post$/.test(raw)) return null;
   return {
     channel,
+    page: raw.includes("page"),
     image: h.image || null,
     comment: h.comment || null,
     body: body.trim(),

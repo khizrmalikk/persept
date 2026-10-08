@@ -28,6 +28,8 @@ export type OfficeRoom = {
   task: string;
   basePct: number;
   workerLine: string;
+  // a small extra chip on the card (e.g. Fixer's "N open PRs"); "" = none.
+  badge: string;
   waiting: boolean;
   waitingText: string;
   opacity: number;
@@ -166,6 +168,7 @@ export function OfficeRooms({ rooms }: { rooms: OfficeRoom[] }) {
             <span className="of-room-bottom">
               <span className="of-room-taskrow">
                 <span className="of-room-task">{r.task}</span>
+                {r.badge && <span className="of-room-badge">{r.badge}</span>}
                 {r.workerLine && (
                   <span className="of-room-wl">{r.workerLine}</span>
                 )}

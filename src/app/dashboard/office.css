@@ -600,3 +600,15 @@
 .wf .of-ideas-line:hover {
   text-decoration: underline;
 }
+
+/* Fixer's office card: a small "N open PRs" chip in the task row */
+.wf .of-room-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: oklch(0.8 0.14 70 / 0.16);
+  color: var(--accent);
+  white-space: nowrap;
+}

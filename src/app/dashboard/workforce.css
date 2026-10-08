@@ -8732,3 +8732,179 @@ a.wf-lead-co:hover {
 .wf .wf-content > .wf-hub {
   min-height: 100vh;
 }
+
+/* connection-note character counter on a LinkedIn manual send (300 limit) */
+.wf .wf-ls-counter {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin-bottom: 2px;
+  width: 100%;
+}
+.wf .wf-ls-counter .amber {
+  color: var(--accent);
+  font-weight: 600;
+}
+.wf .wf-ls-counter .over {
+  color: var(--err);
+  font-weight: 600;
+}
+
+/* ── Leads triage: waiting line, decided-by chip, reason, undo bar ───────── */
+.wf .wf-leads-waiting {
+  font-size: 12px;
+  color: var(--ink-mut);
+  padding: 2px 0 8px;
+}
+.wf .wf-leads-handled-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.wf .wf-leads-handled-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.wf .wf-lead-decider {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+.wf .wf-lead-decider.is-chief {
+  background: oklch(0.8 0.14 70 / 0.16);
+  color: var(--accent);
+}
+.wf .wf-lead-decider.is-owner {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--ink-mut);
+}
+.wf .wf-lead-reason {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink-faint);
+}
+
+/* ── Chief "decided for you" triage panel ────────────────────────────────── */
+.wf .wf-triage {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.wf .wf-triage-daylabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 6px;
+}
+.wf .wf-triage-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.wf .wf-triage-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+.wf .wf-triage-decision {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  flex: none;
+}
+.wf .wf-triage-decision.is-accept {
+  background: oklch(0.8 0.16 150 / 0.14);
+  color: var(--ok);
+}
+.wf .wf-triage-decision.is-dismiss {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--ink-mut);
+}
+.wf .wf-triage-decision.is-na {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--ink-faint);
+}
+.wf a.wf-triage-co {
+  font-weight: 600;
+  color: var(--ink);
+}
+.wf a.wf-triage-co:hover {
+  color: var(--accent);
+}
+.wf .wf-triage-reason {
+  color: var(--ink-faint);
+  font-size: 12px;
+}
+.wf .wf-triage-next {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+.wf .wf-triage-next > summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--ink-mut);
+}
+.wf .wf-triage-next-body {
+  margin-top: 10px;
+}
+
+/* ── Sidebar: campaigns dropdown + sub-items ─────────────────────────────── */
+/* the dropdown is a <button>; reset it to match the Link items */
+.wf button.wf-sb-drop {
+  width: 100%;
+  background: none;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.wf .wf-sb-caret {
+  margin-left: auto;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--ink-faint);
+  transition: transform 0.14s ease;
+}
+.wf .wf-sb-caret.open {
+  transform: rotate(90deg);
+}
+.wf .wf-sb-subnav {
+  display: flex;
+  flex-direction: column;
+  margin: 2px 0 2px 28px;
+  border-left: 1px solid var(--line);
+}
+.wf .wf-sb-subitem {
+  padding: 6px 10px;
+  font-size: 13px;
+  color: var(--ink-mut);
+  border-radius: 0 8px 8px 0;
+  transition:
+    background 0.14s ease,
+    color 0.14s ease;
+}
+.wf .wf-sb-subitem:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink);
+}
+.wf .wf-sb-subitem.is-active {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.06);
+}

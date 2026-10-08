@@ -15,13 +15,22 @@ import {
   listAgentFiles,
   parseMarkdownTable,
 } from "@/lib/workforce/files";
+import { type Fix, getFixes, signedScreenshots } from "@/lib/workforce/fixes";
 import {
   getActiveIdeas,
   getDecidedIdeas,
   getEscalatedApprovalMap,
 } from "@/lib/workforce/ideas";
-import { getKnowledgeForAgent } from "@/lib/workforce/knowledge";
-import { getHandledLeads, getSuggestedLeads } from "@/lib/workforce/leads";
+import {
+  getKnowledgeFiles,
+  getKnowledgeForAgent,
+  type KnowledgeFile,
+} from "@/lib/workforce/knowledge";
+import {
+  getHandledLeads,
+  getSuggestedLeads,
+  getTriageEvents,
+} from "@/lib/workforce/leads";
 import {
   getCampaigns,
   getCandidateDomains,
@@ -30,6 +39,7 @@ import {
   slugify,
 } from "@/lib/workforce/outreach";
 import { getPosts, matchPostFile, parseMusePost } from "@/lib/workforce/posts";
+import { getProjects } from "@/lib/workforce/projects";
 import { getProposals } from "@/lib/workforce/proposals";
 import {
   type Agent,
@@ -41,9 +51,11 @@ import {
 import { CopyPanel } from "../CopyPanel";
 import { IdeasPanel, type IdeaVM } from "../IdeasPanel";
 import { BacklogPanel } from "./BacklogPanel";
+import { ChiefTriagePanel } from "./ChiefTriagePanel";
 import { DigestArchive } from "./DigestArchive";
 import { dueState, today } from "./dates";
 import { type Digest, parseDigest } from "./digest";
+import { FixesPanel, type FixShot } from "./FixesPanel";
 import { HealthStrip } from "./HealthStrip";
 import { HudPanel } from "./HudPanel";
 import { LatestDigest } from "./LatestDigest";
@@ -56,6 +68,8 @@ import { MuseWeekPanel, type PlanRow } from "./MuseWeekPanel";
 import { OfferPanel } from "./OfferPanel";
 import { PipelineSummary } from "./PipelineSummary";
 import { PipelineTable, type ProspectRow } from "./PipelineTable";
+import type { ProjectStats } from "./ProjectCard";
+import { ProjectsPanel } from "./ProjectsPanel";
 import { ProposalsPanel } from "./ProposalsPanel";
 import { type Review, ReviewsPanel } from "./ReviewsPanel";
 import { ScribeLessonsPanel } from "./ScribeLessonsPanel";
@@ -308,6 +322,7 @@ async function MusePanels({ agentId }: { agentId: string }) {
   const drafts: MuseDraft[] = approvals.map((ap) => {
     const parsed = parseMusePost(ap.draft) ?? {
       channel: "linkedin" as const,
+      page: false,
       image: null,
       comment: null,
       body: ap.draft ?? "",
@@ -317,6 +332,7 @@ async function MusePanels({ agentId }: { agentId: string }) {
       approvalId: ap.id,
       agentId,
       channel: parsed.channel,
+      page: parsed.page,
       body: parsed.body,
       image: parsed.image ?? matched?.image ?? null,
       comment: parsed.comment,
@@ -337,6 +353,7 @@ async function MusePanels({ agentId }: { agentId: string }) {
     return {
       id: p.id,
       channel: p.channel,
+      page: p.page,
       firstLine,
       date: when(p.published_at ?? p.ts),
       url: p.url,
@@ -450,6 +467,8 @@ async function ChiefPanels({
     doneItems,
     activeIdeas,
     decidedIdeas,
+    triageEvents,
+    triageFile,
   ] = await Promise.all([
     supabaseAdmin()
       .from("events")
@@ -464,6 +483,8 @@ async function ChiefPanels({
     getDoneBacklog(20),
     getActiveIdeas(),
     getDecidedIdeas(20),
+    getTriageEvents(7),
+    getAgentFile(agentId, "inbox/TRIAGE.md"),
   ]);
   const events = (data as WfEvent[] | null) ?? [];
   const t = today();
@@ -548,6 +569,19 @@ async function ChiefPanels({
       </Cell>
       <Cell wide>
         <HudPanel
+          title="decided for you"
+          right={
+            triageEvents.length ? `${triageEvents.length} · 7 days` : undefined
+          }
+        >
+          <ChiefTriagePanel
+            events={triageEvents}
+            triageMd={triageFile?.content ?? null}
+          />
+        </HudPanel>
+      </Cell>
+      <Cell wide>
+        <HudPanel
           title="weekly review"
           right={reviews.length ? reviews[0].date : undefined}
         >
@@ -586,6 +620,78 @@ async function ChiefPanels({
   );
 }
 
+async function FixerPanels() {
+  const [projects, fixes, knowledge] = await Promise.all([
+    getProjects(),
+    getFixes(200),
+    getKnowledgeFiles(200),
+  ]);
+
+  // per-project stats derived from fixes.
+  const now = Date.now();
+  const statsById: Record<string, ProjectStats> = {};
+  for (const p of projects) {
+    const pf = fixes.filter((f) => f.project === p.id);
+    const openPrs = pf.filter((f) => f.status === "pr_open").length;
+    const merged30 = pf.filter(
+      (f) =>
+        f.status === "merged" &&
+        f.merged_at &&
+        now - new Date(f.merged_at).getTime() < 30 * 86400000,
+    ).length;
+    const last =
+      pf.reduce<string | null>((acc, f) => {
+        if (!f.ts) return acc;
+        return !acc || new Date(f.ts) > new Date(acc) ? f.ts : acc;
+      }, null) ?? p.updated_at;
+    statsById[p.id] = { openPrs, merged30, lastActivity: last };
+  }
+
+  // knowledge files grouped by project.
+  const filesById: Record<string, KnowledgeFile[]> = {};
+  for (const f of knowledge) {
+    if (!f.project) continue;
+    if (!filesById[f.project]) filesById[f.project] = [];
+    filesById[f.project].push(f);
+  }
+
+  // last 40 fixes for the panel + signed screenshot URLs (one batched call each).
+  const recent: Fix[] = fixes.slice(0, 40);
+  const shotsByFix: Record<string, FixShot[]> = {};
+  await Promise.all(
+    recent
+      .filter((f) => f.screenshots.length > 0)
+      .map(async (f) => {
+        shotsByFix[f.id] = await signedScreenshots(f.short_id, f.screenshots);
+      }),
+  );
+
+  return (
+    <>
+      <Cell wide>
+        <HudPanel
+          title="projects"
+          right={projects.length ? `${projects.length}` : undefined}
+        >
+          <ProjectsPanel
+            projects={projects}
+            statsById={statsById}
+            filesById={filesById}
+          />
+        </HudPanel>
+      </Cell>
+      <Cell wide>
+        <HudPanel
+          title="fixes"
+          right={recent.length ? `${recent.length}` : undefined}
+        >
+          <FixesPanel fixes={recent} shotsByFix={shotsByFix} />
+        </HudPanel>
+      </Cell>
+    </>
+  );
+}
+
 export async function AgentPanels({
   agent,
   agents,
@@ -599,6 +705,7 @@ export async function AgentPanels({
   return (
     <section className="wf-panels">
       {id === "hunter" ? <HunterPanels agentId={id} /> : null}
+      {id === "fixer" ? <FixerPanels /> : null}
       {id === "scout" ? (
         <ScoutPanels agentId={id} museEnabled={museEnabled} />
       ) : null}

@@ -1280,3 +1280,281 @@
   color: var(--ink-faint);
   margin-bottom: 6px;
 }
+
+/* a stalled copy request gets a red dot (vs the default stuck/refused dot) */
+.wf .wf-copy-dot.is-red {
+  background: var(--err);
+}
+
+/* ── Fixer: projects + fixes ─────────────────────────────────────────────── */
+.wf .wf-projects {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.wf .wf-projects-top {
+  display: flex;
+  justify-content: flex-end;
+}
+.wf .wf-proj-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.wf .wf-proj-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.wf .wf-proj-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.wf .wf-proj-name {
+  font-weight: 600;
+  font-size: 15px;
+}
+.wf .wf-proj-actions {
+  display: flex;
+  gap: 6px;
+}
+.wf .wf-proj-repo {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.wf .wf-proj-norepo {
+  color: var(--accent);
+}
+.wf .wf-proj-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  font-size: 12px;
+  color: var(--ink-mut);
+}
+.wf .wf-proj-stats strong {
+  color: var(--ink);
+}
+.wf .wf-proj-files {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.wf .wf-proj-files-head {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.wf .wf-proj-filelist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.wf .wf-proj-fileitem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.wf .wf-proj-filename {
+  flex: 1;
+  min-width: 0;
+}
+.wf .wf-proj-filedate {
+  font-size: 10px;
+  color: var(--ink-faint);
+}
+.wf .wf-proj-remove {
+  font: inherit;
+  font-size: 11px;
+  background: none;
+  border: 0;
+  color: var(--ink-faint);
+  cursor: pointer;
+}
+.wf .wf-proj-remove:hover {
+  color: var(--err);
+}
+.wf .wf-proj-upload {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* project form */
+.wf .wf-proj-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+.wf .wf-proj-form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+.wf .wf-proj-login {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.wf .wf-proj-login legend {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding: 0 6px;
+}
+.wf .wf-proj-enabled {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+.wf .wf-proj-form-foot {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* fixes */
+.wf .wf-fixes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.wf .wf-fix {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  overflow: hidden;
+}
+.wf .wf-fix-top {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  color: var(--ink);
+  flex-wrap: wrap;
+}
+.wf .wf-fix-status {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--ink-mut);
+  flex: none;
+}
+.wf .wf-fix-status.is-pr_open {
+  background: oklch(0.8 0.14 70 / 0.16);
+  color: var(--accent);
+}
+.wf .wf-fix-status.is-merged {
+  background: oklch(0.8 0.16 150 / 0.14);
+  color: var(--ok);
+}
+.wf .wf-fix-status.is-failed {
+  background: oklch(0.72 0.17 25 / 0.16);
+  color: var(--err);
+}
+.wf .wf-fix-status.is-running {
+  background: oklch(0.78 0.12 220 / 0.16);
+  color: oklch(0.84 0.09 220);
+}
+.wf .wf-fix-title {
+  flex: 1;
+  min-width: 120px;
+  font-size: 13px;
+}
+.wf .wf-fix-meta {
+  font-size: 10px;
+  color: var(--ink-faint);
+}
+.wf .wf-fix-body {
+  padding: 0 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+}
+.wf .wf-fix-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-right: 8px;
+}
+.wf .wf-fix-summary {
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+.wf .wf-fix-checks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.wf .wf-fix-checks .ok {
+  color: var(--ok);
+}
+.wf .wf-fix-checks .bad {
+  color: var(--err);
+}
+.wf .wf-fix-check-cmd {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.wf .wf-fix-tail,
+.wf .wf-fix-error {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-mut);
+  background: var(--bg, rgba(0, 0, 0, 0.2));
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 4px 0 0;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  max-height: 160px;
+}
+.wf .wf-fix-shots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.wf .wf-fix-shot {
+  width: 120px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}

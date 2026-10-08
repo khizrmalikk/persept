@@ -29,6 +29,19 @@ export type ApprovalVM = {
   held: boolean;
   // true when Scribe raised a "question about …" approval (ask, don't send).
   isQuestion: boolean;
+  // merge approval ("merge PR #n in <project>"): merge on approve, not send.
+  isMerge: boolean;
+  prNumber: number | null;
+  prProject: string;
+};
+
+// The fix behind a merge approval (checks, screenshots, PR link), keyed by id.
+export type MergeVM = {
+  prUrl: string;
+  prNumber: number | null;
+  project: string;
+  checks: { cmd: string; ok: boolean; tail: string }[];
+  shots: { name: string; url: string }[];
 };
 
 export type DecidedVM = {
@@ -156,8 +169,9 @@ function WordDiff({ prev, next }: { prev: string; next: string }) {
   );
 }
 
-// whatsapp / instagram drafts are sent by the owner from his phone: give him a
-// one-tap open link right in the detail (digits only for wa.me; a handle for ig).
+// whatsapp / instagram / linkedin drafts are sent by the owner by hand: give him
+// a one-tap open link right in the detail (digits only for wa.me; a handle for
+// ig; the profile URL for linkedin, which has no permitted send API).
 function manualSendHref(
   channel: string,
   to: string,
@@ -179,7 +193,39 @@ function manualSendHref(
     if (!/^[A-Za-z0-9._]{2,30}$/.test(handle)) return null;
     return { label: "open instagram", href: `https://instagram.com/${handle}` };
   }
+  if (ch === "linkedin") {
+    const c = to.trim();
+    const href = /^https?:\/\//i.test(c)
+      ? c
+      : /linkedin\.com\//i.test(c)
+        ? `https://${c.replace(/^\/+/, "")}`
+        : "";
+    if (!href) return null;
+    return { label: "open profile", href };
+  }
   return null;
+}
+
+// a copy-to-clipboard button for the manual-send body (approvals is a client view).
+function CopyBody({ body }: { body: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      className="wf-apx-btn ghost"
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(body);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1600);
+        } catch {
+          /* clipboard unavailable */
+        }
+      }}
+    >
+      {copied ? "copied" : "copy message"}
+    </button>
+  );
 }
 
 // recipient picker for "send back": scribe rewrites the draft, hunter acts on the
@@ -226,6 +272,7 @@ export function ApprovalsView({
   embedded = false,
   history = {},
   copyMeta = {},
+  mergeInfo = {},
 }: {
   waiting: ApprovalVM[];
   held: ApprovalVM[];
@@ -241,6 +288,8 @@ export function ApprovalsView({
   // Draft-version chains + copy-request meta, keyed by approval id.
   history?: Record<number, VersionVM[]>;
   copyMeta?: Record<number, CopyMetaVM>;
+  // the fix behind each merge approval (checks / screenshots / PR link).
+  mergeInfo?: Record<number, MergeVM>;
 }) {
   const [tab, setTab] = useState<Tab>("waiting");
   const [selId, setSelId] = useState<number | null>(waiting[0]?.id ?? null);
@@ -529,12 +578,71 @@ export function ApprovalsView({
                   )}
                 </div>
 
+                {sel.isMerge && mergeInfo[sel.id] && (
+                  <div className="wf-apx-merge">
+                    {mergeInfo[sel.id].prUrl && (
+                      <a
+                        className="wf-apx-btn primary"
+                        href={mergeInfo[sel.id].prUrl}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                      >
+                        {mergeInfo[sel.id].prNumber
+                          ? `open PR #${mergeInfo[sel.id].prNumber}`
+                          : "open pull request"}{" "}
+                        ↗
+                      </a>
+                    )}
+                    {mergeInfo[sel.id].checks.length > 0 && (
+                      <ul className="wf-apx-merge-checks">
+                        {mergeInfo[sel.id].checks.map((c, i) => (
+                          <li
+                            key={`${c.cmd}-${i}`}
+                            className={c.ok ? "ok" : "bad"}
+                          >
+                            <span className="wf-apx-merge-cmd">
+                              {c.ok ? "✓" : "✗"} {c.cmd}
+                            </span>
+                            {!c.ok && c.tail && (
+                              <pre className="wf-apx-merge-tail">{c.tail}</pre>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {mergeInfo[sel.id].shots.length > 0 && (
+                      <div className="wf-apx-merge-shots">
+                        {mergeInfo[sel.id].shots.map((s) => (
+                          <a
+                            key={s.name}
+                            href={s.url}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {/* biome-ignore lint/performance/noImgElement: signed storage URL, not a build-time asset */}
+                            <img
+                              src={s.url}
+                              alt={s.name}
+                              className="wf-apx-merge-shot"
+                            />
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {(() => {
                   const ms =
                     sel.outbound && !editing
                       ? manualSendHref(sel.channel, sel.to, sel.body)
                       : null;
-                  return ms ? (
+                  if (!ms) return null;
+                  const isLinkedin = sel.channel.toLowerCase() === "linkedin";
+                  const isConnectionNote =
+                    isLinkedin &&
+                    /connection note/i.test(`${sel.reason}\n${sel.body}`);
+                  return (
                     <div
                       style={{
                         display: "flex",
@@ -544,9 +652,24 @@ export function ApprovalsView({
                         padding: "0 20px 4px",
                       }}
                     >
+                      {isConnectionNote && (
+                        <div
+                          className="wf-ls-counter"
+                          style={{ width: "100%" }}
+                        >
+                          <span
+                            className={sel.body.length > 300 ? "over" : "amber"}
+                          >
+                            {sel.body.length}
+                          </span>{" "}
+                          / 300 · connection note
+                        </div>
+                      )}
                       <span className="wf-apx-hint">
-                        you send this one from your phone —
+                        you send this one{" "}
+                        {isLinkedin ? "by hand" : "from your phone"} —
                       </span>
+                      <CopyBody body={sel.body} />
                       <a
                         className="wf-apx-btn primary"
                         href={ms.href}
@@ -556,7 +679,7 @@ export function ApprovalsView({
                         {ms.label}
                       </a>
                     </div>
-                  ) : null;
+                  );
                 })()}
 
                 {(history[sel.id]?.length ?? 0) > 0 && (
@@ -565,7 +688,38 @@ export function ApprovalsView({
                   </div>
                 )}
 
-                {sel.isQuestion ? (
+                {sel.isMerge ? (
+                  <div className="wf-apx-foot">
+                    <textarea
+                      className="wf-apx-note"
+                      name="note"
+                      rows={3}
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      placeholder="note (optional) · sent to fixer if you reject"
+                    />
+                    <div className="wf-apx-actions">
+                      <button
+                        type="submit"
+                        className="wf-apx-btn primary"
+                        formAction={approveAction}
+                      >
+                        merge
+                      </button>
+                      <button
+                        type="submit"
+                        className="wf-apx-btn danger"
+                        formAction={rejectAction}
+                      >
+                        reject
+                      </button>
+                      <span className="wf-apx-hint">
+                        merging runs on the bridge after you approve. reject
+                        with a note to send it back to fixer.
+                      </span>
+                    </div>
+                  </div>
+                ) : sel.isQuestion ? (
                   <div className="wf-apx-foot">
                     <textarea
                       className="wf-apx-note"
@@ -650,7 +804,11 @@ export function ApprovalsView({
                             className="wf-apx-btn primary"
                             formAction={approveAction}
                           >
-                            {sel.channel === "linkedin" ? "publish" : "send"}
+                            {sel.channel === "linkedin"
+                              ? "mark sent"
+                              : sel.channel.includes("post")
+                                ? "publish"
+                                : "send"}
                           </button>
                           <button
                             type="button"

@@ -5,12 +5,54 @@ import {
   acceptLead,
   dismissLead,
   sendAgentCommand,
+  undoChiefAccept,
+  undoChiefDismiss,
 } from "@/lib/workforce/actions";
 // type-only import: leads.ts is server-only (supabaseAdmin).
 import type { Lead } from "@/lib/workforce/leads";
 import { ago } from "@/lib/workforce/types";
 
 const RUN_MSG = "run the weekly prospecting run now, exactly as in AGENTS.md";
+const TRIAGE_HOURS = Number(process.env.NEXT_PUBLIC_TRIAGE_AFTER_HOURS) || 24;
+
+// One decided lead: who decided it ("chief"/"you"), the reason, and — for a lead
+// Chief decided — an undo that flips it (accept→park, dismiss→add to hunter).
+function HandledRow({ l }: { l: Lead }) {
+  const [pending, start] = useTransition();
+  const byChief = l.decided_by === "chief";
+  const accepted = l.status === "sent_to_hunter";
+  const undo = () =>
+    start(async () => {
+      if (accepted) await undoChiefAccept(l.id, l.company);
+      else await undoChiefDismiss(l.id);
+    });
+  return (
+    <li className="wf-leads-handleditem">
+      <div className="wf-leads-handled-main">
+        <span className="wf-leads-handled-co">{l.company}</span>
+        <span className={`wf-lead-decider is-${byChief ? "chief" : "owner"}`}>
+          {byChief ? "chief" : "you"}
+        </span>
+        <span
+          className={`wf-leads-handled-status ${accepted ? "ok" : "muted"}`}
+        >
+          {accepted ? "sent to hunter" : "dismissed"}
+        </span>
+        {byChief && (
+          <button
+            type="button"
+            className="act sm secondary"
+            disabled={pending}
+            onClick={undo}
+          >
+            {pending ? "…" : "undo"}
+          </button>
+        )}
+      </div>
+      {l.reason && <p className="wf-lead-reason">{l.reason}</p>}
+    </li>
+  );
+}
 
 function LeadRow({
   lead,
@@ -113,8 +155,12 @@ export function LeadsPanel({
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showHandled, setShowHandled] = useState(false);
+  const [chiefOnly, setChiefOnly] = useState(false);
   const [pending, start] = useTransition();
   const candidateIds = new Set(fromCandidateIds);
+  const handledList = chiefOnly
+    ? handled.filter((l) => l.decided_by === "chief")
+    : handled;
 
   const toggle = (id: string, on: boolean) =>
     setSelected((prev) => {
@@ -142,6 +188,12 @@ export function LeadsPanel({
 
   return (
     <div className="wf-leads">
+      {suggested.length > 0 && (
+        <div className="wf-leads-waiting">
+          {suggested.length} lead{suggested.length === 1 ? "" : "s"} waiting for
+          you · chief decides anything older than {TRIAGE_HOURS}h
+        </div>
+      )}
       <div className="wf-leads-top">
         <button
           type="button"
@@ -188,29 +240,30 @@ export function LeadsPanel({
 
       {handled.length > 0 && (
         <div className="wf-leads-handled">
-          <button
-            type="button"
-            className="wf-bl-done-toggle"
-            onClick={() => setShowHandled((v) => !v)}
-            aria-expanded={showHandled}
-          >
-            handled ({handled.length})
-          </button>
+          <div className="wf-leads-handled-bar">
+            <button
+              type="button"
+              className="wf-bl-done-toggle"
+              onClick={() => setShowHandled((v) => !v)}
+              aria-expanded={showHandled}
+            >
+              handled ({handled.length})
+            </button>
+            {showHandled && handled.some((l) => l.decided_by === "chief") && (
+              <button
+                type="button"
+                className={`wf-hn-fchip${chiefOnly ? " on" : ""}`}
+                onClick={() => setChiefOnly((v) => !v)}
+                aria-pressed={chiefOnly}
+              >
+                decided by chief
+              </button>
+            )}
+          </div>
           {showHandled && (
             <ul className="wf-leads-handledlist">
-              {handled.map((l) => (
-                <li key={l.id} className="wf-leads-handleditem">
-                  <span className="wf-leads-handled-co">{l.company}</span>
-                  <span
-                    className={`wf-leads-handled-status ${
-                      l.status === "sent_to_hunter" ? "ok" : "muted"
-                    }`}
-                  >
-                    {l.status === "sent_to_hunter"
-                      ? "sent to hunter"
-                      : "dismissed"}
-                  </span>
-                </li>
+              {handledList.map((l) => (
+                <HandledRow key={l.id} l={l} />
               ))}
             </ul>
           )}

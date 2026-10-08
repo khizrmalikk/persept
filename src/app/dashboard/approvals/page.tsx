@@ -7,17 +7,20 @@ import {
   sendApprovedEdit,
 } from "@/lib/workforce/actions";
 import { getApprovalChains } from "@/lib/workforce/drafts";
+import { getFixByPr, signedScreenshots } from "@/lib/workforce/fixes";
 import type { Approval } from "@/lib/workforce/types";
 import { MobileApprovals } from "../_components/MobileApprovals";
 import {
   ApprovalsView,
   type CopyMetaVM,
   type DecidedVM,
+  type MergeVM,
   type VersionVM,
 } from "./_components/ApprovalsView";
 import {
   approvalToDecidedVM,
   approvalToVM,
+  parseMerge,
   toVersionVMs,
 } from "./_components/build-vm";
 import "../approvals.css";
@@ -65,6 +68,27 @@ export default async function ApprovalsPage() {
     approvalToDecidedVM(d, versionsByApproval[d.id]?.length ?? 0),
   );
 
+  // Merge approvals ("merge PR #n in <project>"): pull the matching fix row for
+  // its checks, screenshots and PR link so the inbox renders a merge card.
+  const mergeInfo: Record<number, MergeVM> = {};
+  await Promise.all(
+    all.map(async (a) => {
+      const m = parseMerge(a.action);
+      if (!m.isMerge || m.prNumber == null) return;
+      const fix = await getFixByPr(m.project, m.prNumber);
+      const shots = fix
+        ? await signedScreenshots(fix.short_id, fix.screenshots)
+        : [];
+      mergeInfo[a.id] = {
+        prUrl: fix?.pr_url ?? "",
+        prNumber: m.prNumber,
+        project: m.project,
+        checks: fix?.checks ?? [],
+        shots,
+      };
+    }),
+  );
+
   return (
     <>
       <div className="wf-only-desktop">
@@ -79,6 +103,7 @@ export default async function ApprovalsPage() {
           bulkAction={bulkApprovals}
           history={history}
           copyMeta={copyMeta}
+          mergeInfo={mergeInfo}
         />
       </div>
       <MobileApprovals

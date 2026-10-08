@@ -16,6 +16,8 @@ export type MuseDraft = {
   approvalId: number;
   agentId: string;
   channel: PostChannel;
+  // linkedin only: true = company page (linkedin-page-post), false = profile.
+  page: boolean;
   body: string;
   image: string | null;
   comment: string | null;
@@ -86,7 +88,7 @@ function DraftCard({ d }: { d: MuseDraft }) {
   // draft text for the edit box: keep the outbound header so Muse/bridge still
   // parse channel + image on re-send.
   const editText = [
-    `channel: ${d.channel}-post`,
+    `channel: ${d.page ? "linkedin-page-post" : `${d.channel}-post`}`,
     d.image ? `image: ${d.image}` : "",
     d.comment ? `comment: ${d.comment}` : "",
     "",
@@ -99,6 +101,11 @@ function DraftCard({ d }: { d: MuseDraft }) {
     <article className="wf-muse-draft">
       <div className="wf-muse-draft-head">
         <span className={`wf-chip sm is-${d.channel}`}>{d.channel}</span>
+        {d.channel === "linkedin" && (
+          <span className="wf-chip sm ghost">
+            {d.page ? "page" : "profile"}
+          </span>
+        )}
         <span className="wf-muse-draft-when">{d.ago}</span>
       </div>
       <p className="wf-muse-draft-text">{d.body}</p>

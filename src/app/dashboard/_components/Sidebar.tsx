@@ -38,6 +38,17 @@ const NAV = [
   },
 ];
 
+// Shortcuts into agent workspaces: the CRM (Hunter's prospects), the campaigns
+// dropdown (outreach = Hunter, marketing = Muse) and projects (Fixer).
+const CRM_HREF = "/dashboard/agents/hunter/prospects";
+const PROJECTS_HREF = "/dashboard/agents/fixer";
+const OUTREACH_HREF = "/dashboard/agents/hunter/campaigns";
+const MARKETING_HREF = "/dashboard/agents/muse";
+const CAMPAIGN_LINKS = [
+  { label: "outreach", href: OUTREACH_HREF },
+  { label: "marketing", href: MARKETING_HREF },
+];
+
 function gst(now: Date): string {
   const g = new Date(now.getTime() + (now.getTimezoneOffset() + 240) * 60000);
   return g.toTimeString().slice(0, 8);
@@ -56,6 +67,7 @@ export function Sidebar({
 }) {
   const pathname = usePathname() ?? "";
   const [clock, setClock] = useState("--:--:--");
+  const [campaignsOpen, setCampaignsOpen] = useState(false);
   useEffect(() => {
     setClock(gst(new Date()));
     const iv = setInterval(() => setClock(gst(new Date())), 1000);
@@ -66,6 +78,10 @@ export function Sidebar({
     href === "/dashboard"
       ? pathname === "/dashboard"
       : pathname.startsWith(href);
+  const campaignActive = CAMPAIGN_LINKS.some((c) =>
+    pathname.startsWith(c.href),
+  );
+  const showCampaigns = campaignsOpen || campaignActive;
 
   return (
     <aside className="wf-sb">
@@ -90,6 +106,48 @@ export function Sidebar({
             )}
           </Link>
         ))}
+
+        <Link
+          href={CRM_HREF}
+          className={`wf-sb-item${isActive(CRM_HREF) ? " is-active" : ""}`}
+        >
+          <span className="wf-sb-glyph">▦</span>
+          <span className="wf-sb-item-label">CRM</span>
+        </Link>
+
+        <button
+          type="button"
+          className={`wf-sb-item wf-sb-drop${campaignActive ? " is-active" : ""}`}
+          onClick={() => setCampaignsOpen((o) => !o)}
+          aria-expanded={showCampaigns}
+        >
+          <span className="wf-sb-glyph">◈</span>
+          <span className="wf-sb-item-label">campaigns</span>
+          <span className={`wf-sb-caret${showCampaigns ? " open" : ""}`}>
+            ›
+          </span>
+        </button>
+        {showCampaigns && (
+          <div className="wf-sb-subnav">
+            {CAMPAIGN_LINKS.map((c) => (
+              <Link
+                key={c.href}
+                href={c.href}
+                className={`wf-sb-subitem${pathname.startsWith(c.href) ? " is-active" : ""}`}
+              >
+                {c.label}
+              </Link>
+            ))}
+          </div>
+        )}
+
+        <Link
+          href={PROJECTS_HREF}
+          className={`wf-sb-item${isActive(PROJECTS_HREF) ? " is-active" : ""}`}
+        >
+          <span className="wf-sb-glyph">⬡</span>
+          <span className="wf-sb-item-label">projects</span>
+        </Link>
       </nav>
 
       <nav className="wf-sb-group" aria-label="agents">
