@@ -24,12 +24,15 @@ export async function GET(req: NextRequest) {
     );
     if (!res.ok) {
       const errText = await res.text().catch(() => "");
-      console.error(`[scribe-token] elevenlabs ${res.status}: ${errText.slice(0, 200)}`);
+      console.error(
+        `[scribe-token] elevenlabs ${res.status}: ${errText.slice(0, 200)}`,
+      );
       return new NextResponse(null, { status: 502 });
     }
-    const data = (await res.json().catch(() => null)) as
-      | { token?: string; single_use_token?: string }
-      | null;
+    const data = (await res.json().catch(() => null)) as {
+      token?: string;
+      single_use_token?: string;
+    } | null;
     const token = data?.token ?? data?.single_use_token;
     if (!token) return new NextResponse(null, { status: 502 });
     return NextResponse.json({ token });

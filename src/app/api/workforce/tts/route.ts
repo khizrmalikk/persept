@@ -23,9 +23,12 @@ export async function POST(req: NextRequest) {
   if (!allowed) {
     return NextResponse.json({ error: "not allowed" }, { status: 401 });
   }
-  const body = (await req.json().catch(() => null)) as
-    | { agentId?: string; text?: string; previousText?: string; nextText?: string }
-    | null;
+  const body = (await req.json().catch(() => null)) as {
+    agentId?: string;
+    text?: string;
+    previousText?: string;
+    nextText?: string;
+  } | null;
   const agentId = (body?.agentId ?? "").trim();
   const text = prepareForSpeech(body?.text ?? "");
   if (!text) {

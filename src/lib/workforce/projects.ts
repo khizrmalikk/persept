@@ -30,6 +30,7 @@ export type Project = {
   url: string;
   login: ProjectLogin;
   deploy: ProjectDeploy;
+  vercel_project_id: string;
   research_cadence: ResearchCadence;
   enabled: boolean;
   created_at: string | null;
@@ -78,6 +79,7 @@ function norm(row: Record<string, unknown>): Project {
     url: String(row.url ?? ""),
     login: normLogin(row.login),
     deploy,
+    vercel_project_id: String(row.vercel_project_id ?? ""),
     research_cadence: cadence,
     enabled: row.enabled !== false,
     created_at: (row.created_at as string | null) ?? null,

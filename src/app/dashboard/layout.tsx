@@ -1,23 +1,41 @@
 import type { Metadata } from "next";
+import { Archivo, Geist, JetBrains_Mono } from "next/font/google";
 import { redirect } from "next/navigation";
-import { currentUser, supabaseAdmin } from "@/lib/supabase/server";
+import { currentUser } from "@/lib/supabase/server";
 import { signOut } from "@/lib/workforce/auth-actions";
-import { ROSTER, type SidebarAgent } from "@/lib/workforce/roster";
-import { getActiveSubagents } from "@/lib/workforce/subagents";
-import { AutoRefresh } from "./_components/AutoRefresh";
-import { MobileTabBar } from "./_components/MobileTabBar";
-import { MobileTopBar } from "./_components/MobileTopBar";
-import { Sidebar } from "./_components/Sidebar";
-import "./workforce.css";
-import "./mobile.css";
+import { OSProvider } from "./_components/os-store";
+import "./os.css";
+
+// Persept OS — the workforce dashboard. Full-screen desktop surface on wide
+// screens; below 1280px the page hands off to the mobile app (chat with Chief +
+// approvals). Same Supabase magic-link allowlist (see proxy.ts + currentUser).
+
+const archivo = Archivo({
+  subsets: ["latin"],
+  weight: ["700", "800", "900"],
+  variable: "--font-archivo",
+  display: "swap",
+});
+const geist = Geist({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-geist",
+  display: "swap",
+});
+const jbmono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-jbmono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "Persept · workforce",
+  title: "Persept OS",
   robots: { index: false, follow: false },
 };
 export const dynamic = "force-dynamic";
 
-export default async function DashboardLayout({
+export default async function OSLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -26,109 +44,44 @@ export default async function DashboardLayout({
   const devAuthBypass =
     process.env.NODE_ENV !== "production" &&
     process.env.DASHBOARD_AUTH_BYPASS === "1";
+
   if (!devAuthBypass && user && !allowed) {
     return (
-      <main className="wf shell wf-dark py-24">
-        <p className="kicker">persept / workforce</p>
-        <h1>not on the list</h1>
-        <p style={{ color: "var(--ink-soft)" }}>
-          {email} is signed in but not allowed here.
-        </p>
-        <form action={signOut} className="mt-4">
-          <button className="act secondary" type="submit">
-            sign out
-          </button>
-        </form>
-      </main>
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          display: "grid",
+          placeItems: "center",
+          background: "#0b0a09",
+          color: "#f4f1ec",
+          fontFamily: "system-ui, sans-serif",
+          textAlign: "center",
+          padding: 24,
+        }}
+      >
+        <div>
+          <p style={{ color: "#8a847b", margin: 0 }}>persept os</p>
+          <h1 style={{ fontWeight: 800 }}>not on the list</h1>
+          <p style={{ color: "#b9b3aa" }}>
+            {email} is signed in but not allowed here.
+          </p>
+          <form action={signOut}>
+            <button type="submit">sign out</button>
+          </form>
+        </div>
+      </div>
     );
   }
-  if (!devAuthBypass && !user) redirect("/login");
+  if (!devAuthBypass && !user) redirect("/login?next=/dashboard");
 
-  // Data for the sidebar: live agents, pending approvals (per agent + total),
-  // and running sub-agents per agent → each roster agent's status.
-  let pending = 0;
-  const sidebarAgents: SidebarAgent[] = [];
-  try {
-    const db = supabaseAdmin();
-    const [{ data: agentRows }, { data: pendingRows }, workerRows] =
-      await Promise.all([
-        db.from("agents").select("id, status"),
-        db.from("approvals").select("agent_id").eq("status", "pending"),
-        getActiveSubagents(),
-      ]);
+  const fontVars = `${archivo.variable} ${geist.variable} ${jbmono.variable}`;
 
-    const statusById = new Map<string, string>();
-    for (const a of (agentRows as
-      | { id: string; status: string | null }[]
-      | null) ?? [])
-      statusById.set(a.id, a.status ?? "idle");
-
-    const pendingByAgent = new Map<string, number>();
-    for (const p of (pendingRows as { agent_id: string | null }[] | null) ??
-      []) {
-      pending += 1;
-      if (p.agent_id)
-        pendingByAgent.set(
-          p.agent_id,
-          (pendingByAgent.get(p.agent_id) ?? 0) + 1,
-        );
-    }
-
-    const workersByAgent = new Map<string, number>();
-    for (const w of workerRows)
-      if (w.status === "running" && w.agent_id)
-        workersByAgent.set(
-          w.agent_id,
-          (workersByAgent.get(w.agent_id) ?? 0) + 1,
-        );
-
-    for (const r of ROSTER) {
-      const deployed = statusById.has(r.id);
-      const workers = workersByAgent.get(r.id) ?? 0;
-      const waiting = (pendingByAgent.get(r.id) ?? 0) > 0;
-      const live = statusById.get(r.id);
-      const status = !deployed
-        ? "soon"
-        : waiting
-          ? "waiting"
-          : live === "working" || workers > 0
-            ? "working"
-            : "idle";
-      sidebarAgents.push({
-        id: r.id,
-        name: r.name,
-        emoji: r.emoji,
-        role: r.role,
-        href: `/dashboard/agents/${r.id}`,
-        status,
-        workers,
-      });
-    }
-  } catch {
-    for (const r of ROSTER)
-      sidebarAgents.push({
-        id: r.id,
-        name: r.name,
-        emoji: r.emoji,
-        role: r.role,
-        href: `/dashboard/agents/${r.id}`,
-        status: r.id === "fixer" ? "soon" : "idle",
-        workers: 0,
-      });
-  }
-
+  // The page renders the desktop (wide) + the mobile app (<1280px) inside the
+  // provider's root, so both have the OS context + server data.
   return (
-    <div className="wf wf-dark wf-app">
-      <Sidebar
-        agents={sidebarAgents}
-        pending={pending}
-        operator={email ?? "operator"}
-        signOut={signOut}
-      />
-      <MobileTopBar />
-      <div className="wf-content">{children}</div>
-      <MobileTabBar pending={pending} chatHref="/dashboard/agents/hunter" />
-      <AutoRefresh seconds={6} />
+    <div className={fontVars}>
+      <OSProvider>{children}</OSProvider>
     </div>
   );
 }

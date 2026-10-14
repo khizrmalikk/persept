@@ -35,11 +35,19 @@ OpenClaw gateway (VPS)  ⇄  bridge (VPS, Node)  ⇄  Supabase "workforce" proje
 - Auth is Supabase magic link with an email allowlist: `src/proxy.ts` (Next 16 request gate)
   redirects signed-out visitors of `/dashboard/*` to `/login`; `/auth/callback` exchanges the
   code. `/login` must stay **outside** `src/app/dashboard/` or the layout's redirect loops.
-- The dashboard styles are scoped under `.wf` in `src/app/dashboard/workforce.css` so nothing
-  leaks into the marketing pages. Tailwind classes are welcome; keep to the tokens.
-- Pages are server components re-rendered every 6 s by `_components/AutoRefresh.tsx`.
-  Supabase Realtime is the intended replacement; it needs the anon key plus RLS policies on the
-  five read tables (currently RLS on, no policies, so only the service key can read).
+- The dashboard is now **Persept OS** — a desktop-style surface at `/dashboard` (its own
+  full-screen layout, no sidebar; styles scoped under `.os-root` in `src/app/dashboard/os.css`
+  using the OS design tokens). `/os` 307-redirects to `/dashboard`. Below 1280px the page hands
+  off to the mobile app (chat with Chief + approvals) in `_components/OSMobile.tsx`.
+- Shell = a dock (workspaces | approvals | agents | search), one window at a time (Command,
+  Approvals, Front desk, Marketing, Dev, Knowledge, Agent page), a six-thread Chief drawer, and
+  ⌘K. Deep links from the bridge/Telegram (`/dashboard/approvals/<id>`, `/dashboard/fixes/<id>`,
+  `/dashboard/agents/<id>`) redirect to `?win=…&id=…&k=…` query params the shell reads on load.
+- **Live updates: one mechanism.** `GET /api/os/tick` (service key) returns a few scalars; the
+  shell polls it every 5 s (15 s hidden) and calls `router.refresh()` only on change. The page is
+  `force-dynamic` + `fetchCache = "force-no-store"` (without the latter Next caches supabase's
+  internal `fetch` and the refresh serves stale data). Do NOT add anon-role RLS for Realtime —
+  the anon key ships in the client bundle; reads stay server-side.
 
 ## Env (never commit; see `docs/workforce-dashboard.md`)
 
