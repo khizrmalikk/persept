@@ -1,0 +1,769 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   Persept OS — design tokens + base, scoped under .os-root so nothing leaks
+   into the marketing site or the current /dashboard. Dark is the default;
+   .os-root.light flips every token. Tokens mirror design_handoff/DESIGN.md.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.os-root {
+  /* surfaces + ink — v3: #0c0c0c neutral-dark, matches the landing */
+  --bg: #0c0c0c;
+  --surf: #151515;
+  --surf2: #1d1d1d;
+  --ink: #ecebe5;
+  --soft: #a4a39d;
+  --mute: #85847d;
+  --line: rgba(255, 255, 255, 0.09);
+  --line2: rgba(255, 255, 255, 0.22); /* secondary button border */
+
+  /* the map */
+  --map: #0d0d0d;
+  --cell: rgba(255, 255, 255, 0.032);
+  --road: #121212;
+  --track: rgba(255, 255, 255, 0.08);
+
+  /* chrome */
+  --menubar: rgba(12, 12, 12, 0.74);
+  --dock: rgba(22, 22, 22, 0.74);
+  --glass: rgba(30, 30, 30, 0.82); /* banners, lock-screen cards */
+  --scrim: rgba(0, 0, 0, 0.5);
+  --lockbg: rgba(10, 10, 10, 0.62);
+  --shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 30px 80px rgba(0, 0, 0, 0.55);
+
+  /* dock + icon tiles: monochrome gradient (160deg tile1 -> tile2) */
+  --tile1: #242424;
+  --tile2: #111111;
+
+  /* semantic */
+  --ambink: #eeb04a; /* "needs you" amber text — equals --accent in dark */
+  --ok: oklch(0.75 0.15 150);
+  --bad: oklch(0.66 0.19 28);
+  --code: #0d0d0d;
+
+  /* the accent: the one "waiting on you" colour (fill + its text) */
+  --accent: #eeb04a;
+  --accent-ink: #0c0c0c;
+  --onacc: #0c0c0c;
+
+  /* agent identity — UI colour + tint. Never recoloured. */
+  --c-chief: oklch(0.78 0.12 70);
+  --c-scout: oklch(0.78 0.12 20);
+  --c-hunter: oklch(0.78 0.12 150);
+  --c-scribe: oklch(0.78 0.12 220);
+  --c-muse: oklch(0.78 0.12 110);
+  --c-fixer: oklch(0.78 0.12 290);
+  --t-chief: oklch(0.78 0.12 70 / 0.14);
+  --t-scout: oklch(0.78 0.12 20 / 0.14);
+  --t-hunter: oklch(0.78 0.12 150 / 0.14);
+  --t-scribe: oklch(0.78 0.12 220 / 0.14);
+  --t-muse: oklch(0.78 0.12 110 / 0.14);
+  --t-fixer: oklch(0.78 0.12 290 / 0.14);
+
+  /* status dots */
+  --dot-working: oklch(0.72 0.17 150);
+  --dot-waiting: var(--accent);
+  --dot-idle: #6f6a62;
+  --dot-soon: #3a3631;
+
+  /* type — v3 display is Outfit (loaded on <body> as --font-outfit by the root
+     layout; available inside .os-root via cascade). Mono labels stay JetBrains
+     for now; the all-mono-labels-to-UI pass is a later phase. */
+  --disp: var(--font-outfit), "Outfit", system-ui, sans-serif;
+  --font-display: var(--font-outfit), "Outfit", system-ui, sans-serif;
+  --font-ui: var(--font-geist), system-ui, sans-serif;
+  --font-mono: var(--font-jbmono), ui-monospace, monospace;
+
+  color-scheme: dark;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 14px;
+}
+
+/* light = "paper" (v2 default): warm cream, higher muted-text contrast, soft
+   shadows + heat. porcelain/stone are documented alternates; paper ships. */
+.os-root.light {
+  --bg: #efebe4;
+  --surf: #fffdfa;
+  --surf2: #f6f2eb;
+  --ink: #1b1814;
+  --soft: #524c44;
+  --mute: #756e64;
+  --line: rgba(48, 36, 22, 0.11);
+  --line2: rgba(0, 0, 0, 0.2); /* v3: secondary button border */
+  --map: #ede8e0;
+  --cell: rgba(48, 36, 22, 0.05);
+  --road: #f9f6f1;
+  --track: rgba(48, 36, 22, 0.08);
+  --menubar: rgba(255, 253, 250, 0.82);
+  --dock: rgba(255, 253, 250, 0.88);
+  --glass: rgba(255, 255, 255, 0.82); /* v3 */
+  --lockbg: rgba(240, 240, 240, 0.55); /* v3 */
+  --tile1: #ffffff; /* v3: icon/dock tile gradient */
+  --tile2: #ebebeb;
+  --scrim: rgba(48, 36, 22, 0.16);
+  --shadow: 0 1px 2px rgba(60, 42, 22, 0.06), 0 12px 32px rgba(60, 42, 22, 0.1);
+  --ambink: oklch(0.56 0.13 70); /* v3 amber ink */
+  --ok: oklch(0.5 0.13 150);
+  --bad: oklch(0.53 0.17 28);
+  --code: #1b1814;
+  --accent: #eeb04a;
+  --accent-ink: #0c0c0c;
+  --onacc: #0c0c0c;
+  /* agent colours: darker in light for contrast; tints lighter + more opaque */
+  --c-chief: oklch(0.5 0.13 70);
+  --c-scout: oklch(0.5 0.13 20);
+  --c-hunter: oklch(0.5 0.13 150);
+  --c-scribe: oklch(0.5 0.13 220);
+  --c-muse: oklch(0.5 0.13 110);
+  --c-fixer: oklch(0.5 0.13 290);
+  --t-chief: oklch(0.8 0.1 70 / 0.24);
+  --t-scout: oklch(0.8 0.1 20 / 0.24);
+  --t-hunter: oklch(0.8 0.1 150 / 0.24);
+  --t-scribe: oklch(0.8 0.1 220 / 0.24);
+  --t-muse: oklch(0.8 0.1 110 / 0.24);
+  --t-fixer: oklch(0.8 0.1 290 / 0.24);
+  color-scheme: light;
+}
+
+/* full-viewport desktop, no page scroll */
+.os-root {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  transition: background 0.3s;
+}
+.os-root * {
+  box-sizing: border-box;
+}
+.os-root a {
+  color: var(--accent);
+}
+.os-root a:hover {
+  color: inherit;
+}
+.os-root ::placeholder {
+  color: var(--mute);
+}
+.os-root [contenteditable]:focus {
+  outline: none;
+}
+.os-root ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.os-root ::-webkit-scrollbar-thumb {
+  background: rgba(128, 120, 110, 0.3);
+  border-radius: 4px;
+}
+
+/* ── grain overlay (v3 §Grain) ─────────────────────────────────────────────
+   Fixed full-viewport SVG feTurbulence fractal noise, desaturated, blended
+   with overlay. 7% in dark, 3% in light. Non-interactive, above everything.
+   The SVG data URI below is baseFrequency 0.8, numOctaves 3, saturate 0. */
+.os-root .os-grain {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+.os-root.light .os-grain {
+  opacity: 0.03;
+}
+
+/* ── small helpers used across windows ─────────────────────────────────── */
+.os-mono {
+  font-family: var(--font-mono);
+}
+.os-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+.os-kicker {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+/* below 1280px the desktop hands off to the mobile app (chat + approvals) */
+.os-desktop {
+  position: absolute;
+  inset: 0;
+}
+.os-mobile {
+  display: none;
+  position: absolute;
+  inset: 0;
+  flex-direction: column;
+}
+@media (max-width: 1279px) {
+  .os-desktop {
+    display: none;
+  }
+  .os-mobile {
+    display: flex;
+  }
+}
+
+/* dock + lift-on-hover — inline styles can't express :hover, so the reactive
+   affordances live here. v3 §2: translateY(-6px) scale(1.08) over 0.18s. */
+.os-root .os-dock-tile {
+  transition:
+    transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.os-root .os-dock-tile:hover {
+  transform: translateY(-6px) scale(1.08);
+}
+.os-root .os-dock-tile:active {
+  transform: translateY(-2px) scale(1.02);
+}
+/* neighbour magnification: the siblings of a hovered tile lift a little less */
+.os-root .os-dock-tile:hover + .os-dock-tile,
+.os-root .os-dock-tile:has(+ .os-dock-tile:hover) {
+  transform: translateY(-2px) scale(1.03);
+}
+.os-root .os-dock-tile:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+/* v3 §2: monochrome workspace tile — the tile gradient at 160deg, a 1px --line
+   border and an inset top highlight. Applied via className so the gradient +
+   inset shadow (which an inline `background`/`boxShadow` would have to repeat
+   on every tile) live in one place. */
+.os-root .os-tile-mono {
+  background: linear-gradient(160deg, var(--tile1), var(--tile2));
+  border: 1px solid var(--line);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+/* widget + amber primary buttons: a slight lift on hover */
+.os-root .os-lift {
+  transition: transform 140ms ease-out;
+}
+.os-root .os-lift:hover {
+  transform: translateY(-1px) scale(1.02);
+}
+
+/* Universal hover feedback: every enabled button brightens on hover (dock tiles
+   and .os-lift already lift, so they opt out). `filter` is never set inline, so
+   this applies everywhere without overriding a positioning transform like the
+   translateX(-50%) used on centered buttons — no layout shift, works on any
+   background. Dark brightens, light dims (so it reads on pale surfaces too). */
+.os-root button:not(:disabled):not(.os-dock-tile):not(.os-lift) {
+  transition: filter 130ms ease-out;
+}
+.os-root button:not(:disabled):not(.os-dock-tile):not(.os-lift):hover {
+  filter: brightness(1.14);
+}
+.os-root.light button:not(:disabled):not(.os-dock-tile):not(.os-lift):hover {
+  filter: brightness(0.95);
+}
+
+/* ── v3 §6 window chrome ─────────────────────────────────────────────────────
+   Traffic-light controls (close / minimise / zoom) at the left of every header,
+   the window open/close/minimise motion, the zoom geometry, and a monochrome
+   header icon tile that reuses the dock tile look. */
+
+/* the scrim behind an open window fades in over 0.25s (§6) */
+.os-root .os-win-scrim {
+  animation: os-scrim-in 0.25s ease-out;
+}
+@keyframes os-scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* open: fade + rise from translateY(16px) scale(0.98) over 0.28s (§6).
+   geometry (left/right/top/bottom/border-radius) animates over 0.28s so zoom
+   and the drawer-inset both glide; see WindowFrame for the inline geometry. */
+.os-root .os-window {
+  animation: os-win-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition:
+    left 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    right 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    top 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    bottom 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-radius 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.26s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.26s ease-out;
+}
+@keyframes os-win-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* close: scale to 0.97 + fade over 160ms (WindowFrame unmounts after). */
+.os-root .os-window.is-closing {
+  opacity: 0;
+  transform: scale(0.97);
+  transition:
+    transform 160ms ease-in,
+    opacity 160ms ease-in;
+  pointer-events: none;
+}
+/* minimise: shrink toward the dock (translateY(46%) scale(0.12)) + fade, 260ms */
+.os-root .os-window.is-minimizing {
+  opacity: 0;
+  transform: translateY(46%) scale(0.12);
+  transform-origin: 50% 100%;
+  transition:
+    transform 260ms cubic-bezier(0.4, 0, 0.7, 1),
+    opacity 260ms ease-in;
+  pointer-events: none;
+}
+
+/* traffic-light controls: 22×22, radius 7, --surf2 w/ 1px --line, --soft glyph.
+   close → --bad + white glyph on hover; minimise + zoom invert to --ink bg +
+   --bg glyph on hover (§6). */
+.os-root .os-traffic {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background: var(--surf2);
+  border: 1px solid var(--line);
+  color: var(--soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: none;
+  transition:
+    background 130ms ease-out,
+    color 130ms ease-out,
+    border-color 130ms ease-out;
+}
+.os-root .os-traffic.is-close:hover {
+  background: var(--bad);
+  border-color: var(--bad);
+  color: #fff;
+}
+.os-root .os-traffic.is-min:hover,
+.os-root .os-traffic.is-zoom:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+.os-root .os-traffic svg {
+  width: 11px;
+  height: 11px;
+}
+
+/* monochrome header icon tile — same gradient + border + inset highlight as the
+   dock tiles, glyph in --ink (approvals keeps its accent glyph inline). §6/§2 */
+.os-root .os-header-tile {
+  background: linear-gradient(160deg, var(--tile1), var(--tile2));
+  border: 1px solid var(--line);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+/* working avatar ring pulse (size >= 28); static under reduced motion */
+.os-root .os-ring-pulse {
+  animation: os-ring 2.8s infinite ease-out;
+  transform-origin: 50% 50%;
+}
+@keyframes os-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* button spinner (server action in flight) */
+.os-root .os-spin {
+  animation: os-spin 0.7s linear infinite;
+  transform-origin: 50% 50%;
+}
+@keyframes os-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* chat typing indicator */
+.os-root .os-typing-dot {
+  animation: os-typing 1s infinite ease-in-out;
+}
+@keyframes os-typing {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ─── v3 §4 menu bar: titles, dropdown panels, rows, status item ──────────────
+   The bar itself lives in MenuBar.tsx (inline). These are the pieces that need
+   hover/open states or the pop-in motion. */
+
+/* a clickable bar title (persept wordmark, {window}, go, agents, view). Its
+   padded hit area highlights when its menu is open or on hover. */
+.os-root .os-menu-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 120ms ease-out;
+}
+.os-root .os-menu-title:hover,
+.os-root .os-menu-title.is-open {
+  background: var(--surf2);
+}
+
+/* dropdown panel (§4): --surf, 1px --line, radius 12, padding 6, min-width 250,
+   pop-in over 0.14s from translateY(-6px) scale(.98). */
+.os-root .os-menu-panel {
+  position: absolute;
+  top: 34px;
+  z-index: 50;
+  min-width: 250px;
+  padding: 6px;
+  background: var(--surf);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  transform-origin: top left;
+  animation: os-pop 0.14s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes os-pop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* a menu row: 13px, padding 7px 10px, radius 7. Hover inverts to --ink bg +
+   --bg text (§4). The shortcut column sits right at 55% opacity. */
+.os-root .os-menu-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 100ms ease-out,
+    color 100ms ease-out;
+}
+.os-root .os-menu-row:hover {
+  background: var(--ink);
+  color: var(--bg);
+}
+.os-root .os-menu-row:disabled {
+  color: var(--mute);
+  cursor: default;
+}
+.os-root .os-menu-row:disabled:hover {
+  background: transparent;
+  color: var(--mute);
+}
+.os-root .os-menu-label {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+}
+.os-root .os-menu-key {
+  margin-left: auto;
+  opacity: 0.55;
+  white-space: nowrap;
+}
+/* ✓ / • leading markers keep the row text aligned whether set or not */
+.os-root .os-menu-mark {
+  width: 14px;
+  flex: none;
+  text-align: center;
+}
+/* a thin separator between menu groups */
+.os-root .os-menu-sep {
+  height: 1px;
+  margin: 5px 6px;
+  background: var(--line);
+}
+/* "your workforce" style group header inside the agents menu */
+.os-root .os-menu-head {
+  padding: 6px 10px 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--soft);
+}
+
+/* the right-side status item (green dot · n of 6 working · cpu n% · sparkline).
+   A button that opens the system monitor; highlights on hover/open. */
+.os-root .os-status-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 120ms ease-out;
+}
+.os-root .os-status-item:hover,
+.os-root .os-status-item.is-open {
+  background: var(--surf2);
+}
+
+/* ─── v3 §5 system monitor popover ────────────────────────────────────────── */
+.os-root .os-monitor {
+  position: absolute;
+  top: 44px;
+  right: 12px;
+  z-index: 51;
+  width: 450px;
+  max-width: calc(100vw - 24px);
+  max-height: calc(100% - 64px);
+  overflow: auto;
+  padding: 18px;
+  background: var(--surf);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  transform-origin: top right;
+  animation: os-pop 0.14s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+/* the four stat tiles and the process rows */
+.os-root .os-mon-tile {
+  padding: 11px 12px;
+  background: var(--surf2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.os-root .os-mon-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: background 100ms ease-out;
+}
+.os-root .os-mon-row:hover {
+  background: var(--surf2);
+}
+.os-root .os-mon-bar-track {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--track);
+  overflow: hidden;
+}
+.os-root .os-mon-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+
+/* ─── v3 §9 lock screen ──────────────────────────────────────────────────────
+   The privacy screen fades in over 0.35s (the fade-out on unlock is the inline
+   opacity transition). The fingerprint scan-line is an inline SMIL animation;
+   the global reduced-motion rule below neutralises both. */
+@keyframes os-lock-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ─── v3 §Type buttons ────────────────────────────────────────────────────────
+   11.5px / 700 uppercase +0.08em, radius 6, padding 10px 14px. Primary is accent
+   fill; secondary is a 1px --line2 border that turns --ink on hover (§12 brief
+   CTAs). */
+.os-root .os-btn {
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 120ms ease-out,
+    border-color 120ms ease-out,
+    color 120ms ease-out;
+}
+.os-root .os-btn-primary {
+  border: none;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.os-root .os-btn-secondary {
+  border: 1px solid var(--line2);
+  background: transparent;
+  color: var(--ink);
+}
+.os-root .os-btn-secondary:hover {
+  border-color: var(--ink);
+}
+
+/* ─── v3 §8 notification banners ──────────────────────────────────────────────
+   Top-right, 356px, --glass + 22px blur, radius 16. Slides in from +28px to 0
+   over 0.34s; the leaving state slides back out + fades (reduced motion below
+   collapses both to an instant show/hide). */
+.os-root .os-banner {
+  position: absolute;
+  top: 44px;
+  right: 12px;
+  z-index: 45;
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  width: 356px;
+  max-width: calc(100vw - 24px);
+  padding: 13px 15px;
+  text-align: left;
+  background: var(--glass);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  animation: os-banner-in 0.34s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.os-root .os-banner.is-leaving {
+  animation: os-banner-out 0.34s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+@keyframes os-banner-in {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes os-banner-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+}
+.os-root .os-banner-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+.os-root .os-banner-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.os-root .os-banner-name {
+  font-size: 13.5px;
+  font-weight: 700;
+}
+.os-root .os-banner-kind {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.os-root .os-banner-text {
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: var(--soft);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* v3 §12: pop-in for the centred overlays (palette, toast) — a variant of
+   os-pop that preserves the translateX(-50%) centring. */
+@keyframes os-pop-cx {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%);
+  }
+}
+.os-root .os-popin-cx {
+  animation: os-pop-cx 0.14s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+/* v3 §12: the notifications panel uses the same pop-in as the menus/monitor. */
+.os-root .os-popin {
+  transform-origin: top right;
+  animation: os-pop 0.14s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .os-root * {
+    /* biome-ignore lint/complexity/noImportantStyles: reduced-motion must override inline animations */
+    animation-duration: 0.001ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced-motion must override inline animations */
+    animation-iteration-count: 1 !important;
+  }
+  /* v3 §12: instant window transitions under reduced motion */
+  .os-root .os-window {
+    /* biome-ignore lint/complexity/noImportantStyles: reduced-motion must override the geometry transition */
+    transition: none !important;
+  }
+  .os-root .os-window.is-closing,
+  .os-root .os-window.is-minimizing {
+    /* biome-ignore lint/complexity/noImportantStyles: reduced-motion must override the close/minimise transition */
+    transition: none !important;
+  }
+}

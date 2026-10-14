@@ -15,11 +15,15 @@ export async function POST(req: NextRequest) {
   }
   const url = process.env.BRIDGE_CALL_URL;
   if (!url) {
-    return NextResponse.json({ error: "live channel unavailable" }, { status: 501 });
+    return NextResponse.json(
+      { error: "live channel unavailable" },
+      { status: 501 },
+    );
   }
-  const body = (await req.json().catch(() => null)) as
-    | { agentId?: string; text?: string }
-    | null;
+  const body = (await req.json().catch(() => null)) as {
+    agentId?: string;
+    text?: string;
+  } | null;
   const agentId = (body?.agentId ?? "").trim();
   const text = (body?.text ?? "").trim();
   if (!agentId || !text) {

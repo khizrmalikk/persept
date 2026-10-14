@@ -10,6 +10,11 @@ export type RosterAgent = {
   hue: number;
   room: string;
   role: string;
+  // static roster facts for the agent page's "how work flows" + "owns / works in".
+  // NOT fixtures — these describe the fixed shape of the workforce, not live state.
+  mandate: string; // what this agent is for
+  from: string[]; // who hands work to it
+  to: string[]; // who it hands work to
 };
 
 export const ROSTER: RosterAgent[] = [
@@ -20,6 +25,9 @@ export const ROSTER: RosterAgent[] = [
     hue: 70,
     room: "chief of staff",
     role: "chief of staff",
+    mandate: "sees everything. triage, backlog, weekly review and health.",
+    from: ["all agents"],
+    to: ["all agents"],
   },
   {
     id: "scout",
@@ -28,6 +36,9 @@ export const ROSTER: RosterAgent[] = [
     hue: 20,
     room: "research",
     role: "research",
+    mandate: "finds prospects and signal. hands leads to Hunter.",
+    from: ["Chief"],
+    to: ["Hunter"],
   },
   {
     id: "hunter",
@@ -36,6 +47,9 @@ export const ROSTER: RosterAgent[] = [
     hue: 150,
     room: "outreach & sales",
     role: "outreach",
+    mandate: "campaigns, pipeline, conversations and outbound sends.",
+    from: ["Scout", "Scribe"],
+    to: ["Scribe", "you"],
   },
   {
     id: "scribe",
@@ -44,6 +58,9 @@ export const ROSTER: RosterAgent[] = [
     hue: 220,
     room: "proposals & clients",
     role: "proposals",
+    mandate: "writes and revises proposals. transcribes calls.",
+    from: ["Hunter"],
+    to: ["Hunter"],
   },
   {
     id: "muse",
@@ -52,6 +69,9 @@ export const ROSTER: RosterAgent[] = [
     hue: 110,
     room: "marketing studio",
     role: "marketing",
+    mandate: "drafts posts and images, publishes, learns from stats.",
+    from: ["Hunter", "Scout"],
+    to: ["you"],
   },
   {
     id: "fixer",
@@ -60,6 +80,9 @@ export const ROSTER: RosterAgent[] = [
     hue: 290,
     room: "dev & debugging",
     role: "dev & debugging",
+    mandate: "runs code projects, ships fixes, does research passes.",
+    from: ["Chief"],
+    to: ["you"],
   },
 ];
 

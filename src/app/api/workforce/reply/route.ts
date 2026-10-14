@@ -40,7 +40,8 @@ export async function GET(req: NextRequest) {
       const p = (row.payload ?? {}) as { role?: string; text?: string };
       const text = (p.text ?? row.summary ?? "").trim();
       const mine =
-        p.role === "user" || (row.summary ?? "").toLowerCase().startsWith("owner");
+        p.role === "user" ||
+        (row.summary ?? "").toLowerCase().startsWith("owner");
       if (mine || !text || /^\[voice call/i.test(text)) continue;
       return NextResponse.json({ id: row.id, text });
     }
