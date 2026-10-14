@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
-import { Archivo, Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
+import {
+  Archivo,
+  Geist,
+  Geist_Mono,
+  JetBrains_Mono,
+  Outfit,
+} from "next/font/google";
 import localFont from "next/font/local";
 import Script from "next/script";
 import "./globals.css";
@@ -10,6 +16,13 @@ import "./globals.css";
 const archivo = Archivo({
   subsets: ["latin"],
   variable: "--font-archivo",
+  display: "swap",
+});
+// Landing v12 display face (uppercase headlines + numerals). Scoped to `.pl12`.
+const outfit = Outfit({
+  subsets: ["latin"],
+  weight: ["600", "700", "800", "900"],
+  variable: "--font-outfit",
   display: "swap",
 });
 const geistSans = Geist({
@@ -177,7 +190,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${neueHaasDisplay.variable} ${geistMono.variable} ${archivo.variable} ${geistSans.variable} ${jetbrainsMono.variable} antialiased`}
+        className={`${neueHaasDisplay.variable} ${geistMono.variable} ${archivo.variable} ${geistSans.variable} ${jetbrainsMono.variable} ${outfit.variable} antialiased`}
       >
         <script
           type="application/ld+json"

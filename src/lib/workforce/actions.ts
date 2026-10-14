@@ -36,11 +36,84 @@ export async function sendMessageFromForm(fd: FormData) {
   await guard();
   const agentId = String(fd.get("agent") ?? "");
   const text = String(fd.get("text") ?? "").trim();
-  if (!agentId || !text) return;
+  // Attached images arrive as one or more signed URLs (see uploadChatImage); a
+  // message is just `text`, so each image is inlined as a markdown image line.
+  // The bridge relays the composed text verbatim and the agent fetches the link.
+  const images = fd
+    .getAll("image")
+    .map(String)
+    .map((u) => u.trim())
+    .filter(Boolean);
+  if (!agentId || (!text && !images.length)) return;
+  const body = [text, ...images.map((u) => `![image](${u})`)]
+    .filter(Boolean)
+    .join("\n\n");
   await supabaseAdmin()
     .from("actions")
-    .insert({ kind: "message", agent_id: agentId, text });
+    .insert({ kind: "message", agent_id: agentId, text: body });
   revalidatePath(`/dashboard/agents/${agentId}`);
+}
+
+// Stash an image OR file the owner is attaching to a chat message in the PRIVATE
+// `knowledge` bucket under chat/<agentId>/, then mint a time-limited signed URL.
+// There's no attachment column in the bridge contract — a message is one `actions`
+// row with `text` — so the composer inlines this URL into the message (an image as
+// a markdown image, a file as a markdown link; see the chat composer) and the agent
+// fetches it. Stays private: the link expires, so a leaked url doesn't live forever.
+// The agent polls and fetches within minutes, well inside the TTL.
+const CHAT_FILE_MAX_BYTES = 25 * 1024 * 1024;
+const CHAT_FILE_URL_TTL = 60 * 60 * 24 * 7; // 7 days
+// non-image types the owner can hand an agent in chat (no executables).
+const CHAT_FILE_EXTS = [
+  "pdf",
+  "doc",
+  "docx",
+  "xls",
+  "xlsx",
+  "ppt",
+  "pptx",
+  "csv",
+  "txt",
+  "md",
+  "json",
+  "rtf",
+  "zip",
+];
+
+export async function uploadChatFile(
+  fd: FormData,
+): Promise<
+  { url: string; name: string; isImage: boolean } | { error: string }
+> {
+  await guard();
+  const agentId = String(fd.get("agent") ?? "").trim();
+  const file = fd.get("file");
+  if (!agentId) return { error: "no agent" };
+  if (!(file instanceof File) || file.size === 0) return { error: "no file" };
+  if (file.size > CHAT_FILE_MAX_BYTES)
+    return { error: "file too large (max 25mb)" };
+  const isImage = file.type.startsWith("image/");
+  const ext = file.name.toLowerCase().match(/\.([a-z0-9]+)$/)?.[1] ?? "";
+  if (!isImage && !CHAT_FILE_EXTS.includes(ext))
+    return { error: "images, pdf, office docs, csv/txt/md, json or zip only" };
+
+  const safe = file.name.replace(/[^a-zA-Z0-9._-]+/g, "_");
+  const path = `chat/${agentId}/${crypto.randomUUID()}-${safe}`;
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const db = supabaseAdmin();
+  const { error: upErr } = await db.storage
+    .from("knowledge")
+    .upload(path, bytes, {
+      contentType: file.type || "application/octet-stream",
+      upsert: true,
+    });
+  if (upErr) return { error: upErr.message };
+  const { data, error: signErr } = await db.storage
+    .from("knowledge")
+    .createSignedUrl(path, CHAT_FILE_URL_TTL);
+  if (signErr || !data?.signedUrl)
+    return { error: signErr?.message ?? "could not sign the file url" };
+  return { url: data.signedUrl, name: file.name, isImage };
 }
 
 // Panel quick-actions (pipeline, digest, backlog) send an agent a plain message,
@@ -1067,6 +1140,7 @@ export async function saveProject(fd: FormData): Promise<void> {
       env: String(fd.get("login_env") ?? "").trim(),
     },
     deploy,
+    vercel_project_id: String(fd.get("vercel_project_id") ?? "").trim(),
     research_cadence: cadence,
     enabled: String(fd.get("enabled") ?? "") === "on",
     updated_at: new Date().toISOString(),
@@ -1082,6 +1156,73 @@ export async function saveProject(fd: FormData): Promise<void> {
   }
   revalidatePath("/dashboard/agents/fixer");
   revalidatePath("/dashboard/knowledge");
+}
+
+// OS dev-window variant of saveProject: create or update a project WITHOUT the
+// redirect (the window stays open and re-pulls via the tick), returning the id so
+// the panel can select it. Create derives a unique slug id from the name. Same
+// `projects` columns + `vercel_project_id`; the bridge mirrors the row to the
+// runner within two minutes (so updated_at is always bumped).
+export async function upsertProjectOS(
+  fd: FormData,
+): Promise<{ id: string } | { error: string }> {
+  await guard();
+  const create = String(fd.get("create") ?? "") === "1";
+  const name = String(fd.get("name") ?? "").trim() || "untitled project";
+  const rawId = String(fd.get("id") ?? "").trim();
+  const id = (create ? rawId || slugify(name) : rawId).trim();
+  if (!id) return { error: "give the project a name" };
+
+  const deployRaw = String(fd.get("deploy") ?? "");
+  const deploy =
+    deployRaw === "vercel" ? "vercel" : deployRaw === "flag" ? "flag" : null;
+  const cadence =
+    String(fd.get("research_cadence") ?? "none") === "weekly"
+      ? "weekly"
+      : "none";
+
+  const row = {
+    name,
+    repo: normRepo(String(fd.get("repo") ?? "")),
+    default_branch: String(fd.get("default_branch") ?? "").trim(),
+    description: String(fd.get("description") ?? "").trim(),
+    notes: String(fd.get("notes") ?? "").trim(),
+    checks: linesToList(fd.get("checks")),
+    allowed_tools: linesToList(fd.get("allowed_tools")),
+    dev: String(fd.get("dev") ?? "").trim(),
+    url: String(fd.get("url") ?? "").trim(),
+    login: {
+      path: String(fd.get("login_path") ?? "").trim(),
+      email_selector: String(fd.get("login_email_selector") ?? "").trim(),
+      password_selector: String(fd.get("login_password_selector") ?? "").trim(),
+      submit_selector: String(fd.get("login_submit_selector") ?? "").trim(),
+      env: String(fd.get("login_env") ?? "").trim(),
+    },
+    deploy,
+    vercel_project_id: String(fd.get("vercel_project_id") ?? "").trim(),
+    research_cadence: cadence,
+    enabled: String(fd.get("enabled") ?? "") === "on",
+    updated_at: new Date().toISOString(),
+  };
+
+  const db = supabaseAdmin();
+  if (create) {
+    const { data: existing } = await db
+      .from("projects")
+      .select("id")
+      .eq("id", id)
+      .maybeSingle();
+    if (existing) return { error: `a project “${id}” already exists` };
+    const { error } = await db
+      .from("projects")
+      .insert({ ...row, id, created_at: new Date().toISOString() });
+    if (error) return { error: error.message };
+  } else {
+    const { error } = await db.from("projects").update(row).eq("id", id);
+    if (error) return { error: error.message };
+  }
+  revalidatePath("/dashboard");
+  return { id };
 }
 
 // "research now": queue Fixer a research pass on the project.
@@ -1287,4 +1428,432 @@ export async function dismissIdea(id: string): Promise<void> {
     .eq("id", rowId);
   revalidatePath("/dashboard/agents/chief");
   revalidatePath("/dashboard");
+}
+
+// ── Persept OS actions ────────────────────────────────────────────────────────
+// Writes the dashboard (Persept OS) windows need that weren't covered by the
+// existing actions. All guarded. The dashboard re-pulls via router.refresh()
+// (driven by the tick), so these don't revalidate a static path.
+
+// Create a campaign without the redirect saveCampaign does (which would leave the
+// dashboard). Returns the new id so the window can open it. Dashboard-owned write.
+export async function createCampaign(
+  owner: string,
+): Promise<{ id: string } | { error: string }> {
+  await guard();
+  const agent = owner === "muse" ? "muse" : "hunter";
+  const now = new Date().toISOString();
+  const rules: CampaignRules = {
+    channels: [...DEFAULT_RULES.channels],
+    daily_cap: DEFAULT_RULES.daily_cap,
+    follow_up_days: [...DEFAULT_RULES.follow_up_days],
+    search_queries: [],
+    platforms: [],
+    starts: "",
+    ends: "",
+  };
+  const { data, error } = await supabaseAdmin()
+    .from("campaigns")
+    .insert({
+      name: "new campaign",
+      status: "draft",
+      goal: "",
+      audience: "",
+      offer: "",
+      description: "",
+      assets: [],
+      rules,
+      agent_id: agent,
+      created_at: now,
+      updated_at: now,
+    })
+    .select("id")
+    .maybeSingle();
+  if (error) return { error: error.message };
+  return { id: (data as { id: string } | null)?.id ?? "" };
+}
+
+// Edit an existing campaign in place (no redirect, unlike saveCampaign). Patches
+// the columns + merges the `rules` jsonb (so channels/follow_up_days/dates are
+// preserved). Never touches id/slug — a rename patches `name` only; the bridge
+// keys the mirrored campaigns/<slug>.md by id. `notes` is best-effort (the column
+// may not exist in every schema) so it never fails the main save.
+export async function updateCampaign(
+  fd: FormData,
+): Promise<{ ok: true } | { error: string }> {
+  await guard();
+  const id = String(fd.get("id") ?? "").trim();
+  if (!id) return { error: "no id" };
+  const db = supabaseAdmin();
+
+  const { data: existing } = await db
+    .from("campaigns")
+    .select("rules")
+    .eq("id", id)
+    .maybeSingle();
+  const prev = ((existing as { rules?: Partial<CampaignRules> } | null)
+    ?.rules ?? {}) as Partial<CampaignRules>;
+
+  const ownerRaw = String(fd.get("owner") ?? "hunter").trim();
+  const owner = ownerRaw === "muse" ? "muse" : "hunter";
+  const statusRaw = String(fd.get("status") ?? "active");
+  const status = ["active", "paused", "archived"].includes(statusRaw)
+    ? statusRaw
+    : "active";
+  const dailyCap = Number(fd.get("daily_cap"));
+  const platforms = fd
+    .getAll("platforms")
+    .map(String)
+    .flatMap((p) => p.split(/[\n,]/))
+    .map((p) => p.trim())
+    .filter((p) => MUSE_PLATFORMS.includes(p));
+
+  const rules: CampaignRules = {
+    channels: prev.channels ?? [...DEFAULT_RULES.channels],
+    daily_cap:
+      Number.isFinite(dailyCap) && dailyCap > 0
+        ? Math.floor(dailyCap)
+        : (prev.daily_cap ?? DEFAULT_RULES.daily_cap),
+    follow_up_days: prev.follow_up_days ?? [...DEFAULT_RULES.follow_up_days],
+    search_queries: normSearchQueries(fd.get("search_queries")),
+    platforms: [...new Set(platforms)],
+    starts: prev.starts ?? "",
+    ends: prev.ends ?? "",
+  };
+
+  const row = {
+    name: String(fd.get("name") ?? "").trim() || "untitled campaign",
+    agent_id: owner,
+    status,
+    description: String(fd.get("description") ?? "").trim(),
+    goal: String(fd.get("goal") ?? "").trim(),
+    rules,
+    updated_at: new Date().toISOString(),
+  };
+  const { error } = await db.from("campaigns").update(row).eq("id", id);
+  if (error) return { error: error.message };
+
+  // notes is optional — patch it separately so a missing column can't fail the save
+  const notes = String(fd.get("notes") ?? "").trim();
+  try {
+    await db.from("campaigns").update({ notes }).eq("id", id);
+  } catch {
+    // no notes column in this schema; ignore
+  }
+  return { ok: true };
+}
+
+// Set an agent's monthly budget (USD). Direct patch of agents.budget_usd — the
+// owner sets this on the permissions tab (day-30 contract).
+export async function setAgentBudget(
+  agentId: string,
+  usd: number,
+): Promise<void> {
+  await guard();
+  const id = agentId.trim();
+  const budget = Number.isFinite(usd) && usd >= 0 ? Math.round(usd) : 0;
+  if (!id) return;
+  await supabaseAdmin()
+    .from("agents")
+    .update({ budget_usd: budget })
+    .eq("id", id);
+}
+
+// Permissions tab model picker: send Chief a CONFIG block naming the tier. The
+// bridge resolves the tier (cheap|routine|judgment) to a concrete gateway model
+// and writes it back to agents.model — the UI never names a model string.
+export async function setAgentModelTier(
+  agentId: string,
+  tier: "cheap" | "routine" | "judgment",
+): Promise<void> {
+  await guard();
+  const id = agentId.trim();
+  if (!id || !["cheap", "routine", "judgment"].includes(tier)) return;
+  await sendAgentCommand(
+    "chief",
+    `CONFIG\nagent: ${id}\nmodel: ${tier}\nwhy: owner, permissions tab`,
+  );
+}
+
+// Runs & logs tab "restart <Agent>": one `actions` message with the text `restart`.
+// The bridge resets that agent's main session (memory files stay) and writes a
+// `system` event the log then shows. Confirmed in the UI before calling.
+export async function restartAgent(agentId: string): Promise<void> {
+  await guard();
+  const id = agentId.trim();
+  if (!id) return;
+  await supabaseAdmin()
+    .from("actions")
+    .insert({ kind: "message", agent_id: id, text: "restart" });
+  revalidatePath(`/dashboard/agents/${id}`);
+}
+
+// Dismiss a rolled-up error from the Dev tab: patch errors.state = 'ignored'
+// (day-31 contract). "ask Fixer to fix" goes through sendAgentCommand already.
+export async function ignoreError(id: string): Promise<void> {
+  await guard();
+  const rowId = id.trim();
+  if (!rowId) return;
+  await supabaseAdmin()
+    .from("errors")
+    .update({ state: "ignored" })
+    .eq("id", rowId);
+}
+
+// ── War room: goals, steps, movers (day-32 contract) ──────────────────────────
+// The war room replaces the old whiteboard. `goals`, `goal_steps`, `goal_phases`,
+// `goal_snapshots`, `goal_movers` are the tables. The dashboard writes `goals`,
+// `goal_steps`, `goal_movers` and `backlog` DIRECTLY (service key, no anon RLS);
+// planning itself is Chief's, driven by a `plan goal <id>` message on `actions`.
+// goal_phases/goal_snapshots are bridge-owned (read only here). No redirect: the
+// windows re-pull via the tick's `goals_updated_at`.
+
+const GOAL_SRC = [
+  "manual",
+  "won-count",
+  "won-value",
+  "prospects-count",
+  "replied-count",
+  "calls-count",
+] as const;
+
+// Create a goal, then ask Chief to plan it. `src: manual` unless the owner picked
+// a live source (the bridge keeps `cur` current for live sources). We optimistically
+// set `planning: true`; the bridge flips it false when the PLAN lands. For manual
+// goals we write both the new `cur`/`name` and the old widget `value`/`label`.
+export async function createGoal(
+  fd: FormData,
+): Promise<{ id: string } | { error: string }> {
+  await guard();
+  const name = String(fd.get("name") ?? "").trim();
+  if (!name) return { error: "no name" };
+  const tag = String(fd.get("tag") ?? "").trim() || name.toLowerCase();
+  const unit = String(fd.get("unit") ?? "count") === "AED" ? "AED" : "count";
+  const srcRaw = String(fd.get("src") ?? "manual");
+  const src = (GOAL_SRC as readonly string[]).includes(srcRaw)
+    ? srcRaw
+    : "manual";
+  const model =
+    String(fd.get("model") ?? "pace") === "pipeline" ? "pipeline" : "pace";
+  const owner = String(fd.get("owner") ?? "chief").trim() || "chief";
+  const team = fd
+    .getAll("team")
+    .map(String)
+    .map((a) => a.trim())
+    .filter(Boolean);
+  const target = Number(fd.get("target"));
+  const cur = Number(fd.get("cur"));
+  const start = String(fd.get("start") ?? "").trim() || null;
+  const due = String(fd.get("due") ?? "").trim() || null;
+
+  const db = supabaseAdmin();
+  const { data: top } = await db
+    .from("goals")
+    .select("sort")
+    .order("sort", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const sort = ((top as { sort?: number } | null)?.sort ?? 0) + 1;
+
+  const value = Number.isFinite(cur) ? cur : 0;
+  const { data, error } = await db
+    .from("goals")
+    .insert({
+      name,
+      label: name,
+      tag,
+      unit,
+      src,
+      model,
+      owner,
+      team,
+      target: Number.isFinite(target) ? target : 0,
+      cur: value,
+      value,
+      start,
+      due,
+      planning: true,
+      archived: false,
+      sort,
+    })
+    .select("id")
+    .maybeSingle();
+  if (error) return { error: error.message };
+  const id = (data as { id: string } | null)?.id ?? "";
+  if (id) await sendAgentCommand("chief", `plan goal ${id}`);
+  return { id };
+}
+
+// Edit a goal's plan-affecting fields. If `target` or `due` changed and the goal
+// already has steps, mark the plan stale (the owner can then "re-plan"). `cur` is
+// edited separately (setGoalValue) — a manual goal's "now at" field.
+export async function updateGoal(
+  fd: FormData,
+): Promise<{ ok: true } | { error: string }> {
+  await guard();
+  const id = String(fd.get("id") ?? "").trim();
+  if (!id) return { error: "no id" };
+  const db = supabaseAdmin();
+
+  const { data: existing } = await db
+    .from("goals")
+    .select("target, due")
+    .eq("id", id)
+    .maybeSingle();
+  const prev = existing as { target?: number; due?: string | null } | null;
+
+  const name = String(fd.get("name") ?? "").trim() || "untitled goal";
+  const tag = String(fd.get("tag") ?? "").trim() || name.toLowerCase();
+  const owner = String(fd.get("owner") ?? "chief").trim() || "chief";
+  const team = fd
+    .getAll("team")
+    .map(String)
+    .map((a) => a.trim())
+    .filter(Boolean);
+  const target = Number(fd.get("target"));
+  const due = String(fd.get("due") ?? "").trim() || null;
+
+  const targetChanged =
+    Number.isFinite(target) && target !== (prev?.target ?? null);
+  const dueChanged = due !== (prev?.due ?? null);
+
+  let hasSteps = false;
+  if (targetChanged || dueChanged) {
+    const { count } = await db
+      .from("goal_steps")
+      .select("id", { count: "exact", head: true })
+      .eq("goal_id", id);
+    hasSteps = (count ?? 0) > 0;
+  }
+
+  const { error } = await db
+    .from("goals")
+    .update({
+      name,
+      label: name,
+      tag,
+      owner,
+      team,
+      target: Number.isFinite(target) ? target : (prev?.target ?? 0),
+      due,
+      ...(hasSteps ? { plan_stale: true } : {}),
+    })
+    .eq("id", id);
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+// "re-plan": ask Chief to redo the plan for a goal. Sets planning optimistically.
+export async function replanGoal(id: string): Promise<void> {
+  await guard();
+  const goalId = id.trim();
+  if (!goalId) return;
+  const db = supabaseAdmin();
+  await db
+    .from("goals")
+    .update({ planning: true, plan_stale: false })
+    .eq("id", goalId);
+  await sendAgentCommand("chief", `re-plan goal ${goalId}`);
+}
+
+// "remove": archive only — steps and phases stay for history.
+export async function archiveGoal(id: string): Promise<void> {
+  await guard();
+  const goalId = id.trim();
+  if (!goalId) return;
+  await supabaseAdmin()
+    .from("goals")
+    .update({ archived: true })
+    .eq("id", goalId);
+}
+
+// Manual goal's "now at": patch both the new `cur` and the old widget `value`.
+// Live goals are read-only here (the bridge keeps `cur`), so the window only shows
+// this field for manual goals.
+export async function setGoalValue(id: string, value: number): Promise<void> {
+  await guard();
+  const goalId = id.trim();
+  if (!goalId || !Number.isFinite(value)) return;
+  await supabaseAdmin()
+    .from("goals")
+    .update({ cur: value, value })
+    .eq("id", goalId);
+}
+
+// Tap a step to advance it: todo → doing → done (the client cycles and sends the
+// next status). `waiting` is bridge-set (a step following an approval), so we only
+// accept the owner-settable states.
+export async function setGoalStepStatus(
+  id: string,
+  status: "todo" | "doing" | "done",
+): Promise<void> {
+  await guard();
+  const stepId = id.trim();
+  if (!stepId || !["todo", "doing", "done"].includes(status)) return;
+  await supabaseAdmin().from("goal_steps").update({ status }).eq("id", stepId);
+}
+
+// "→ backlog": turn a step into a Chief backlog item (owner = the step's agent,
+// due parsed from `when_label` if it is an ISO date), then link it back on the step.
+// The bridge marks the step done when the backlog item is done.
+export async function goalStepToBacklog(fd: FormData): Promise<void> {
+  await guard();
+  const stepId = String(fd.get("stepId") ?? "").trim();
+  const text = String(fd.get("text") ?? "").trim();
+  const agent = String(fd.get("agent") ?? "owner").trim() || "owner";
+  const whenLabel = String(fd.get("when_label") ?? "").trim();
+  if (!stepId || !text) return;
+  const due = /^\d{4}-\d{2}-\d{2}$/.test(whenLabel) ? whenLabel : null;
+  const now = new Date().toISOString();
+  const db = supabaseAdmin();
+  const { data } = await db
+    .from("backlog")
+    .insert({
+      title: text,
+      owner: agent,
+      due,
+      priority: "normal",
+      status: "open",
+      source: "war room",
+      created_at: now,
+      updated_at: now,
+    })
+    .select("id")
+    .maybeSingle();
+  const backlogId = (data as { id: string } | null)?.id ?? "";
+  if (backlogId)
+    await db
+      .from("goal_steps")
+      .update({ backlog_id: backlogId })
+      .eq("id", stepId);
+  revalidateBacklog();
+}
+
+// Chief's needle movers (`goal_movers`). Tapping one with an `ask` sends that agent
+// the message and marks the mover done; "dismiss" just dismisses it. (Derived movers
+// — pending approvals, failed fixes, overdue backlog — resolve via their own source
+// action, not here.)
+export async function tapMover(
+  id: string,
+  agent: string,
+  ask: string,
+): Promise<void> {
+  await guard();
+  const moverId = id.trim();
+  if (!moverId) return;
+  const db = supabaseAdmin();
+  const a = agent.trim();
+  const text = ask.trim();
+  if (a && text) await sendAgentCommand(a, text);
+  await db.from("goal_movers").update({ status: "done" }).eq("id", moverId);
+}
+
+export async function dismissMover(id: string): Promise<void> {
+  await guard();
+  const moverId = id.trim();
+  if (!moverId) return;
+  await supabaseAdmin()
+    .from("goal_movers")
+    .update({ status: "dismissed" })
+    .eq("id", moverId);
 }

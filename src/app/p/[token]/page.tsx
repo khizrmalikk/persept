@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { Markdown } from "@/app/dashboard/_components/panels/Markdown";
+import { Markdown } from "./Markdown";
 import { PerseptMark } from "@/components/ui/logo";
 import {
   getProposalByToken,

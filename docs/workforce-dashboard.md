@@ -1,25 +1,50 @@
-# Workforce dashboard (`/dashboard`)
+# Workforce dashboard — Persept OS (`/dashboard`)
 
-The owner's command centre for the Persept AI workforce, living inside persept.ai behind a
-Supabase Auth magic-link login. It reads the tables the bridge on the VPS fills (`agents`,
-`events`, `tasks`, `approvals`, `instance`) and writes to one (`actions`), which the bridge
-turns into messages and approval decisions for the agents. Source of truth for the design and
-the tables: the Persept project docs 10 and 11.
+The owner's command centre for the Persept AI workforce: a **desktop-style operating surface**
+at `/dashboard`, behind a Supabase Auth magic-link login. It reads the tables the bridge on the
+VPS fills (`agents`, `events`, `tasks`, `approvals`, `prospects`, `vps_metrics`, `warroom_items`,
+`fixes`, `deploys`, `errors`, …) and writes only `actions` (plus dashboard-owned tables), which
+the bridge turns into messages and decisions for the agents.
+
+## The OS shell
+
+- **Desktop** (≥1280px): a live VPS-map wallpaper (agents are buildings; the ring is cost against
+  budget, links carry the real handoff edges), glanceable widgets (today's brief, goals, pipeline,
+  waiting-for-you, activity, VPS strip), and a **dock**: `desktop · command · front desk ·
+  marketing · dev · knowledge │ approvals │ six agents │ search`.
+- **Windows** (one at a time, scrim + Esc): Command, Approvals, Front desk, Marketing, Dev,
+  Knowledge, and the per-agent page. Each header shows one owner large, collaborators as chips,
+  and a dashed `chief · oversight` chip on workspaces.
+- **Chief drawer** (⌘J): one panel, six threads (Chief pinned, then the five others). Sending is a
+  `sendMessageFromForm` → `actions` row; a thread is `events` where `kind=message` (payload.role
+  `user`/`assistant`). **⌘K** asks Chief or jumps to a workspace / deal / project / agent.
+- **Deep links**: `/dashboard/approvals/<id>`, `/dashboard/fixes/<id>`, `/dashboard/agents/<id>`
+  (what the bridge/Telegram send) 307-redirect to `?win=…&id=…&k=…` query params the shell reads
+  on load. `/os` redirects to `/dashboard`.
+- **Mobile** (<1280px): the page hands off to `OSMobile` — chat with Chief + the approval queue.
+- **Live updates — one mechanism**: `GET /api/os/tick` returns a few scalars (pending approvals,
+  `events_max_id`, running fixes, `warroom`/`prospects` updated-at, `vps_ts`); the shell polls it
+  every 5 s (15 s hidden) and `router.refresh()`es only on change. The Dev terminal tails
+  `GET /api/fixes/[id]/log` every 3 s while a fix runs. The page is `force-dynamic` +
+  `fetchCache = "force-no-store"`. **No anon-role RLS** (the anon key is public; reads stay
+  server-side).
 
 ## Files
 
 ```
-src/proxy.ts                         session refresh + redirect signed-out visitors of /dashboard
+src/proxy.ts                         request gate: refresh session, redirect signed-out /dashboard + /os → /login
 src/app/auth/callback/route.ts       magic-link landing, exchanges the code for a session
-src/app/login/page.tsx               email form (allowlisted addresses only); outside the dashboard layout on purpose
-src/app/dashboard/layout.tsx         auth check, nav, sign out, 6s auto-refresh
-src/app/dashboard/page.tsx           office: one card per agent
-src/app/dashboard/activity/          feed + scheduled runs
-src/app/dashboard/approvals/         the inbox: approve / reject with a note
-src/app/dashboard/agents/[id]/       chat with an agent, its approvals and runs
-src/app/dashboard/_components/       cards, nav links, auto-refresh
-src/app/dashboard/workforce.css      styles scoped under .wf, using design-system.css tokens
-src/lib/supabase/server.ts           auth client (anon + cookies) and admin client (service key)
+src/app/login/page.tsx               email form (allowlisted); outside the dashboard layout on purpose
+src/app/dashboard/layout.tsx         auth check + fonts; renders the OS provider
+src/app/dashboard/page.tsx           loads all window data; renders <Desktop> (wide) + <OSMobile> (<1280px)
+src/app/dashboard/_components/        the shell: Desktop, dock, WindowFrame, ChiefDrawer, Palette, Persona, TickPoller, windows/, OSMobile
+src/app/dashboard/_data/             server loaders (agents, approvals, frontdesk, marketing, dev, knowledge, command, threads, …) + client-safe *-types
+src/app/dashboard/os.css             OS design tokens + base, scoped under .os-root
+src/app/os/page.tsx                  redirect → /dashboard (temporary)
+src/app/api/os/tick/route.ts         the live-update heartbeat
+src/app/api/fixes/[id]/log/route.ts  terminal log tail
+src/app/api/errors/route.ts          POST error ingest (bearer ERROR_INGEST_TOKEN)
+src/lib/supabase/server.ts           admin client (service key) — all OS reads/writes are server-side
 src/lib/workforce/                   types, server actions, auth actions
 ```
 
