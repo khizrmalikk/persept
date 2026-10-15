@@ -5,8 +5,9 @@ import { getActiveIdeas } from "@/lib/workforce/ideas";
 import type { AgentKey } from "../_components/Persona";
 import { loadAgents } from "./agents";
 import {
+  backlogColumn,
   type OSBacklogCard,
-  type OSColumn,
+  type OSBacklogState,
   type OSCommand,
   type OSHealth,
   type OSIdeaCard,
@@ -83,9 +84,8 @@ export async function loadCommand(): Promise<OSCommand> {
         return await db
           .from("backlog")
           .select(
-            "id, title, detail, owner, due, priority, status, waiting_on_owner, updated_at",
+            "id, title, detail, owner, due, priority, status, waiting_on_owner, started_at, doing_note, doing_by, blocked_why, result, result_verified, done_by, done_at, updated_at",
           )
-          .neq("status", "dropped")
           .order("updated_at", { ascending: false });
       } catch {
         return { data: null };
@@ -141,19 +141,32 @@ export async function loadCommand(): Promise<OSCommand> {
     priority: string | null;
     status: string | null;
     waiting_on_owner: boolean | null;
+    started_at: string | null;
+    doing_note: string | null;
+    doing_by: string | null;
+    blocked_why: string | null;
+    result: string | null;
+    result_verified: boolean | null;
+    done_by: string | null;
+    done_at: string | null;
   };
+  const STATES = [
+    "open",
+    "started",
+    "doing",
+    "blocked",
+    "stalled",
+    "done",
+    "dropped",
+  ];
   const backlogRows = ((backlogRes as { data: BacklogRow[] | null }).data ??
     []) as BacklogRow[];
   const backlog: OSBacklogCard[] = backlogRows.map((b) => {
     const owner = asAgent(b.owner);
-    const done = b.status === "done";
-    const column: OSColumn = done
-      ? "done"
-      : b.waiting_on_owner
-        ? "waiting"
-        : owner !== "you" && workingSet.has(owner)
-          ? "doing"
-          : "todo";
+    const state = (
+      STATES.includes(b.status ?? "") ? b.status : "open"
+    ) as OSBacklogState;
+    const waitingOnOwner = !!b.waiting_on_owner;
     const title = (b.title ?? "").trim();
     return {
       id: b.id,
@@ -164,8 +177,18 @@ export async function loadCommand(): Promise<OSCommand> {
       priority: (["high", "normal", "low"].includes(b.priority ?? "")
         ? b.priority
         : "normal") as "high" | "normal" | "low",
-      column,
+      column: backlogColumn(state, waitingOnOwner),
+      state,
       workforce: /^workforce:/i.test(title),
+      startedAt: b.started_at,
+      doingNote: (b.doing_note ?? "").trim(),
+      doingBy: b.doing_by ? asAgent(b.doing_by) : null,
+      blockedWhy: (b.blocked_why ?? "").trim(),
+      waitingOnOwner,
+      result: (b.result ?? "").trim(),
+      resultVerified: !!b.result_verified,
+      doneBy: (b.done_by ?? "").trim(),
+      doneAt: b.done_at,
     };
   });
 
@@ -185,7 +208,9 @@ export async function loadCommand(): Promise<OSCommand> {
 
   // ── state tiles + health + brief ──────────────────────────────────────────
   const stateContent = stateRes?.content ?? null;
-  const openCount = backlog.filter((b) => b.column !== "done").length;
+  const openCount = backlog.filter(
+    (b) => b.column !== "done" && b.column !== "dropped",
+  ).length;
   const doingCount = backlog.filter((b) => b.column === "doing").length;
   const apCount = (apCountRes as { count: number | null }).count ?? 0;
   const activeIdeas = ideas.filter((i) => i.isNew).length;

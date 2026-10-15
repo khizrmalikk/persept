@@ -782,19 +782,22 @@ export async function updateBacklogItem(fd: FormData): Promise<void> {
   revalidateBacklog();
 }
 
+// Direct status patches (day-39: `backlog.status` is the single source of truth).
+// ✓ done = the owner marking it done by hand (records done_by + a result line);
+// ✕ drop = `dropped`; "open" reopens. The bridge owns `started|doing|blocked|
+// stalled` via BACKLOG blocks — the dashboard never sets those.
 async function setBacklog(id: string, status: "open" | "done" | "dropped") {
   await guard();
   const rowId = id.trim();
   if (!rowId) return;
   const now = new Date().toISOString();
-  await supabaseAdmin()
-    .from("backlog")
-    .update({
-      status,
-      updated_at: now,
-      done_at: status === "done" ? now : null,
-    })
-    .eq("id", rowId);
+  const patch: Record<string, unknown> = { status, updated_at: now };
+  if (status === "done") {
+    patch.done_at = now;
+    patch.done_by = "owner";
+    patch.result = "marked done by the owner";
+  }
+  await supabaseAdmin().from("backlog").update(patch).eq("id", rowId);
   revalidateBacklog();
 }
 
@@ -808,23 +811,45 @@ export async function backlogReopenFromForm(fd: FormData) {
   await setBacklog(String(fd.get("id") ?? ""), "open");
 }
 
-// "start" a backlog item: give Chief the word to kick it off. Backlog items don't
-// run on a schedule — they sit until you say go. This routes through Chief (a plain
-// `message`), who hands it to the right agent or puts it on today's list, exactly
-// as Chief describes. The suggested owner goes along as context.
+// "start"/"start again" a backlog item (day-39): hand the task off through Chief
+// with the exact `start backlog <uuid>[: note]` command. The bridge marks the row
+// `started`, sends the TASK to the owner agent directly, and tells Chief; the card
+// moves on the next tick. We do NOT touch `status` here — the bridge owns it.
 export async function startBacklogItem(
-  owner: string,
-  title: string,
+  id: string,
+  note?: string,
 ): Promise<void> {
   await guard();
+  const rowId = id.trim();
+  if (!rowId) return;
+  const n = (note ?? "").trim();
+  await sendAgentCommand("chief", `start backlog ${rowId}${n ? `: ${n}` : ""}`);
+  revalidateBacklog();
+}
+
+// Re-assign a backlog item to a different owner. If it had already been handed off
+// (started|doing), reset it to `open` so the new agent gets a fresh start.
+export async function reassignBacklog(
+  id: string,
+  owner: string,
+): Promise<void> {
+  await guard();
+  const rowId = id.trim();
   const o = owner.trim().toLowerCase();
-  const t = title.trim();
-  if (!t) return;
-  const who = o && o !== "you" && o !== "owner" ? ` (owner: ${o})` : "";
-  await sendAgentCommand(
-    "chief",
-    `kick off this backlog item now — hand it to the right agent or put it on today's list${who}: ${t}`,
-  );
+  if (!rowId || !o) return;
+  const db = supabaseAdmin();
+  const { data } = await db
+    .from("backlog")
+    .select("status")
+    .eq("id", rowId)
+    .maybeSingle();
+  const status = String((data as { status?: string } | null)?.status ?? "");
+  const patch: Record<string, unknown> = {
+    owner: o,
+    updated_at: new Date().toISOString(),
+  };
+  if (status === "started" || status === "doing") patch.status = "open";
+  await db.from("backlog").update(patch).eq("id", rowId);
   revalidateBacklog();
 }
 

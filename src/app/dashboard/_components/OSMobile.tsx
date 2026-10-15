@@ -13,6 +13,7 @@ import type { OSThreadMsg } from "../_data/threads";
 import { AGENT_HUE_VAR } from "../_data/windows";
 import { AttachButton, AttachChips } from "./ChatAttach";
 import { ChatBody } from "./ChatBody";
+import { MessageBody } from "./MessageBody";
 import { Persona, type PersonaStatus } from "./Persona";
 import { useChatAttachments } from "./useChatAttachments";
 
@@ -245,22 +246,27 @@ function MobileChat({
                 flexDirection: "column",
                 gap: 3,
                 alignItems: m.mine ? "flex-end" : "flex-start",
+                minWidth: 0,
               }}
             >
-              <div
-                style={{
-                  padding: "10px 14px",
-                  borderRadius: m.mine
-                    ? "16px 16px 4px 16px"
-                    : "16px 16px 16px 4px",
-                  background: m.mine ? "var(--ink)" : "var(--surf2)",
-                  color: m.mine ? "var(--bg)" : "var(--ink)",
-                  fontSize: 14.5,
-                  lineHeight: 1.45,
-                }}
-              >
-                <ChatBody text={m.text} mine={m.mine} />
-              </div>
+              {!m.mine && m.parts?.some((p) => p.kind !== "text") ? (
+                <MessageBody parts={m.parts} thread="chief" />
+              ) : (
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    borderRadius: m.mine
+                      ? "16px 16px 4px 16px"
+                      : "16px 16px 16px 4px",
+                    background: m.mine ? "var(--ink)" : "var(--surf2)",
+                    color: m.mine ? "var(--bg)" : "var(--ink)",
+                    fontSize: 14.5,
+                    lineHeight: 1.45,
+                  }}
+                >
+                  <ChatBody text={m.text} mine={m.mine} />
+                </div>
+              )}
               {m.ts && (
                 <span
                   className="os-mono"

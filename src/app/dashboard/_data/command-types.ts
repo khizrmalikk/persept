@@ -5,7 +5,33 @@ import type { AgentKey } from "../_components/Persona";
 // component can import these VALUES without pulling server code into the bundle.
 
 export type OSStatus = "working" | "waiting" | "idle" | "soon";
-export type OSColumn = "todo" | "doing" | "waiting" | "done";
+export type OSColumn = "todo" | "doing" | "waiting" | "done" | "dropped";
+
+// day-39: `backlog.status` is the single source of truth (no derivation from the
+// agent's status). The bridge owns started|doing|blocked|stalled.
+export type OSBacklogState =
+  | "open"
+  | "started"
+  | "doing"
+  | "blocked"
+  | "stalled"
+  | "done"
+  | "dropped";
+
+// status (+ a pending owner approval) → board column. Pure, so the loader and the
+// client can agree. started|doing with waiting_on_owner is "waiting for you".
+export function backlogColumn(
+  state: OSBacklogState,
+  waitingOnOwner: boolean,
+): OSColumn {
+  if (state === "dropped") return "dropped";
+  if (state === "done") return "done";
+  if (state === "blocked" || state === "stalled") return "waiting";
+  if ((state === "started" || state === "doing") && waitingOnOwner)
+    return "waiting";
+  if (state === "started" || state === "doing") return "doing";
+  return "todo"; // open (and anything unexpected)
+}
 
 export type OSStateTile = {
   key: string;
@@ -35,14 +61,25 @@ export type OSTeamMember = {
 };
 
 export type OSBacklogCard = {
-  id: string;
+  id: string; // full uuid (the start command needs it)
   title: string;
   detail: string;
   owner: AgentKey;
   due: string | null;
   priority: "high" | "normal" | "low";
   column: OSColumn;
+  state: OSBacklogState;
   workforce: boolean;
+  // task-system fields (day-39)
+  startedAt: string | null; // when handed to the agent (for the "waiting" line)
+  doingNote: string; // doing_note while the agent works
+  doingBy: AgentKey | null; // doing_by
+  blockedWhy: string; // blocked_why (red badge)
+  waitingOnOwner: boolean; // an approval from the agent is pending
+  result: string; // the agent's result when done
+  resultVerified: boolean; // tick vs "unverified"
+  doneBy: string; // "owner" or an agent id
+  doneAt: string | null;
 };
 
 export type OSIdeaCard = {
@@ -79,8 +116,9 @@ export type OSCommand = {
   staleNotice: string | null;
 };
 
-// kanban columns (contract): to do = open & !waiting & owner not working,
-// in progress = open & owner working, waiting for you = waiting_on_owner, done = done.
+// kanban columns (day-39, from backlog.status — see backlogColumn):
+// to do = open · in progress = started|doing · waiting for you = blocked|stalled|
+// waiting_on_owner · done = done. `dropped` is off-board (a filter chip reveals it).
 export const BACKLOG_COLUMNS: {
   key: OSColumn;
   label: string;
@@ -112,6 +150,14 @@ export const BACKLOG_COLUMNS: {
     empty: "nothing done yet",
   },
 ];
+
+// shown only when the "dropped" filter chip is on.
+export const DROPPED_COLUMN = {
+  key: "dropped" as OSColumn,
+  label: "dropped",
+  color: "var(--mute)",
+  empty: "nothing dropped",
+};
 
 export const COMMAND_TABS: [string, string][] = [
   ["today", "today"],

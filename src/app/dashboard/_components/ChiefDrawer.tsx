@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { sendMessageFromForm } from "@/lib/workforce/actions";
+import type { Part } from "@/lib/workforce/blocks";
 import type { OSAgent } from "../_data/agents";
 import type { OSThreadMsg } from "../_data/threads";
 import { AttachButton, AttachChips } from "./ChatAttach";
 import { ChatBody } from "./ChatBody";
+import { MessageBody } from "./MessageBody";
 import { useOS } from "./os-store";
 import { type AgentKey, Persona } from "./Persona";
 import { useChatAttachments } from "./useChatAttachments";
@@ -16,7 +18,13 @@ import { useChatAttachments } from "./useChatAttachments";
 // the bridge relays); replies and task cards arrive from the bridge as events —
 // history loading is wired with the agent page. Optimistic bubbles show sends now.
 
-type Bubble = { id: string; mine: boolean; text: string; ts: string };
+type Bubble = {
+  id: string;
+  mine: boolean;
+  text: string;
+  ts: string;
+  parts?: Part[];
+};
 const ORDER: AgentKey[] = [
   "chief",
   "scout",
@@ -360,22 +368,27 @@ export function ChiefDrawer({
                 flexDirection: "column",
                 gap: 4,
                 alignItems: m.mine ? "flex-end" : "flex-start",
+                minWidth: 0,
               }}
             >
-              <div
-                style={{
-                  padding: "10px 14px",
-                  borderRadius: m.mine
-                    ? "16px 16px 4px 16px"
-                    : "16px 16px 16px 4px",
-                  background: m.mine ? "var(--ink)" : "var(--surf2)",
-                  color: m.mine ? "var(--bg)" : "var(--ink)",
-                  fontSize: 13.5,
-                  lineHeight: 1.45,
-                }}
-              >
-                <ChatBody text={m.text} mine={m.mine} />
-              </div>
+              {!m.mine && m.parts?.some((p) => p.kind !== "text") ? (
+                <MessageBody parts={m.parts} thread={thread} />
+              ) : (
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    borderRadius: m.mine
+                      ? "16px 16px 4px 16px"
+                      : "16px 16px 16px 4px",
+                    background: m.mine ? "var(--ink)" : "var(--surf2)",
+                    color: m.mine ? "var(--bg)" : "var(--ink)",
+                    fontSize: 13.5,
+                    lineHeight: 1.45,
+                  }}
+                >
+                  <ChatBody text={m.text} mine={m.mine} />
+                </div>
+              )}
               <span
                 className="os-mono"
                 style={{ fontSize: 10, color: "var(--mute)" }}
