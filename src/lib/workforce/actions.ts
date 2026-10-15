@@ -1660,6 +1660,9 @@ const GOAL_SRC = [
   "prospects-count",
   "replied-count",
   "calls-count",
+  "stripe-mrr",
+  "stripe-month",
+  "stripe-customers",
 ] as const;
 
 // Create a goal, then ask Chief to plan it. `src: manual` unless the owner picked

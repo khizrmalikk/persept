@@ -17,6 +17,7 @@ import {
   dismissMover,
   goalStepToBacklog,
   replanGoal,
+  sendAgentCommand,
   setGoalStepStatus,
   setGoalValue,
   tapMover,
@@ -28,6 +29,7 @@ import {
   dueLabel,
   fmtGoal,
   type GoalCtx,
+  type GoalSrc,
   goalStats,
   MONS,
   NEXT_STEP,
@@ -42,6 +44,7 @@ import {
 import { AGENT_HUE_VAR, AGENT_TINT_VAR } from "../../_data/windows";
 import { useOS } from "../os-store";
 import { type AgentKey, Persona } from "../Persona";
+import { Money } from "./Money";
 
 // The war room — a trading-terminal overlook of every goal: a live ticker, a
 // goals watchlist, the selected goal's projection chart + roadmap + Chief-written
@@ -102,11 +105,16 @@ const TONE: Record<string, string> = {
 };
 const mono: CSSProperties = { fontFamily: "var(--font-mono)" };
 
-const SUGG: [string, number, "count" | "AED", number][] = [
+// name, target, unit, months-out, and an optional live src (day-40 Stripe chips
+// create a live goal the bridge keeps current).
+const SUGG: [string, number, "count" | "AED", number, GoalSrc?][] = [
   ["monthly retainers signed", 5, "count", 5],
   ["website demos booked", 20, "count", 2],
   ["instagram followers", 2000, "count", 3],
   ["monthly recurring revenue", 25000, "AED", 6],
+  ["MRR", 50000, "AED", 6, "stripe-mrr"],
+  ["revenue this month", 80000, "AED", 1, "stripe-month"],
+  ["paying customers", 100, "count", 6, "stripe-customers"],
 ];
 
 type FormState = {
@@ -116,6 +124,7 @@ type FormState = {
   unit: "count" | "AED";
   due: string;
   owner: AgentKey;
+  src?: GoalSrc; // day-40: set by a live suggestion chip (else manual)
   tried?: boolean;
 };
 
@@ -128,6 +137,14 @@ export function WarRoom({
 }) {
   const os = useOS();
   const subGoal = (os.sub as { goal?: string }).goal ?? null;
+
+  // day-42: goals | money tabs (money moved here from the front desk).
+  const [tab, setTab] = useState<"goals" | "money">(
+    os.sub.tab === "money" ? "money" : "goals",
+  );
+  useEffect(() => {
+    if (os.sub.tab) setTab(os.sub.tab === "money" ? "money" : "goals");
+  }, [os.sub.tab]);
 
   const [now, setNow] = useState(() => Date.now());
   const [sel, setSel] = useState<string | null>(subGoal);
@@ -298,6 +315,7 @@ export function WarRoom({
       return;
     }
     const unit = form.unit === "AED" ? "AED" : "";
+    const goalSrc = form.src ?? "manual";
     if (mode === "new") {
       const id = `local-${now}`;
       const g: OSWarGoal = {
@@ -305,7 +323,7 @@ export function WarRoom({
         n: form.n.trim(),
         tag: form.n.trim().split(/\s+/).slice(0, 2).join(" "),
         unit,
-        src: "manual",
+        src: goalSrc,
         model: "pace",
         target: tgt,
         cur: cur || 0,
@@ -332,6 +350,7 @@ export function WarRoom({
       fd.append("cur", String(cur || 0));
       fd.append("due", form.due);
       fd.append("owner", form.owner);
+      fd.append("src", goalSrc);
       void createGoal(fd);
       os.showToast("chief is writing the plan");
       setSel(id);
@@ -412,6 +431,58 @@ export function WarRoom({
         fontVariantNumeric: "tabular-nums",
       }}
     >
+      {/* day-42: goals | money tabs */}
+      <div
+        style={{
+          flex: "none",
+          display: "flex",
+          alignItems: "center",
+          gap: 4,
+          position: "relative",
+          zIndex: 6,
+        }}
+      >
+        {(["goals", "money"] as const).map((t) => {
+          const on = tab === t;
+          const bad = t === "money" && data.money.overdueCount > 0;
+          return (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTab(t)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 7,
+                padding: "6px 13px",
+                borderRadius: 9,
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: "pointer",
+                border: "none",
+                background: on ? "var(--surf2)" : "transparent",
+                color: on ? "var(--ink)" : "var(--soft)",
+              }}
+            >
+              {t}
+              {bad && (
+                <span
+                  style={{
+                    fontSize: 11,
+                    padding: "1px 6px",
+                    borderRadius: 999,
+                    background: "var(--bad)",
+                    color: "var(--bg)",
+                  }}
+                >
+                  {data.money.overdueCount}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
       {/* ticker */}
       <div
         style={{
@@ -1101,6 +1172,47 @@ export function WarRoom({
           </div>
         </div>
       </div>
+
+      {/* money tab — an overlay over the goals content (below the tab bar) */}
+      {tab === "money" && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            paddingTop: 44,
+            zIndex: 5,
+            background: "var(--bg)",
+          }}
+        >
+          <div
+            style={{
+              position: "relative",
+              width: "100%",
+              height: "100%",
+              borderRadius: 14,
+              border: "1px solid var(--line)",
+              overflow: "hidden",
+            }}
+          >
+            <Money
+              money={data.money}
+              deals={data.deals}
+              onRemind={(ref) => {
+                void sendAgentCommand("hunter", `remind invoice ${ref}`);
+                os.showToast("asked Hunter to remind");
+              }}
+              onOpenDeal={(key) => os.open("frontdesk", { deal: key })}
+              onLink={(paymentId, key) => {
+                void sendAgentCommand(
+                  "chief",
+                  `link payment ${paymentId} to ${key}`,
+                );
+                os.showToast("asked Chief to link the payment");
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1913,7 +2025,14 @@ function Chart({
     }
     const hx = X(hov);
     const hy = Y(v);
-    const bx = hx + 146 > 680 ? hx - 146 : hx + 10;
+    // size the tooltip to its text (monospace → predictable advance) so a long
+    // projected range like "AED 259.7 (168.9–477.3)" isn't clipped, and keep the
+    // box on-canvas on both sides.
+    const line1 = dayMon(startMs + hov * DAY) + (isF ? " · projected" : "");
+    const boxW = Math.ceil(Math.max(line1.length * 6, txt.length * 7.3)) + 20;
+    const gap = 10;
+    let bx = hx + boxW + gap > 680 ? hx - boxW - gap : hx + gap;
+    bx = Math.max(2, Math.min(680 - boxW - 2, bx));
     const by = Math.max(MT, Math.min(PB - 38, hy - 46));
     hoverEls = (
       <>
@@ -1934,7 +2053,7 @@ function Chart({
         <rect
           x={f1(bx)}
           y={f1(by)}
-          width="136"
+          width={f1(boxW)}
           height="38"
           rx="7"
           style={{ fill: "var(--ink)" }}
@@ -1946,7 +2065,7 @@ function Chart({
           fontSize="10"
           style={{ fill: "var(--bg)", opacity: 0.75 }}
         >
-          {dayMon(startMs + hov * DAY) + (isF ? " · projected" : "")}
+          {line1}
         </text>
         <text
           x={f1(bx + 10)}
@@ -2634,7 +2753,7 @@ function GoalForm({
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <span style={label}>or start from</span>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {SUGG.map(([n, tv, u, mo]) => {
+            {SUGG.map(([n, tv, u, mo, src]) => {
               const d = new Date(
                 new Date(now).getFullYear(),
                 new Date(now).getMonth() + mo + 1,
@@ -2650,6 +2769,7 @@ function GoalForm({
                       n,
                       target: String(tv),
                       unit: u,
+                      src: src ?? "manual",
                       due: d.toISOString().slice(0, 10),
                     })
                   }

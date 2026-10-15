@@ -2,6 +2,12 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { getHandledLeads, getSuggestedLeads } from "@/lib/workforce/leads";
 import { getMessages, groupThreads } from "@/lib/workforce/outreach";
 import { getProposals } from "@/lib/workforce/proposals";
+import {
+  isThisMonth,
+  loadMoney,
+  paidThisMonthByKey,
+  paymentForKey,
+} from "@/lib/workforce/stripe";
 import { ago } from "@/lib/workforce/types";
 import type { AgentKey } from "../_components/Persona";
 import {
@@ -35,6 +41,7 @@ type ProspectRow = {
   last_touch: string | null;
   notes: string | null;
   archived: boolean | null;
+  won_at: string | null;
 };
 
 const STAGE_SET = new Set<OSStage>([
@@ -47,6 +54,12 @@ const STAGE_SET = new Set<OSStage>([
 ]);
 
 const firstName = (full: string) => full.split(/\s+/)[0] ?? full;
+const shortDate = (iso: string | null): string => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return `${d.getDate()} ${d.toLocaleString("en-US", { month: "short" }).toLowerCase()}`;
+};
 const sourceKey = (l: { campaign: string; source_url: string }) => {
   if (l.campaign) return l.campaign;
   const m = l.source_url.match(/^https?:\/\/([^/]+)/i);
@@ -68,14 +81,14 @@ function leadVM(
 
 export async function loadFrontDesk(): Promise<OSFrontDesk> {
   const db = supabaseAdmin();
-  const [prospectsRes, suggested, handled, proposals, messages] =
+  const [prospectsRes, suggested, handled, proposals, messages, money] =
     await Promise.all([
       (async () => {
         try {
           return await db
             .from("prospects")
             .select(
-              "key, company, contact, size, angle, stage, status, value_aed, campaign, last_touch, notes, archived",
+              "key, company, contact, size, angle, stage, status, value_aed, campaign, last_touch, notes, archived, won_at",
             )
             .order("updated_at", { ascending: false });
         } catch {
@@ -86,6 +99,21 @@ export async function loadFrontDesk(): Promise<OSFrontDesk> {
       getHandledLeads(20).catch(() => []),
       getProposals().catch(() => []),
       getMessages("hunter").catch(() => []),
+      loadMoney().catch(
+        () =>
+          ({
+            ok: false,
+            fx: 0,
+            accounts: [],
+            revenueDaily: [],
+            subscriptions: [],
+            invoices: [],
+            payments: [],
+            collectedAed: 0,
+            overdueCount: 0,
+            errored: [],
+          }) as Awaited<ReturnType<typeof loadMoney>>,
+      ),
     ]);
 
   const propByCompany = new Map<string, (typeof proposals)[number]>();
@@ -105,6 +133,10 @@ export async function loadFrontDesk(): Promise<OSFrontDesk> {
         : undefined;
       const team: AgentKey[] = ["scout", "hunter"];
       if (prop) team.push("scribe");
+      const pay = paymentForKey(money, p.key);
+      const inv = pay
+        ? money.invoices.find((i) => i.number && i.number === pay.number)
+        : null;
       return {
         key: p.key,
         company: p.company ?? p.key,
@@ -120,27 +152,41 @@ export async function loadFrontDesk(): Promise<OSFrontDesk> {
         lastWhen: p.last_touch ? ago(p.last_touch) : "",
         team,
         proposalId: prop?.id ?? null,
+        paid: pay
+          ? {
+              aed: pay.amountAed,
+              when: shortDate(pay.paidAt),
+              number: pay.number,
+              url: inv?.url ?? "",
+            }
+          : null,
+        wonAt: p.won_at,
       };
     })
     // hide lost/parked (they were filtered out of STAGE_SET above too)
     .filter((d) => STAGE_SET.has(d.stage));
 
   const now = new Date();
-  const thisMonth = (iso: string | null) => {
-    if (!iso) return false;
-    const d = new Date(iso);
-    return (
-      d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
-    );
-  };
   const pipelineValue = deals
     .filter((d) => d.stage !== "won")
     .reduce((s, d) => s + d.value, 0);
-  const wonThisMonth = prospects
+
+  // day-40 won this month = Σ real Stripe payments (matched to a prospect), plus
+  // won prospects this month that have no matching payment yet ("unpaid").
+  const paidByKey = paidThisMonthByKey(money, now);
+  const wonPaidThisMonth = [...paidByKey.values()].reduce(
+    (s, v) => s + v.aed,
+    0,
+  );
+  const unpaidWon = prospects
     .filter(
-      (p) => (p.stage ?? "").toLowerCase() === "won" && thisMonth(p.last_touch),
+      (p) =>
+        (p.stage ?? "").toLowerCase() === "won" &&
+        isThisMonth(p.last_touch, now) &&
+        !paidByKey.has(p.key),
     )
     .reduce((s, p) => s + (p.value_aed ?? 0), 0);
+  const wonThisMonth = wonPaidThisMonth + unpaidWon;
 
   const proposalRows: OSProposalRow[] = proposals.map((p) => {
     const idx = PROPOSAL_STEPS.indexOf(
@@ -204,5 +250,7 @@ export async function loadFrontDesk(): Promise<OSFrontDesk> {
     sources,
     pipelineValue,
     wonThisMonth,
+    wonPaidThisMonth,
+    money,
   };
 }

@@ -41,6 +41,9 @@ export type OSStateTile = {
   accent: boolean;
   win?: string;
   tab?: string;
+  // day-40 money tile: span the full row + colour the sub red (overdue).
+  wide?: boolean;
+  subBad?: boolean;
 };
 
 export type OSHealth = {

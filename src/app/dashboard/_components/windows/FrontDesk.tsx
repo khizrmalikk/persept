@@ -20,11 +20,14 @@ import {
 import { AGENT_HUE_VAR, AGENT_TINT_VAR } from "../../_data/windows";
 import { useOS } from "../os-store";
 import { type AgentKey, Persona } from "../Persona";
+import { cur, money0, shortDay } from "./Money";
 
 // Front desk — the sales funnel. pipeline / research desk / conversations /
 // proposals + a deal side-panel. Reads loadFrontDesk() data; mutations go through
 // the real actions (acceptLead / dismissLead / approve / sendOutboundAsOwner /
-// sendAgentCommand) then router.refresh().
+// sendAgentCommand) then router.refresh(). The money tab moved to the war room
+// (day-42); the deal panel still shows this deal's Stripe payments, so it reuses
+// the money formatters from ./Money.
 
 const TABS: [string, string][] = [
   ["pipeline", "pipeline"],
@@ -109,6 +112,7 @@ export function FrontDesk({
         {TABS.map(([k, n]) => {
           const on = tab === k;
           const badge = k === "leads" ? data.leads.length : 0;
+          const badgeBad = false;
           return (
             <button
               key={k}
@@ -136,8 +140,8 @@ export function FrontDesk({
                     fontSize: 11,
                     padding: "1px 6px",
                     borderRadius: 999,
-                    background: "var(--surf)",
-                    color: "var(--soft)",
+                    background: badgeBad ? "var(--bad)" : "var(--surf)",
+                    color: badgeBad ? "var(--bg)" : "var(--soft)",
                   }}
                 >
                   {badge}
@@ -243,7 +247,6 @@ function formOf(entries: Record<string, string>): FormData {
   return f;
 }
 
-// ── pipeline ────────────────────────────────────────────────────────────────
 function Pipeline({
   deals,
   dealHasAp,
@@ -1279,10 +1282,16 @@ function DealPanel({
   const dealAps = approvals.filter(
     (a) => a.company?.toLowerCase() === deal.company.toLowerCase(),
   );
+  // day-42: every Stripe payment linked to this prospect, newest first.
+  const dealPayments = data.money.payments
+    .filter((p) => p.prospectKey === deal.key)
+    .sort((a, b) => (b.paidAt ?? "").localeCompare(a.paidAt ?? ""));
+  const invoiceUrl = (num: string) =>
+    (num && data.money.invoices.find((i) => i.number === num)?.url) || "";
 
   // the journey: Scout found it → Hunter added → each message → proposal
   const journey: {
-    k: AgentKey | "contact";
+    k: AgentKey | "contact" | "paid";
     who: string;
     t: string;
     quote?: string;
@@ -1327,6 +1336,14 @@ function DealPanel({
           ? "is drafting the proposal"
           : `wrote the proposal · now ${prop.status}`,
       when: prop.updated,
+    });
+  // one "paid" entry per linked payment (oldest→newest, so they read in order)
+  for (const p of [...dealPayments].reverse())
+    journey.push({
+      k: "paid",
+      who: "paid",
+      t: `AED ${money0(p.amountAed)}${p.number ? ` · invoice #${p.number}` : ""}`,
+      when: shortDay(p.paidAt),
     });
 
   return (
@@ -1431,6 +1448,34 @@ function DealPanel({
               </button>
             </div>
           </div>
+          {deal.paid && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 12.5,
+                color: "var(--ok)",
+                fontWeight: 600,
+              }}
+            >
+              <span>
+                paid · AED {fmt(deal.paid.aed)}
+                {deal.paid.when ? ` on ${deal.paid.when}` : ""}
+                {deal.paid.number ? ` · invoice #${deal.paid.number}` : ""}
+              </span>
+              {deal.paid.url && (
+                <a
+                  href={deal.paid.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "var(--soft)", textDecoration: "none" }}
+                >
+                  open in Stripe ↗
+                </a>
+              )}
+            </div>
+          )}
           <div
             style={{
               display: "flex",
@@ -1508,6 +1553,12 @@ function DealPanel({
                   }}
                 >
                   {st.label}
+                  {st.key === "won" && deal.wonAt && (
+                    <span style={{ color: "var(--ok)" }}>
+                      {" "}
+                      · {shortDay(deal.wonAt)}
+                    </span>
+                  )}
                 </span>
               </div>
             ))}
@@ -1623,6 +1674,69 @@ function DealPanel({
               </div>
             </div>
           )}
+          {dealPayments.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <span
+                className="os-mono"
+                style={{
+                  fontSize: 10.5,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  color: "var(--mute)",
+                }}
+              >
+                payments
+              </span>
+              {dealPayments.map((p) => {
+                const url = invoiceUrl(p.number);
+                return (
+                  <div
+                    key={p.id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      fontSize: 13,
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 7,
+                        height: 7,
+                        borderRadius: 999,
+                        background: "var(--ok)",
+                        flex: "none",
+                      }}
+                    />
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      {cur(p.currency)} {money0(p.amount)}
+                      <span style={{ color: "var(--mute)" }}>
+                        {" "}
+                        · AED {money0(p.amountAed)}
+                      </span>
+                    </span>
+                    <span style={{ fontSize: 11.5, color: "var(--mute)" }}>
+                      {shortDay(p.paidAt)}
+                    </span>
+                    {url && (
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontSize: 11.5,
+                          color: "var(--soft)",
+                          textDecoration: "none",
+                        }}
+                      >
+                        receipt ↗
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
           <span
             className="os-mono"
             style={{
@@ -1663,6 +1777,24 @@ function DealPanel({
                     >
                       {ini(deal.contact || deal.company)}
                     </span>
+                  ) : j.k === "paid" ? (
+                    <span
+                      style={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: "50%",
+                        background: "var(--ok)",
+                        color: "var(--bg)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 13,
+                        fontWeight: 700,
+                        flex: "none",
+                      }}
+                    >
+                      ✓
+                    </span>
                   ) : (
                     <Persona agent={j.k} size={24} />
                   )}
@@ -1690,7 +1822,9 @@ function DealPanel({
                         color:
                           j.k === "contact"
                             ? "var(--ink)"
-                            : `var(${AGENT_HUE_VAR[j.k]})`,
+                            : j.k === "paid"
+                              ? "var(--ok)"
+                              : `var(${AGENT_HUE_VAR[j.k]})`,
                       }}
                     >
                       {j.who}

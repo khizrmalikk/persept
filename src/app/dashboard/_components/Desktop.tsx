@@ -109,6 +109,8 @@ export function Desktop({
       label: s,
       count: frontdesk.deals.filter((d) => d.stage === s).length,
     })),
+    wonThisMonth: frontdesk.wonThisMonth,
+    collected: frontdesk.money.collectedAed,
   };
   const ctxLabel =
     os.win === "agent"

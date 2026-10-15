@@ -1,3 +1,4 @@
+import type { OSMoney } from "@/lib/workforce/stripe-types";
 import type { AgentKey } from "../_components/Persona";
 
 // Client-safe shared types + constants for the front desk. Kept apart from
@@ -43,6 +44,14 @@ export type OSDeal = {
   lastWhen: string;
   team: AgentKey[];
   proposalId: string | null;
+  // set when a Stripe payment matched this prospect's key (day-40)
+  paid: {
+    aed: number;
+    when: string; // formatted date
+    number: string;
+    url: string;
+  } | null;
+  wonAt: string | null; // prospects.won_at — set when a payment matched (day-42)
 };
 
 export type OSLead = {
@@ -90,4 +99,8 @@ export type OSFrontDesk = {
   sources: { name: string; count: number }[];
   pipelineValue: number;
   wonThisMonth: number;
+  // how much of wonThisMonth is backed by a real Stripe payment (vs "unpaid" won
+  // prospects). day-40.
+  wonPaidThisMonth: number;
+  money: OSMoney;
 };

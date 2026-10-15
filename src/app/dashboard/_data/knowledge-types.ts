@@ -25,6 +25,7 @@ export type OSKnowledgeFile = {
   title: string; // raw title (preserved when toggling readers)
   summary: string; // raw summary (preserved when toggling readers)
   excerpt: string; // a short content preview
+  inVault: boolean; // day-38: a sources/ page exists for this file in the wiki
 };
 
 export type OSKnowledge = {

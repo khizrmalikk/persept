@@ -254,6 +254,7 @@ function Today({ data }: { data: OSCommand }) {
                   gap: 6,
                   textAlign: "left",
                   color: "var(--ink)",
+                  gridColumn: s.wide ? "1 / -1" : undefined,
                 }}
               >
                 <span
@@ -276,7 +277,7 @@ function Today({ data }: { data: OSCommand }) {
                 <span
                   style={{
                     fontSize: 12,
-                    color: "var(--soft)",
+                    color: s.subBad ? "var(--bad)" : "var(--soft)",
                     whiteSpace: "nowrap",
                   }}
                 >

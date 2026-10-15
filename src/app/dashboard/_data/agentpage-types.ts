@@ -69,6 +69,9 @@ export type OSAgentExtras = {
   ledgerPending: boolean; // cost ledger hasn't run → show "ledger has not run yet"
   vpsStale: boolean; // vps_metrics older than 10 min
   staleNotice: string | null; // the one-line amber notice (null when fresh)
+  // day-42 money, only set for Hunter's page (at-a-glance). null elsewhere.
+  paidThisMonth: number | null;
+  overdueInvoices: number | null;
 };
 
 // Model tiers the owner can pick on the permissions tab (CONFIG block to Chief).

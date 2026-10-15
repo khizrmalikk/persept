@@ -1,5 +1,6 @@
 import { getKnowledgeFiles } from "@/lib/workforce/knowledge";
 import { ago } from "@/lib/workforce/types";
+import { vaultSourceSlugs } from "@/lib/workforce/wiki";
 import type { AgentKey } from "../_components/Persona";
 import {
   KNOWLEDGE_AGENTS,
@@ -36,8 +37,18 @@ function fileExt(path: string, title: string, mime: string): string {
   return sub || "file";
 }
 
+// strip extension + keep alphanumerics only, for a loose file ↔ vault-slug match.
+const slugKey = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/\.[a-z0-9]+$/, "")
+    .replace(/[^a-z0-9]+/g, "");
+
 export async function loadKnowledge(): Promise<OSKnowledge> {
   let files: OSKnowledgeFile[] = [];
+  const vault = new Set(
+    (await vaultSourceSlugs().catch(() => [])).map(slugKey).filter(Boolean),
+  );
   try {
     const rows = await getKnowledgeFiles();
     files = rows.map((f): OSKnowledgeFile => {
@@ -55,6 +66,7 @@ export async function loadKnowledge(): Promise<OSKnowledge> {
         title: f.title,
         summary: f.summary,
         excerpt,
+        inVault: vault.has(slugKey(filename)) || vault.has(slugKey(f.title)),
       };
     });
   } catch {

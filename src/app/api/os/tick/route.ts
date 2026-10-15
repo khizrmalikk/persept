@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { fxToAed } from "@/lib/workforce/stripe";
 
 // The OS live-update heartbeat. The shell polls this every 5s (15s when the tab
 // is hidden) and only calls router.refresh() when a value changed — so one cheap
@@ -36,6 +37,8 @@ export async function GET() {
     goalsRow,
     backlogRow,
     prospectsRow,
+    stripeRow,
+    paymentsRow,
     vpsRow,
   ] = await Promise.all([
     num(
@@ -86,6 +89,26 @@ export async function GET() {
         .limit(1)
         .maybeSingle(),
     ),
+    // the money surfaces poll this: the bridge bumps stripe_accounts.updated_at
+    // on every 15-min mirror, so the money tab/tiles refresh within ~5s.
+    scalar(
+      db
+        .from("stripe_accounts")
+        .select("updated_at")
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ),
+    // the payments list polls this: the bridge inserts a payments row (and may
+    // link it to a prospect), so the money tab / deal panel refresh within ~5s.
+    scalar(
+      db
+        .from("payments")
+        .select("created_at")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ),
     scalar(db.from("vps_metrics").select("ts").eq("id", 1).maybeSingle()),
   ]);
 
@@ -100,6 +123,13 @@ export async function GET() {
         (backlogRow as { updated_at?: string } | null)?.updated_at ?? null,
       prospects_updated_at:
         (prospectsRow as { updated_at?: string } | null)?.updated_at ?? null,
+      stripe_updated_at:
+        (stripeRow as { updated_at?: string } | null)?.updated_at ?? null,
+      payments_updated_at:
+        (paymentsRow as { created_at?: string } | null)?.created_at ?? null,
+      // static, but cheap to ship here so the client has the bridge's FX without
+      // a second request (also at /api/os/config).
+      stripe_fx_to_aed: fxToAed(),
       vps_ts: (vpsRow as { ts?: string } | null)?.ts ?? null,
     },
     { headers: { "cache-control": "no-store" } },

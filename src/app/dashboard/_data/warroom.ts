@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { loadMoney } from "@/lib/workforce/stripe";
 import { ago } from "@/lib/workforce/types";
 import type { AgentKey } from "../_components/Persona";
 import {
@@ -197,6 +198,28 @@ export async function loadWarRoom(): Promise<OSWarRoom> {
   const won = prospects.filter((p) => S(p.stage).toLowerCase() === "won");
   const wonCount = won.length;
   const wonValue = won.reduce((s, p) => s + N(p.value_aed), 0);
+
+  // ── money tab (day-42: moved here from the front desk) ─────────────────────
+  const money = await loadMoney().catch(
+    () =>
+      ({
+        ok: false,
+        fx: 0,
+        accounts: [],
+        revenueDaily: [],
+        subscriptions: [],
+        invoices: [],
+        payments: [],
+        collectedAed: 0,
+        overdueCount: 0,
+        errored: [],
+      }) as Awaited<ReturnType<typeof loadMoney>>,
+  );
+  const deals = prospects.map((p) => ({
+    key: S(p.key),
+    company: S(p.company),
+    stage: S(p.stage).toLowerCase(),
+  }));
 
   // ── steps / phases / snapshots indexed by goal ─────────────────────────────
   const gidOf = (r: Row) => S(r.goal_id ?? r.goal ?? r.gid);
@@ -512,7 +535,16 @@ export async function loadWarRoom(): Promise<OSWarRoom> {
     },
   ];
 
-  return { goals, open, wonCount, wonValue, movers: liveMovers, ticker };
+  return {
+    goals,
+    open,
+    wonCount,
+    wonValue,
+    movers: liveMovers,
+    ticker,
+    money,
+    deals,
+  };
 }
 
 function dueLabelLite(due: string): string {
