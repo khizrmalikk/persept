@@ -39,6 +39,7 @@ export function ChiefDrawer({
   const [typing, setTyping] = useState<Record<string, boolean>>({});
   const [draft, setDraft] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const composerRef = useRef<HTMLTextAreaElement>(null);
   const nid = useRef(0);
   const typingTimers = useRef<Record<string, number>>({});
   const att = useChatAttachments(os.showToast);
@@ -87,6 +88,8 @@ export function ChiefDrawer({
     send(body, thread);
     att.clear();
     setDraft("");
+    // collapse the grown textarea back to one line after sending
+    if (composerRef.current) composerRef.current.style.height = "auto";
   };
 
   // reconcile: when fresh events land (via the tick), drop optimistic bubbles the
@@ -427,11 +430,22 @@ export function ChiefDrawer({
           }}
         >
           <AttachButton agentId={thread} att={att} />
-          <input
+          <textarea
+            ref={composerRef}
             value={draft}
-            onChange={(e) => setDraft(e.target.value)}
+            rows={1}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              // auto-grow up to ~5 lines, then scroll
+              e.target.style.height = "auto";
+              e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+            }}
             onKeyDown={(e) => {
-              if (e.key === "Enter") doSend();
+              // Enter sends; Shift+Enter inserts a line break
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                doSend();
+              }
             }}
             placeholder={
               thread === "chief"
@@ -447,6 +461,10 @@ export function ChiefDrawer({
               fontFamily: "var(--font-ui)",
               fontSize: 14,
               minWidth: 0,
+              resize: "none",
+              maxHeight: 120,
+              lineHeight: 1.45,
+              padding: "6px 0",
             }}
           />
           <button

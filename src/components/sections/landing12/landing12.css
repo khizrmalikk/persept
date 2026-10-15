@@ -910,66 +910,11 @@
   border-color: var(--acc);
   color: var(--acc);
 }
-.pl12 .proof-note {
-  position: absolute;
-  right: 4%;
-  top: 44%;
-  width: min(300px, 30%);
-  min-width: 210px;
-  background: var(--light-bg);
-  color: #0c0c0c;
-  border-radius: 14px;
-  padding: 16px 18px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
-  transform: rotate(-2deg);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.pl12 .proof-note-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #4a4945;
-}
-.pl12 .proof-note-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: oklch(0.62 0.16 150);
-}
-.pl12 .proof-note-text {
-  font-size: 16px;
-  line-height: 1.35;
-  font-weight: 500;
-}
-.pl12 .proof-note-actions {
-  display: flex;
-  gap: 8px;
-}
-.pl12 .proof-note-send {
-  background: #0c0c0c;
-  color: var(--light-bg);
-  border-radius: 8px;
-  padding: 7px 14px;
-  font-size: 13px;
-  font-weight: 600;
-}
-.pl12 .proof-note-review {
-  border: 1px solid rgba(14, 13, 12, 0.2);
-  border-radius: 8px;
-  padding: 7px 14px;
-  font-size: 13px;
-}
 @media (max-width: 760px) {
   .pl12 .proof-scene {
     aspect-ratio: auto;
   }
-  .pl12 .proof-svg,
-  .pl12 .proof-note {
+  .pl12 .proof-svg {
     display: none;
   }
   .pl12 .proof-scene .proof-video {
@@ -1635,6 +1580,24 @@
   line-height: 1.05;
   letter-spacing: -0.045em;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+/* small client sign-in, pinned to the bottom of the full-screen menu */
+.pl12 .menu-foot {
+  margin-top: auto;
+  padding-top: 28px;
+}
+.pl12 .menu-signin {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--mute);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.pl12 .menu-signin:hover {
+  color: var(--ink);
 }
 
 /* ---- reduced motion ---- */
