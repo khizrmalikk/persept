@@ -8,12 +8,14 @@ import {
   backlogDropFromForm,
   backlogReopenFromForm,
   dismissIdea,
+  reassignBacklog,
   sendAgentCommand,
   startBacklogItem,
 } from "@/lib/workforce/actions";
 import {
   BACKLOG_COLUMNS,
   COMMAND_TABS,
+  DROPPED_COLUMN,
   type OSBacklogCard,
   type OSCommand,
   PRIORITY_DOT,
@@ -73,7 +75,9 @@ export function Command({ data }: { data: OSCommand }) {
           const on = tab === k;
           const badge =
             k === "backlog"
-              ? data.backlog.filter((b) => b.column !== "done").length
+              ? data.backlog.filter(
+                  (b) => b.column !== "done" && b.column !== "dropped",
+                ).length
               : k === "ideas"
                 ? data.ideas.filter((i) => i.isNew).length
                 : 0;
@@ -154,10 +158,13 @@ export function Command({ data }: { data: OSCommand }) {
             onReopen={(id) =>
               refresh(backlogReopenFromForm(formOf({ id })), "reopened")
             }
-            onStart={(owner, title) =>
+            onStart={(id) =>
+              refresh(startBacklogItem(id), "asked Chief to hand it over")
+            }
+            onReassign={(id, owner) =>
               refresh(
-                startBacklogItem(owner, title),
-                "asked Chief to kick it off",
+                reassignBacklog(id, owner),
+                `re-assigned to ${nm(owner as AgentKey)}`,
               )
             }
           />
@@ -521,6 +528,22 @@ function Today({ data }: { data: OSCommand }) {
 }
 
 // ── backlog ───────────────────────────────────────────────────────────────────
+// day-39: `backlog.status` is the single source of truth. The dashboard only ever
+// sends `start backlog <uuid>` (through Chief), marks items done/dropped by hand,
+// or re-assigns the owner. The bridge owns started|doing|blocked|stalled.
+function timeAgo(iso: string | null): string {
+  if (!iso) return "";
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return "";
+  const s = Math.max(0, Math.floor((Date.now() - then) / 1000));
+  if (s < 60) return "just now";
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
 function Backlog({
   data,
   onAdd,
@@ -528,17 +551,20 @@ function Backlog({
   onDrop,
   onReopen,
   onStart,
+  onReassign,
 }: {
   data: OSCommand;
   onAdd: (title: string, owner: string) => void;
   onDone: (id: string) => void;
   onDrop: (id: string) => void;
   onReopen: (id: string) => void;
-  onStart: (owner: string, title: string) => void;
+  onStart: (id: string) => void;
+  onReassign: (id: string, owner: string) => void;
 }) {
   const [newT, setNewT] = useState("");
   const [owner, setOwner] = useState<AgentKey>("chief");
   const [filter, setFilter] = useState<string>("all");
+  const [showDropped, setShowDropped] = useState(false);
   const add = () => {
     if (!newT.trim()) return;
     onAdd(newT.trim(), owner);
@@ -547,6 +573,12 @@ function Backlog({
   const items = data.backlog.filter(
     (b) => filter === "all" || b.owner === filter,
   );
+  const columns = showDropped
+    ? [...BACKLOG_COLUMNS, DROPPED_COLUMN]
+    : BACKLOG_COLUMNS;
+  const droppedCount = data.backlog.filter(
+    (b) => b.column === "dropped",
+  ).length;
 
   return (
     <>
@@ -651,17 +683,34 @@ function Backlog({
               </button>
             );
           })}
+          <button
+            type="button"
+            onClick={() => setShowDropped((v) => !v)}
+            title="show dropped items"
+            style={{
+              fontSize: 12,
+              padding: "6px 11px",
+              borderRadius: 999,
+              border: "1px solid var(--line)",
+              cursor: "pointer",
+              background: showDropped ? "var(--surf2)" : "transparent",
+              color: showDropped ? "var(--ink)" : "var(--mute)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            dropped{droppedCount ? ` · ${droppedCount}` : ""}
+          </button>
         </div>
       </div>
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(4, minmax(0,1fr))",
+          gridTemplateColumns: `repeat(${columns.length}, minmax(0,1fr))`,
           gap: 12,
           alignItems: "start",
         }}
       >
-        {BACKLOG_COLUMNS.map((c) => {
+        {columns.map((c) => {
           const colItems = items.filter((b) => b.column === c.key);
           return (
             <div
@@ -710,10 +759,12 @@ function Backlog({
                   <BacklogCard
                     key={b.id}
                     b={b}
+                    owners={data.owners}
                     onDone={onDone}
                     onDrop={onDrop}
                     onReopen={onReopen}
                     onStart={onStart}
+                    onReassign={onReassign}
                   />
                 ))
               )}
@@ -727,17 +778,34 @@ function Backlog({
 
 function BacklogCard({
   b,
+  owners,
   onDone,
   onDrop,
   onReopen,
   onStart,
+  onReassign,
 }: {
   b: OSBacklogCard;
+  owners: AgentKey[];
   onDone: (id: string) => void;
   onDrop: (id: string) => void;
   onReopen: (id: string) => void;
-  onStart: (owner: string, title: string) => void;
+  onStart: (id: string) => void;
+  onReassign: (id: string, owner: string) => void;
 }) {
+  const [mounted, setMounted] = useState(false);
+  const [reassigning, setReassigning] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const isOwner = b.owner === "you";
+  // start / start again: only on open|blocked|stalled, and only for agent owners.
+  const canStart =
+    b.state === "open" || b.state === "blocked" || b.state === "stalled";
+  const startLabel = b.state === "open" ? "start" : "start again";
+  const waitingApproval =
+    b.waitingOnOwner && (b.state === "started" || b.state === "doing");
+
   return (
     <div
       style={{
@@ -745,6 +813,12 @@ function BacklogCard({
         borderRadius: 13,
         background: "var(--surf)",
         border: "1px solid var(--line)",
+        borderLeft:
+          b.state === "blocked"
+            ? "3px solid var(--bad)"
+            : b.state === "stalled" || waitingApproval
+              ? "3px solid var(--ambink)"
+              : "1px solid var(--line)",
         display: "flex",
         flexDirection: "column",
         gap: 8,
@@ -767,14 +841,138 @@ function BacklogCard({
           workforce
         </span>
       )}
-      <span style={{ fontSize: 13.5, fontWeight: 600, lineHeight: 1.3 }}>
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        style={{
+          all: "unset",
+          cursor: "pointer",
+          fontSize: 13.5,
+          fontWeight: 600,
+          lineHeight: 1.3,
+        }}
+      >
         {b.title}
-      </span>
+      </button>
       {b.detail && (
         <span style={{ fontSize: 12, color: "var(--soft)", lineHeight: 1.35 }}>
           {b.detail}
         </span>
       )}
+
+      {/* status line — driven entirely by backlog.status */}
+      {b.state === "started" && (
+        <span
+          style={{ fontSize: 11.5, color: "var(--mute)", lineHeight: 1.35 }}
+        >
+          handed to {nm(b.owner)}
+          {mounted && b.startedAt ? ` · ${timeAgo(b.startedAt)}` : ""} · waiting
+          for them to pick it up
+        </span>
+      )}
+      {b.state === "doing" && (
+        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          <Persona agent={b.doingBy ?? b.owner} size={16} />
+          <span
+            style={{ fontSize: 12, color: "var(--soft)", lineHeight: 1.35 }}
+          >
+            {b.doingNote || `${nm(b.doingBy ?? b.owner)} is on it`}
+          </span>
+        </div>
+      )}
+      {b.state === "blocked" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <span style={badge("var(--bad)")}>blocked</span>
+          <span
+            style={{ fontSize: 12, color: "var(--soft)", lineHeight: 1.35 }}
+          >
+            {b.blockedWhy || "the agent hit a blocker and needs you"}
+          </span>
+        </div>
+      )}
+      {b.state === "stalled" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <span style={badge("var(--ambink)")}>stalled</span>
+          <span
+            style={{ fontSize: 12, color: "var(--soft)", lineHeight: 1.35 }}
+          >
+            nothing from {nm(b.owner)} after two sends
+          </span>
+        </div>
+      )}
+      {waitingApproval && (
+        <span
+          style={{ fontSize: 11.5, color: "var(--ambink)", fontWeight: 600 }}
+        >
+          an approval from {nm(b.owner)} is waiting on you
+        </span>
+      )}
+      {b.state === "done" && b.result && (
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 7 }}>
+          <span
+            style={{
+              fontSize: 12,
+              color: b.resultVerified ? "var(--ok)" : "var(--mute)",
+              lineHeight: 1.35,
+            }}
+          >
+            {b.resultVerified ? "✓" : "·"}
+          </span>
+          <span
+            style={{ fontSize: 12, color: "var(--soft)", lineHeight: 1.35 }}
+          >
+            {b.result}
+            {b.resultVerified ? "" : " · unverified"}
+          </span>
+        </div>
+      )}
+      {expanded && b.state === "done" && (b.doneBy || b.doneAt) && (
+        <span
+          className="os-mono"
+          style={{ fontSize: 10.5, color: "var(--mute)" }}
+        >
+          {b.doneBy ? `by ${b.doneBy}` : ""}
+          {b.doneAt && mounted ? ` · ${timeAgo(b.doneAt)}` : ""}
+        </span>
+      )}
+
+      {/* re-assign picker */}
+      {reassigning && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            flexWrap: "wrap",
+            padding: "4px 0 2px",
+          }}
+        >
+          <span style={{ fontSize: 11, color: "var(--mute)" }}>hand to</span>
+          {owners.map((o) => (
+            <button
+              key={o}
+              type="button"
+              title={nm(o)}
+              onClick={() => {
+                onReassign(b.id, o);
+                setReassigning(false);
+              }}
+              style={{
+                borderRadius: "50%",
+                cursor: "pointer",
+                border: "none",
+                background: "transparent",
+                padding: 0,
+                opacity: b.owner === o ? 1 : 0.5,
+                boxShadow: b.owner === o ? `0 0 0 2px ${col(o)}` : "none",
+              }}
+            >
+              <Persona agent={o} size={22} />
+            </button>
+          ))}
+        </div>
+      )}
+
       <div
         style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2 }}
       >
@@ -797,7 +995,7 @@ function BacklogCard({
           }}
         />
         <div style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
-          {b.column === "done" ? (
+          {b.state === "done" || b.state === "dropped" ? (
             <button
               type="button"
               onClick={() => onReopen(b.id)}
@@ -808,27 +1006,52 @@ function BacklogCard({
             </button>
           ) : (
             <>
-              {/* kick it off: hand the task to its agent (not for your own items,
-                  and only while it's still "to do" — not already in progress). */}
-              {b.column === "todo" && b.owner !== "you" && (
-                <button
-                  type="button"
-                  onClick={() => onStart(b.owner, b.title)}
-                  title={`start — hand to ${nm(b.owner)}`}
-                  style={startBtn}
-                >
-                  <svg
-                    width="11"
-                    height="11"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    aria-hidden="true"
+              {canStart &&
+                (isOwner ? (
+                  <button
+                    type="button"
+                    disabled
+                    title="assign to an agent first"
+                    style={{ ...startBtn, opacity: 0.4, cursor: "not-allowed" }}
                   >
-                    <path d="M7 5v14l12-7z" />
-                  </svg>
-                  start
-                </button>
-              )}
+                    <svg
+                      width="11"
+                      height="11"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path d="M7 5v14l12-7z" />
+                    </svg>
+                    {startLabel}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => onStart(b.id)}
+                    title={`${startLabel} — hand to ${nm(b.owner)} via Chief`}
+                    style={startBtn}
+                  >
+                    <svg
+                      width="11"
+                      height="11"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path d="M7 5v14l12-7z" />
+                    </svg>
+                    {startLabel}
+                  </button>
+                ))}
+              <button
+                type="button"
+                onClick={() => setReassigning((v) => !v)}
+                title="re-assign"
+                style={miniBtn}
+              >
+                ⇄
+              </button>
               <button
                 type="button"
                 onClick={() => onDone(b.id)}
@@ -852,6 +1075,18 @@ function BacklogCard({
     </div>
   );
 }
+const badge = (c: string): React.CSSProperties => ({
+  alignSelf: "flex-start",
+  fontSize: 10,
+  fontWeight: 700,
+  letterSpacing: "0.06em",
+  textTransform: "uppercase",
+  padding: "2px 7px",
+  borderRadius: 5,
+  color: c,
+  background: "color-mix(in oklab, var(--surf2) 80%, transparent)",
+  border: `1px solid ${c}`,
+});
 const miniBtn: React.CSSProperties = {
   width: 24,
   height: 24,

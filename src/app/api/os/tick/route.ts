@@ -34,6 +34,7 @@ export async function GET() {
     fixes_running,
     eventsRow,
     goalsRow,
+    backlogRow,
     prospectsRow,
     vpsRow,
   ] = await Promise.all([
@@ -67,6 +68,16 @@ export async function GET() {
         .limit(1)
         .maybeSingle(),
     ),
+    // the backlog polls this: the bridge bumps backlog.updated_at on every BACKLOG
+    // block (started/doing/blocked/stalled/done), so a card moves within ~5s.
+    scalar(
+      db
+        .from("backlog")
+        .select("updated_at")
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ),
     scalar(
       db
         .from("prospects")
@@ -85,6 +96,8 @@ export async function GET() {
       events_max_id: (eventsRow as { id?: number } | null)?.id ?? 0,
       goals_updated_at:
         (goalsRow as { updated_at?: string } | null)?.updated_at ?? null,
+      backlog_updated_at:
+        (backlogRow as { updated_at?: string } | null)?.updated_at ?? null,
       prospects_updated_at:
         (prospectsRow as { updated_at?: string } | null)?.updated_at ?? null,
       vps_ts: (vpsRow as { ts?: string } | null)?.ts ?? null,
