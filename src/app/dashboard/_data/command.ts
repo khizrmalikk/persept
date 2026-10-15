@@ -2,6 +2,7 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { parseHealth } from "@/lib/workforce/backlog";
 import { getAgentFile, listAgentFiles } from "@/lib/workforce/files";
 import { getActiveIdeas } from "@/lib/workforce/ideas";
+import { gystMrrAed, loadMoney } from "@/lib/workforce/stripe";
 import type { AgentKey } from "../_components/Persona";
 import { loadAgents } from "./agents";
 import {
@@ -116,6 +117,8 @@ export async function loadCommand(): Promise<OSCommand> {
     })(),
     loadHealthFlags().catch(() => ({ vpsStale: false, ledgerPending: false })),
   ]);
+
+  const money = await loadMoney().catch(() => null);
 
   const agents = agentsRes.agents;
   const workingSet = new Set(
@@ -249,6 +252,26 @@ export async function loadCommand(): Promise<OSCommand> {
       accent: false,
     },
   ];
+  // day-40 money tile — collected this month (AED), GYST MRR, overdue invoices.
+  if (money?.ok) {
+    const mrr = Math.round(gystMrrAed(money));
+    const overdue = money.overdueCount;
+    stateTiles.push({
+      key: "money",
+      label: "money",
+      value: `AED ${Math.round(money.collectedAed).toLocaleString("en-US")}`,
+      sub:
+        (mrr > 0
+          ? `GYST MRR AED ${mrr.toLocaleString("en-US")}`
+          : "collected this month") +
+        (overdue > 0 ? ` · ${overdue} overdue` : ""),
+      accent: false,
+      win: "warroom",
+      tab: "money",
+      wide: true,
+      subBad: overdue > 0,
+    });
+  }
   const health: OSHealth[] = parseHealth(stateContent).map((text) => ({
     text,
     ...healthTarget(text),

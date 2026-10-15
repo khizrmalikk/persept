@@ -412,6 +412,35 @@
   }
 }
 
+/* chat "agent is working" shimmer — shows while the thread's agent is off doing
+   work (status=working) and hasn't replied yet. */
+.os-root .os-working-bar {
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--track) 0%,
+    var(--soft) 50%,
+    var(--track) 100%
+  );
+  background-size: 200% 100%;
+  animation: os-working-shimmer 1.4s linear infinite;
+}
+@keyframes os-working-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .os-root .os-working-bar {
+    animation: none;
+    background-position: 50% 0;
+  }
+}
+
 /* ─── v3 §4 menu bar: titles, dropdown panels, rows, status item ──────────────
    The bar itself lives in MenuBar.tsx (inline). These are the pieces that need
    hover/open states or the pop-in motion. */

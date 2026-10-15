@@ -168,8 +168,20 @@
   gap: 24px;
 }
 .gyst-figcap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   font-size: 14px;
   color: var(--mut2);
+}
+.gyst-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center;
+  border: 1px solid var(--bd2);
+  flex: none;
 }
 
 /* path steps */

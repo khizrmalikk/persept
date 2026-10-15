@@ -1,3 +1,4 @@
+import type { OSMoney } from "@/lib/workforce/stripe-types";
 import type { AgentKey } from "../_components/Persona";
 
 // Client-safe types + the PURE projection maths for the war room (goals
@@ -17,7 +18,12 @@ export type GoalSrc =
   | "won-value"
   | "prospects-count"
   | "replied-count"
-  | "calls-count";
+  | "calls-count"
+  // day-40 Stripe live sources — the bridge keeps `goals.cur` current, so the
+  // maths reads `g.cur` for these exactly like the other live sources.
+  | "stripe-mrr"
+  | "stripe-month"
+  | "stripe-customers";
 export type GoalStatus = "hit" | "new" | "on track" | "at risk" | "behind";
 export type GoalUnit = "" | "AED";
 export type StepStatus = "todo" | "doing" | "waiting" | "done";
@@ -103,6 +109,10 @@ export type OSWarRoom = {
   wonValue: number;
   movers: OSRawMover[];
   ticker: OSTicker[];
+  // day-42: the money tab lives here now. `deals` is a lite prospect list for the
+  // payment-link picker and for naming linked payments.
+  money: OSMoney;
+  deals: { key: string; company: string; stage: string }[];
 };
 
 export type OSGoalStats = {

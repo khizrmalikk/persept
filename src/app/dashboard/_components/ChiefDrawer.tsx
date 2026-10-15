@@ -5,6 +5,7 @@ import { sendMessageFromForm } from "@/lib/workforce/actions";
 import type { Part } from "@/lib/workforce/blocks";
 import type { OSAgent } from "../_data/agents";
 import type { OSThreadMsg } from "../_data/threads";
+import { AGENT_HUE_VAR } from "../_data/windows";
 import { AttachButton, AttachChips } from "./ChatAttach";
 import { ChatBody } from "./ChatBody";
 import { MessageBody } from "./MessageBody";
@@ -147,6 +148,13 @@ export function ChiefDrawer({
     ...(pending[thread] ?? []).filter((o) => !mineTexts.has(o.text.trim())),
   ];
   const showTyping = !!typing[thread];
+  // the agent went off to do something: show a richer "working" card (with the
+  // task) instead of the typing dots while it's working and hasn't replied yet.
+  // Covers the gap after the dots time out but before the reply lands.
+  const awaiting =
+    showTyping || (list.length > 0 && list[list.length - 1].mine);
+  const working = agent?.status === "working";
+  const showWorking = awaiting && working;
 
   // stick to newest — also when the drawer opens, so it starts at the most recent
   // message rather than the top. A rAF lets layout settle before measuring.
@@ -398,7 +406,49 @@ export function ChiefDrawer({
             </div>
           </div>
         ))}
-        {showTyping && (
+        {showWorking ? (
+          <div style={{ display: "flex", gap: 9, alignItems: "flex-end" }}>
+            <Persona agent={thread} size={26} status="working" />
+            <div
+              style={{
+                padding: "10px 13px",
+                borderRadius: "16px 16px 16px 4px",
+                background: "var(--surf2)",
+                borderLeft: `2px solid var(${AGENT_HUE_VAR[thread]})`,
+                display: "flex",
+                flexDirection: "column",
+                gap: 7,
+                maxWidth: 260,
+                minWidth: 150,
+              }}
+            >
+              <span style={{ fontSize: 12.5, fontWeight: 600 }}>
+                {name} is working
+                {[0, 1, 2].map((i) => (
+                  <span
+                    key={i}
+                    className="os-typing-dot"
+                    style={{ animationDelay: `${i * 0.2}s` }}
+                  >
+                    .
+                  </span>
+                ))}
+              </span>
+              {agent?.task && (
+                <span
+                  style={{
+                    fontSize: 12,
+                    color: "var(--soft)",
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {agent.task}
+                </span>
+              )}
+              <div className="os-working-bar" />
+            </div>
+          </div>
+        ) : showTyping ? (
           <div style={{ display: "flex", gap: 9, alignItems: "center" }}>
             <Persona agent={thread} size={26} />
             <div
@@ -425,7 +475,7 @@ export function ChiefDrawer({
               ))}
             </div>
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* composer */}

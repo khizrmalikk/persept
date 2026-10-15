@@ -655,6 +655,18 @@ export function AgentPage({
                 onChange={openModelPicker}
               />
               <Row label="status" value={agent.status} />
+              {ex.paidThisMonth != null && (
+                <Row
+                  label="paid this month"
+                  value={`AED ${Math.round(ex.paidThisMonth).toLocaleString("en-US")}`}
+                />
+              )}
+              {ex.overdueInvoices != null && (
+                <Row
+                  label="overdue invoices"
+                  value={String(ex.overdueInvoices)}
+                />
+              )}
               <Row label="cost today" value={costTodayStr} />
               <Row label="cost this month" value={costMonthStr} />
               <Row label="tokens today" value={tokensTodayStr} />

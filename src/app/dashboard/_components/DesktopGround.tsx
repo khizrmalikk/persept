@@ -62,6 +62,10 @@ export type OSPipeline = {
   value: number;
   deals: number;
   bars: { label: string; count: number }[];
+  // day-40: real money. wonThisMonth blends Stripe payments + unpaid won; collected
+  // is this month's net from Stripe, converted to AED.
+  wonThisMonth: number;
+  collected: number;
 };
 
 export function DesktopGround({
@@ -476,6 +480,30 @@ export function DesktopGround({
               style={{ fontWeight: 800, fontSize: 32, lineHeight: 1 }}
             >
               AED {pipeline.value.toLocaleString("en-US")}
+            </div>
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                fontSize: 11.5,
+                color: "var(--soft)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              <span>
+                won this month{" "}
+                <b style={{ color: "var(--ink)" }}>
+                  AED {pipeline.wonThisMonth.toLocaleString("en-US")}
+                </b>
+              </span>
+              {pipeline.collected > 0 && (
+                <span>
+                  collected{" "}
+                  <b style={{ color: "var(--ok)" }}>
+                    AED {Math.round(pipeline.collected).toLocaleString("en-US")}
+                  </b>
+                </span>
+              )}
             </div>
             <div
               style={{

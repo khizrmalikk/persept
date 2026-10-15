@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { ROSTER } from "@/lib/workforce/roster";
+import { isThisMonth, loadMoney } from "@/lib/workforce/stripe";
 import { ago } from "@/lib/workforce/types";
 import type { AgentKey } from "../_components/Persona";
 import {
@@ -123,6 +124,17 @@ export async function loadAgentExtras(): Promise<
   }
   const staleNotice = staleNoticeText(health);
 
+  // day-42 money for Hunter's at-a-glance: paid this month (every persept Stripe
+  // payment this month) + overdue invoices. Request-cached, shared with the front
+  // desk. Defensive: no Stripe data → zeros.
+  const money = await loadMoney().catch(() => null);
+  const hunterPaid = money
+    ? money.payments
+        .filter((p) => p.product === "persept" && isThisMonth(p.paidAt))
+        .reduce((s, p) => s + p.amountAed, 0)
+    : 0;
+  const hunterOverdue = money?.overdueCount ?? 0;
+
   const intById = new Map<string, IntegrationRow>();
   for (const r of integrations) {
     const key = (r.id ?? r.name ?? "").toLowerCase();
@@ -170,6 +182,8 @@ export async function loadAgentExtras(): Promise<
       ledgerPending: health.ledgerPending,
       vpsStale: health.vpsStale,
       staleNotice,
+      paidThisMonth: id === "hunter" ? hunterPaid : null,
+      overdueInvoices: id === "hunter" ? hunterOverdue : null,
     };
   }
   return out;

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import {
   createContext,
   type ReactNode,
@@ -92,6 +93,9 @@ type OSApi = OSState & {
   toggleNotif: () => void;
   closeOverlays: () => void;
   showToast: (msg: string) => void;
+  // soft-refresh the current window's server data (⌘R / header button) — re-runs
+  // the loaders without a full browser reload.
+  refresh: () => void;
   toggleTheme: () => void;
   // v3 §4 menu bar
   setMenu: (menu: string | null) => void;
@@ -216,6 +220,16 @@ export function OSProvider({ children }: { children: ReactNode }) {
     [patch],
   );
 
+  // router.refresh() re-runs the server loaders in place (the dashboard is
+  // force-dynamic + no-store) so the open window repaints with fresh data without
+  // a full browser reload. A ref keeps the empty-dep ⌘R handler calling the latest.
+  const router = useRouter();
+  const refreshRef = useRef<() => void>(() => {});
+  refreshRef.current = () => {
+    router.refresh();
+    toast("refreshing…");
+  };
+
   const api = useMemo<OSApi>(
     () => ({
       ...s,
@@ -274,6 +288,7 @@ export function OSProvider({ children }: { children: ReactNode }) {
       toggleNotif: () => patch({ notif: !s.notif, pal: false }),
       closeOverlays: () => patch({ pal: false, notif: false }),
       showToast: toast,
+      refresh: () => refreshRef.current(),
       toggleTheme: () => {
         const next: Theme = s.theme === "dark" ? "light" : "dark";
         window.localStorage.setItem("os-theme", next);
@@ -325,6 +340,11 @@ export function OSProvider({ children }: { children: ReactNode }) {
       if ((e.metaKey || e.ctrlKey) && k === "k") {
         e.preventDefault();
         setS((p) => ({ ...p, pal: !p.pal, notif: false, menu: null }));
+      } else if ((e.metaKey || e.ctrlKey) && !e.shiftKey && k === "r") {
+        // ⌘R soft-refreshes the current window instead of reloading the whole
+        // page. ⌘⇧R still does a full browser reload (not intercepted).
+        e.preventDefault();
+        refreshRef.current();
       } else if ((e.metaKey || e.ctrlKey) && k === "j") {
         e.preventDefault();
         setS((p) => ({

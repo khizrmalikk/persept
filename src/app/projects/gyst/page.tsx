@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { PerseptMark } from "@/components/sections/pl-chrome";
 import "@/components/sections/landing.css";
@@ -183,7 +184,14 @@ export default function GystPage() {
               tailor the application, and actually reach a human.”
             </blockquote>
             <figcaption className="gyst-figcap">
-              Khizr Malik · Founder of GYST &amp; Persept
+              <Image
+                src="/khizr-malik-founder.jpg"
+                alt="Khizr Malik"
+                width={56}
+                height={56}
+                className="gyst-avatar"
+              />
+              <span>Khizr Malik · Founder of GYST &amp; Persept</span>
             </figcaption>
           </figure>
         </div>

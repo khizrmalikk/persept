@@ -344,6 +344,39 @@ export function WindowFrame({
               gap: 8,
             }}
           >
+            <button
+              type="button"
+              onClick={os.refresh}
+              title="refresh this window (⌘R)"
+              aria-label="refresh this window"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 30,
+                height: 30,
+                borderRadius: 999,
+                border: "1px solid var(--line)",
+                background: "transparent",
+                color: "var(--soft)",
+                cursor: "pointer",
+                flex: "none",
+              }}
+            >
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5" />
+              </svg>
+            </button>
             {collab.map((c) => (
               <span
                 key={c}
