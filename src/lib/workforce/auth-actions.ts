@@ -28,6 +28,24 @@ export async function signInWithPassword(fd: FormData) {
   redirect(next);
 }
 
+// "forgot password" → send a reset link. We ALWAYS redirect to the sent state,
+// whether or not the address is on the list, so the page never reveals who has an
+// account; the email only actually goes out for an allowlisted address. The link
+// lands on /login/reset (a recovery session) where the owner sets a new password.
+export async function requestPasswordReset(fd: FormData) {
+  const email = String(fd.get("email") ?? "")
+    .trim()
+    .toLowerCase();
+  if (email && allowedEmails().includes(email)) {
+    const site = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/+$/, "");
+    const supabase = await supabaseAuth();
+    await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${site}/login/reset`,
+    });
+  }
+  redirect(`/login?sent=${encodeURIComponent(email)}`);
+}
+
 export async function signOut() {
   const supabase = await supabaseAuth();
   await supabase.auth.signOut();
