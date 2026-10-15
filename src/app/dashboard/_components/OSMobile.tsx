@@ -147,6 +147,7 @@ function MobileChat({
   const [pending, setPending] = useState<OSThreadMsg[]>([]);
   const [draft, setDraft] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const composerRef = useRef<HTMLTextAreaElement>(null);
   const nid = useRef(0);
   const att = useChatAttachments();
 
@@ -184,6 +185,7 @@ function MobileChat({
     ]);
     setDraft("");
     att.clear();
+    if (composerRef.current) composerRef.current.style.height = "auto";
     const fd = new FormData();
     fd.append("agent", "chief");
     fd.append("text", body);
@@ -285,11 +287,21 @@ function MobileChat({
           }}
         >
           <AttachButton agentId="chief" att={att} />
-          <input
+          <textarea
+            ref={composerRef}
             value={draft}
-            onChange={(e) => setDraft(e.target.value)}
+            rows={1}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              e.target.style.height = "auto";
+              e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+            }}
             onKeyDown={(e) => {
-              if (e.key === "Enter") send();
+              // Enter sends; Shift+Enter inserts a line break
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                send();
+              }
             }}
             placeholder="tell chief what you need…"
             style={{
@@ -301,6 +313,10 @@ function MobileChat({
               fontFamily: "var(--font-ui)",
               fontSize: 15,
               minWidth: 0,
+              resize: "none",
+              maxHeight: 120,
+              lineHeight: 1.45,
+              padding: "6px 0",
             }}
           />
           <button

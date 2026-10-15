@@ -808,6 +808,26 @@ export async function backlogReopenFromForm(fd: FormData) {
   await setBacklog(String(fd.get("id") ?? ""), "open");
 }
 
+// "start" a backlog item: give Chief the word to kick it off. Backlog items don't
+// run on a schedule — they sit until you say go. This routes through Chief (a plain
+// `message`), who hands it to the right agent or puts it on today's list, exactly
+// as Chief describes. The suggested owner goes along as context.
+export async function startBacklogItem(
+  owner: string,
+  title: string,
+): Promise<void> {
+  await guard();
+  const o = owner.trim().toLowerCase();
+  const t = title.trim();
+  if (!t) return;
+  const who = o && o !== "you" && o !== "owner" ? ` (owner: ${o})` : "";
+  await sendAgentCommand(
+    "chief",
+    `kick off this backlog item now — hand it to the right agent or put it on today's list${who}: ${t}`,
+  );
+  revalidateBacklog();
+}
+
 // ── Scout's leads → Hunter prospects ──────────────────────────────────────────
 // `leads` is BRIDGE-owned; the dashboard only flips `status`. "accept" also sends
 // Hunter an `add prospect: …` command through the existing sendAgentCommand path,

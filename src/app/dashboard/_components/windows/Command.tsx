@@ -9,6 +9,7 @@ import {
   backlogReopenFromForm,
   dismissIdea,
   sendAgentCommand,
+  startBacklogItem,
 } from "@/lib/workforce/actions";
 import {
   BACKLOG_COLUMNS,
@@ -152,6 +153,12 @@ export function Command({ data }: { data: OSCommand }) {
             }
             onReopen={(id) =>
               refresh(backlogReopenFromForm(formOf({ id })), "reopened")
+            }
+            onStart={(owner, title) =>
+              refresh(
+                startBacklogItem(owner, title),
+                "asked Chief to kick it off",
+              )
             }
           />
         )}
@@ -520,12 +527,14 @@ function Backlog({
   onDone,
   onDrop,
   onReopen,
+  onStart,
 }: {
   data: OSCommand;
   onAdd: (title: string, owner: string) => void;
   onDone: (id: string) => void;
   onDrop: (id: string) => void;
   onReopen: (id: string) => void;
+  onStart: (owner: string, title: string) => void;
 }) {
   const [newT, setNewT] = useState("");
   const [owner, setOwner] = useState<AgentKey>("chief");
@@ -704,6 +713,7 @@ function Backlog({
                     onDone={onDone}
                     onDrop={onDrop}
                     onReopen={onReopen}
+                    onStart={onStart}
                   />
                 ))
               )}
@@ -720,11 +730,13 @@ function BacklogCard({
   onDone,
   onDrop,
   onReopen,
+  onStart,
 }: {
   b: OSBacklogCard;
   onDone: (id: string) => void;
   onDrop: (id: string) => void;
   onReopen: (id: string) => void;
+  onStart: (owner: string, title: string) => void;
 }) {
   return (
     <div
@@ -796,6 +808,27 @@ function BacklogCard({
             </button>
           ) : (
             <>
+              {/* kick it off: hand the task to its agent (not for your own items,
+                  and only while it's still "to do" — not already in progress). */}
+              {b.column === "todo" && b.owner !== "you" && (
+                <button
+                  type="button"
+                  onClick={() => onStart(b.owner, b.title)}
+                  title={`start — hand to ${nm(b.owner)}`}
+                  style={startBtn}
+                >
+                  <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path d="M7 5v14l12-7z" />
+                  </svg>
+                  start
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => onDone(b.id)}
@@ -831,6 +864,20 @@ const miniBtn: React.CSSProperties = {
   fontSize: 12,
   color: "var(--soft)",
   background: "transparent",
+};
+const startBtn: React.CSSProperties = {
+  height: 24,
+  padding: "0 9px",
+  borderRadius: 7,
+  border: "none",
+  display: "flex",
+  alignItems: "center",
+  gap: 5,
+  cursor: "pointer",
+  fontSize: 11.5,
+  fontWeight: 600,
+  color: "var(--accent-ink)",
+  background: "var(--accent)",
 };
 
 // ── ideas ─────────────────────────────────────────────────────────────────────
