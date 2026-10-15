@@ -531,9 +531,9 @@
 .os-root .os-status-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   height: 24px;
-  padding: 0 9px;
+  padding: 0 8px;
   border-radius: 7px;
   border: none;
   background: transparent;

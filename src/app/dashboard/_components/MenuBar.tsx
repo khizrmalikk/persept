@@ -381,125 +381,129 @@ export function MenuBar({
 
       <div style={{ flex: 1 }} />
 
-      {/* ── status item (opens the system monitor) ──────────────────────────── */}
-      <button
-        type="button"
-        className={`os-status-item${os.monitorOpen ? " is-open" : ""}`}
-        onClick={os.openMonitor}
-        title="system monitor"
-        style={{ position: "relative", zIndex: 2 }}
-      >
-        <span
-          style={{
-            width: 7,
-            height: 7,
-            borderRadius: "50%",
-            background: "var(--dot-working)",
-          }}
-        />
-        <span style={{ fontSize: 12.5 }}>{working} of 6 working</span>
-        <span
-          className="os-mono"
-          style={{ fontSize: 11.5, color: "var(--soft)" }}
+      {/* right cluster — one even gap, independent of the left menu titles, so
+          the status group + icons + clock + avatar read as a tidy row (v3). */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        {/* ── status item (opens the system monitor) ────────────────────────── */}
+        <button
+          type="button"
+          className={`os-status-item${os.monitorOpen ? " is-open" : ""}`}
+          onClick={os.openMonitor}
+          title="system monitor"
+          style={{ position: "relative", zIndex: 2 }}
         >
-          cpu {cpu}
-        </span>
-        <Sparkline />
-      </button>
-
-      {/* ── search · theme · bell · clock · avatar ──────────────────────────── */}
-      <button
-        type="button"
-        onClick={os.openPal}
-        title="search ⌘K"
-        style={iconBtn}
-      >
-        <svg
-          width="15"
-          height="15"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          aria-hidden="true"
-        >
-          <circle cx="11" cy="11" r="7" />
-          <path d="M20 20l-3.5-3.5" />
-        </svg>
-        <span className="os-mono" style={{ fontSize: 11 }}>
-          ⌘K
-        </span>
-      </button>
-      <button
-        type="button"
-        onClick={os.toggleTheme}
-        title="light / dark"
-        style={iconBtn}
-      >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          aria-hidden="true"
-        >
-          <path
-            d={
-              os.theme === "dark"
-                ? "M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"
-                : "M12 4V2M12 22v-2M4 12H2M22 12h-2M6 6L5 5M18 6l1-1M6 18l-1 1M18 18l1 1M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"
-            }
-          />
-        </svg>
-      </button>
-      <button
-        type="button"
-        onClick={os.toggleNotif}
-        title="notifications"
-        style={{ ...iconBtn, position: "relative" }}
-      >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M6 9a6 6 0 0 1 12 0c0 6 3 7 3 7H3s3-1 3-7M10 20a2 2 0 0 0 4 0" />
-        </svg>
-        {pending > 0 && (
           <span
             style={{
-              position: "absolute",
-              top: -4,
-              right: -6,
-              minWidth: 14,
-              height: 14,
-              padding: "0 3px",
-              borderRadius: 7,
-              background: "var(--accent)",
-              color: "var(--onacc)",
-              fontSize: 9,
-              fontWeight: 700,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              width: 7,
+              height: 7,
+              borderRadius: "50%",
+              background: "var(--dot-working)",
             }}
+          />
+          <span style={{ fontSize: 12.5 }}>{working} of 6 working</span>
+          <span
+            className="os-mono"
+            style={{ fontSize: 11.5, color: "var(--soft)" }}
           >
-            {pending}
+            cpu {cpu}
           </span>
-        )}
-      </button>
-      <span style={{ whiteSpace: "nowrap", fontSize: 12.5 }}>{clock}</span>
-      <Persona agent="you" size={22} />
+          <Sparkline />
+        </button>
+
+        {/* ── search · theme · bell · clock · avatar ──────────────────────────── */}
+        <button
+          type="button"
+          onClick={os.openPal}
+          title="search ⌘K"
+          style={iconBtn}
+        >
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            aria-hidden="true"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path d="M20 20l-3.5-3.5" />
+          </svg>
+          <span className="os-mono" style={{ fontSize: 11 }}>
+            ⌘K
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={os.toggleTheme}
+          title="light / dark"
+          style={iconBtn}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            aria-hidden="true"
+          >
+            <path
+              d={
+                os.theme === "dark"
+                  ? "M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"
+                  : "M12 4V2M12 22v-2M4 12H2M22 12h-2M6 6L5 5M18 6l1-1M6 18l-1 1M18 18l1 1M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"
+              }
+            />
+          </svg>
+        </button>
+        <button
+          type="button"
+          onClick={os.toggleNotif}
+          title="notifications"
+          style={{ ...iconBtn, position: "relative" }}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M6 9a6 6 0 0 1 12 0c0 6 3 7 3 7H3s3-1 3-7M10 20a2 2 0 0 0 4 0" />
+          </svg>
+          {pending > 0 && (
+            <span
+              style={{
+                position: "absolute",
+                top: -4,
+                right: -6,
+                minWidth: 14,
+                height: 14,
+                padding: "0 3px",
+                borderRadius: 7,
+                background: "var(--accent)",
+                color: "var(--onacc)",
+                fontSize: 9,
+                fontWeight: 700,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {pending}
+            </span>
+          )}
+        </button>
+        <span style={{ whiteSpace: "nowrap", fontSize: 12.5 }}>{clock}</span>
+        <Persona agent="you" size={22} />
+      </div>
     </div>
   );
 }
