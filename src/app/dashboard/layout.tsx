@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Archivo, Geist, JetBrains_Mono } from "next/font/google";
 import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/supabase/server";
@@ -9,6 +9,12 @@ import "./os.css";
 // Persept OS — the workforce dashboard. Full-screen desktop surface on wide
 // screens; below 1280px the page hands off to the mobile app (chat with Chief +
 // approvals). Same Supabase magic-link allowlist (see proxy.ts + currentUser).
+
+// Dark OS surface — override the light root default for mobile browser chrome.
+export const viewport: Viewport = {
+  themeColor: "#0c0c0c",
+  colorScheme: "dark",
+};
 
 const archivo = Archivo({
   subsets: ["latin"],

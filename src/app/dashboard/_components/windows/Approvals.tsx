@@ -16,6 +16,7 @@ import type {
   OSManualPost,
 } from "../../_data/approvals";
 import type { OSFlightRow } from "../../_data/copy-types";
+import { waHref } from "../../_data/whatsapp";
 import { AGENT_HUE_VAR, WINDOWS } from "../../_data/windows";
 import { InFlightStrip } from "../InFlightStrip";
 import { useOS } from "../os-store";
@@ -1520,6 +1521,15 @@ function Actions({
     buttons.push(btn("reject", () => reject(cur), "r", "reject"));
   } else {
     buttons.push(btn(PRIM[cur.kind], () => approve(cur), "p", "approve"));
+    // whatsapp: open the chat straight to the found number with the draft
+    // prefilled, so you can eyeball and press send in WhatsApp itself.
+    const wa = cur.kind === "whatsapp" ? waHref(cur.to, cur.body) : null;
+    if (wa)
+      buttons.push(
+        btn("open in whatsapp", () => {
+          window.open(wa, "_blank", "noopener,noreferrer");
+        }),
+      );
     if (cur.editable)
       buttons.push(
         btn(cur.kind === "email" ? "edit and send" : "edit first", () => {
