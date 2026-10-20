@@ -941,6 +941,19 @@
   margin-top: 32px;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
+/* collapse the four agent cards on narrow screens — must sit after the base
+   rule above (equal specificity) so these win in source order. */
+@media (max-width: 1099px) {
+  .pl12 .proof-agents {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 24px;
+  }
+}
+@media (max-width: 559px) {
+  .pl12 .proof-agents {
+    grid-template-columns: 1fr;
+  }
+}
 .pl12 .pagent {
   padding: 22px 20px 0 0;
   display: flex;
@@ -1240,6 +1253,14 @@
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
   gap: 32px 48px;
+}
+/* stack the "(questions)" label above the list on narrow screens — must sit
+   after the base rule above (equal specificity) so it wins in source order. */
+@media (max-width: 899px) {
+  .pl12 .faq-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
 }
 .pl12 .faq-sec {
   padding: clamp(60px, 8vw, 120px) clamp(16px, 3vw, 40px);
