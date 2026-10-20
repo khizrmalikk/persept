@@ -5,6 +5,7 @@ import type { OSAgentExtras } from "../_data/agentpage-types";
 import type { OSAgent, OSVps } from "../_data/agents";
 import type { OSApproval, OSManualPost } from "../_data/approvals";
 import type { OSCommand } from "../_data/command-types";
+import type { OSFlightRow } from "../_data/copy-types";
 import type { OSDesktop } from "../_data/desktop-types";
 import type { OSDev } from "../_data/dev-types";
 import type { OSFrontDesk } from "../_data/frontdesk";
@@ -42,6 +43,7 @@ export function Desktop({
   vps,
   approvals,
   manual,
+  inFlight,
   frontdesk,
   desktop,
   marketing,
@@ -58,6 +60,7 @@ export function Desktop({
   vps: OSVps | null;
   approvals: OSApproval[];
   manual: OSManualPost[];
+  inFlight: OSFlightRow[];
   frontdesk: OSFrontDesk;
   desktop: OSDesktop;
   marketing: OSMarketing;
@@ -153,6 +156,7 @@ export function Desktop({
         pending={pending}
         approvals={approvals}
         manual={manual}
+        inFlight={inFlight}
         frontdesk={frontdesk}
         marketing={marketing}
         dev={dev}

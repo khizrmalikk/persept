@@ -47,7 +47,7 @@ export type StripeInvoice = {
   id: string;
   number: string;
   account: string;
-  status: string; // open | paid | …
+  status: string; // open | paid | void | …
   amountDue: number;
   amountPaid: number;
   currency: string;
@@ -59,6 +59,13 @@ export type StripeInvoice = {
   // which product the invoice is for — classified like payments (a GYST
   // subscriber's unpaid renewal shouldn't read as a Persept invoice).
   product: "gyst" | "persept";
+  // day-47: the bridge mirrors the owner's own `manual_invoices` into this table
+  // with id `man_<id>` and `source = "manual"`. Manual rows are paid by bank
+  // transfer (no hosted Stripe link) and may carry a PDF in `fileUrl`.
+  source: "stripe" | "manual";
+  manualId: string; // the manual_invoices row id (mirror id minus `man_`), else ""
+  fileUrl: string; // the invoice PDF url, manual rows only
+  prospectKey: string; // links a manual invoice to a prospect/deal
 };
 
 export type Payment = {
@@ -78,6 +85,11 @@ export type Payment = {
   // subscription signal: a "Subscription …" charge or a known GYST subscriber →
   // gyst. GYST payments are recurring revenue and never link to a prospect.
   product: "gyst" | "persept";
+  // day-47: how the money arrived. The bridge sets `kind = "manual"` for payments
+  // folded in from a manual invoice, with `method` (transfer | cash | cheque |
+  // card). Stripe payments are kind "stripe" with method "".
+  kind: string;
+  method: string;
 };
 
 export type OSMoney = {

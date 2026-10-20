@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { parseHealth } from "@/lib/workforce/backlog";
+import { getWordsToday } from "@/lib/workforce/copy";
 import { getAgentFile, listAgentFiles } from "@/lib/workforce/files";
 import { getActiveIdeas } from "@/lib/workforce/ideas";
 import { gystMrrAed, loadMoney } from "@/lib/workforce/stripe";
@@ -119,6 +120,13 @@ export async function loadCommand(): Promise<OSCommand> {
   ]);
 
   const money = await loadMoney().catch(() => null);
+  const words = await getWordsToday().catch(() => ({
+    requested: 0,
+    writing: 0,
+    questions: 0,
+    drafted: 0,
+    oldestWaitingMin: 0,
+  }));
 
   const agents = agentsRes.agents;
   const workingSet = new Set(
@@ -313,7 +321,9 @@ export async function loadCommand(): Promise<OSCommand> {
       time: (r.time ?? "").slice(0, 5),
       agent: asAgent(r.agent),
       name: r.name ?? "run",
-      status: ["planned", "done", "missed"].includes(st) ? st : "planned",
+      status: ["planned", "done", "missed", "rerun"].includes(st)
+        ? st
+        : "planned",
     };
   });
 
@@ -326,6 +336,7 @@ export async function loadCommand(): Promise<OSCommand> {
     ideas,
     review,
     runs,
+    words,
     owners: ROSTER_IDS,
     staleNotice: staleNoticeText(healthRes),
   };

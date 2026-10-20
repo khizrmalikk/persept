@@ -131,6 +131,25 @@ export async function sendAgentCommand(agentId: string, text: string) {
   revalidatePath(`/dashboard/agents/${id}`);
 }
 
+// day-47: re-run a scheduled job on demand (e.g. Muse's daily run or weekly
+// plan). Sends the agent `run now: <name>` through the same `actions` path; the
+// bridge triggers the job and stamps the run.
+export async function rerunRun(agentId: string, name: string): Promise<void> {
+  await guard();
+  const id = agentId.trim();
+  if (!id) return;
+  const n = name.trim();
+  await supabaseAdmin()
+    .from("actions")
+    .insert({
+      kind: "message",
+      agent_id: id,
+      text: n ? `run now: ${n}` : "run now",
+    });
+  revalidatePath(`/dashboard/agents/${id}`);
+  revalidatePath("/dashboard");
+}
+
 // FormData wrapper for server-rendered quick-action forms. Composes the command
 // from a direct `text`, or a fixed hidden `prefix` plus a free-text `note`.
 export async function sendAgentCommandFromForm(fd: FormData) {
@@ -397,6 +416,19 @@ export async function deleteCampaign(id: string): Promise<void> {
   redirect("/dashboard/agents/hunter/campaigns");
 }
 
+// day-47: delete a campaign from the OS window (hunter OR muse owned), staying on
+// the desktop shell — unlike the legacy `deleteCampaign` above, which is
+// hunter-only and redirects to the old per-agent campaigns route.
+export async function removeCampaign(id: string): Promise<void> {
+  await guard();
+  const rowId = id.trim();
+  if (!rowId) return;
+  await supabaseAdmin().from("campaigns").delete().eq("id", rowId);
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/agents/hunter");
+  revalidatePath("/dashboard/agents/muse");
+}
+
 // Turn a campaign on or off without deleting it. Dashboard-owned write (like
 // saveCampaign): flips `status` between active and paused (archived stays reachable
 // via the editor). The bridge mirrors the new status into the agent's workspace
@@ -504,7 +536,8 @@ export async function sendApprovedEdit(fd: FormData): Promise<void> {
 // move it in the CRM). Each selected agent gets a tailored `message` directive; the
 // approval is marked `returned` so it leaves the queue and shows in the decided tab.
 // Scribe's revised draft arrives as a fresh pending approval when it is done.
-const RETURN_AGENTS = ["scribe", "hunter"] as const;
+// day-47: Muse is a recipient too, so a post can be sent back to its drafter.
+const RETURN_AGENTS = ["scribe", "hunter", "muse"] as const;
 type ReturnAgent = (typeof RETURN_AGENTS)[number];
 
 async function returnOne(
@@ -557,6 +590,26 @@ async function returnOne(
       `make the edit now and re-raise the revised draft as a new approval for ${forAgent} (this replaces approval #${id}). do not reply with questions — apply the note and re-raise. if the note is genuinely impossible, raise the approval anyway with a one-line reason.`,
     );
     await sendAgentCommand("scribe", parts.join("\n"));
+  }
+
+  if (recips.includes("muse")) {
+    // Muse revises the post per the note and re-raises it (same pattern as Scribe,
+    // phrased for a social post rather than an outbound message).
+    const parts: string[] = [
+      `the owner reviewed approval #${id} (a post) and wants it revised. apply the note below to the post — change exactly what it asks and leave the rest.`,
+      "",
+      "owner's note:",
+      note || "(no note — tighten the writing and fix any grammar.)",
+      "",
+    ];
+    if (meta) parts.push(`post meta: ${meta}`);
+    parts.push(
+      "current post:",
+      body,
+      "",
+      `make the edit now and re-raise the revised post as a new approval for ${forAgent} (this replaces approval #${id}). do not reply with questions — apply the note and re-raise. if the note is genuinely impossible, raise the approval anyway with a one-line reason.`,
+    );
+    await sendAgentCommand("muse", parts.join("\n"));
   }
 
   if (recips.includes("hunter")) {
@@ -956,8 +1009,30 @@ export async function dismissLead(id: string, reason = ""): Promise<void> {
   revalidateLeads();
 }
 
-// Undo a lead Chief ACCEPTED: dismiss it and tell Hunter to park it.
-export async function undoChiefAccept(
+// day-47 undo on a decided lead (either Hunter's or the owner's). A DISMISSED
+// lead comes back to the owner: suggested again, reason/decided_by cleared, but
+// `qualify_sent_at` stamped now so Hunter's qualify job does not re-grab it — it
+// stays with you.
+export async function undoLeadDismiss(id: string): Promise<void> {
+  await guard();
+  const rowId = id.trim();
+  if (!rowId) return;
+  await supabaseAdmin()
+    .from("leads")
+    .update({
+      status: "suggested",
+      reason: null,
+      decided_by: null,
+      decided_at: null,
+      qualify_sent_at: new Date().toISOString(),
+    })
+    .eq("id", rowId);
+  revalidateLeads();
+}
+
+// day-47 undo on an ACCEPTED lead: dismiss it and send Hunter `skip <company>`
+// so the prospect row he opened is parked.
+export async function undoLeadAccept(
   id: string,
   company: string,
 ): Promise<void> {
@@ -974,29 +1049,144 @@ export async function undoChiefAccept(
     })
     .eq("id", rowId);
   const co = company.trim();
-  if (co)
-    await sendAgentCommand(
-      "hunter",
-      `park ${co}: the owner reversed chief's accept`,
-    );
+  if (co) await sendAgentCommand("hunter", `skip ${co}`);
   revalidateLeads();
 }
 
-// Undo a lead Chief DISMISSED: accept it (same add-prospect path as a normal
-// owner accept), regardless of its current status.
-export async function undoChiefDismiss(id: string): Promise<void> {
+// ── the owner's own invoices (bridge day 47) ──────────────────────────────────
+// `manual_invoices` is DASHBOARD-owned: bank-transfer invoices the owner raises
+// outside Stripe. The bridge WATCHES `updated_at` and, within two minutes,
+// mirrors each row into `stripe_invoices` (id `man_<id>`, source=manual) and —
+// when status flips to paid — inserts a `payments` row (kind=manual) and marks
+// the linked prospect won. So the dashboard only writes this one table; the
+// money tab, overdue badge and deal panel pick the rows up after the sync.
+// Every write stamps `updated_at = now()` (the bridge's change signal).
+
+function revalidateMoney() {
+  revalidatePath("/dashboard");
+}
+
+// the next free number for the year, `P-<yyyy>-<nnn>` (3-digit, zero-padded).
+async function nextInvoiceNumber(db: DbClient): Promise<string> {
+  const year = new Date().getFullYear();
+  const prefix = `P-${year}-`;
+  let max = 0;
+  try {
+    const { data } = await db
+      .from("manual_invoices")
+      .select("number")
+      .like("number", `${prefix}%`)
+      .limit(500);
+    for (const r of (data as { number: string }[] | null) ?? []) {
+      const n = Number.parseInt(String(r.number).slice(prefix.length), 10);
+      if (Number.isFinite(n) && n > max) max = n;
+    }
+  } catch {
+    /* defensive: fall through to 1 */
+  }
+  return `${prefix}${String(max + 1).padStart(3, "0")}`;
+}
+
+const INVOICE_METHODS = ["transfer", "cash", "cheque", "card"] as const;
+
+export async function createManualInvoice(
+  fd: FormData,
+): Promise<{ id: string } | { error: string }> {
+  await guard();
+  const db = supabaseAdmin();
+
+  const company = String(fd.get("company") ?? "").trim();
+  if (!company) return { error: "company is required" };
+  const amount = Number(fd.get("amount"));
+  if (!(amount > 0)) return { error: "amount must be above zero" };
+
+  // optional PDF → campaign-assets bucket, stored as a stable public url
+  let fileUrl = String(fd.get("file_url") ?? "").trim();
+  const file = fd.get("file");
+  if (file instanceof File && file.size > 0) {
+    if (file.size > 25 * 1024 * 1024)
+      return { error: "pdf too large (max 25mb)" };
+    const safe = file.name.replace(/[^a-zA-Z0-9._-]+/g, "_");
+    const path = `invoices/${Date.now()}-${safe}`;
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const { error: upErr } = await db.storage
+      .from("campaign-assets")
+      .upload(path, bytes, {
+        contentType: file.type || "application/pdf",
+        upsert: true,
+      });
+    if (upErr) return { error: upErr.message };
+    fileUrl = db.storage.from("campaign-assets").getPublicUrl(path)
+      .data.publicUrl;
+  }
+
+  const productRaw = String(fd.get("product") ?? "persept").toLowerCase();
+  const product = productRaw === "gyst" ? "gyst" : "persept";
+  const currency = String(fd.get("currency") ?? "aed").toLowerCase() || "aed";
+  const number =
+    String(fd.get("number") ?? "").trim() || (await nextInvoiceNumber(db));
+  const today = new Date().toISOString().slice(0, 10);
+  const issued = String(fd.get("issued_at") ?? "").trim() || today;
+  const due =
+    String(fd.get("due_at") ?? "").trim() ||
+    new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
+
+  const { data, error } = await db
+    .from("manual_invoices")
+    .insert({
+      number,
+      product,
+      prospect_key: String(fd.get("prospect_key") ?? "").trim() || null,
+      company,
+      email: String(fd.get("email") ?? "").trim() || null,
+      amount,
+      currency,
+      description: String(fd.get("description") ?? "").trim() || null,
+      issued_at: issued,
+      due_at: due,
+      status: "open",
+      file_url: fileUrl || null,
+      updated_at: new Date().toISOString(),
+    })
+    .select("id")
+    .maybeSingle();
+  if (error) return { error: error.message };
+  revalidateMoney();
+  return { id: (data as { id: string } | null)?.id ?? "" };
+}
+
+export async function markManualInvoicePaid(
+  id: string,
+  paidAt = "",
+  method = "transfer",
+): Promise<void> {
   await guard();
   const rowId = id.trim();
   if (!rowId) return;
-  const db = supabaseAdmin();
-  const { data } = await db
-    .from("leads")
-    .select("*")
-    .eq("id", rowId)
-    .maybeSingle();
-  const lead = data as Record<string, string> | null;
-  if (!lead) return;
-  await acceptLeadCore(db, rowId, lead);
+  const m = (INVOICE_METHODS as readonly string[]).includes(method)
+    ? method
+    : "transfer";
+  await supabaseAdmin()
+    .from("manual_invoices")
+    .update({
+      status: "paid",
+      paid_at: paidAt.trim() || new Date().toISOString().slice(0, 10),
+      method: m,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", rowId);
+  revalidateMoney();
+}
+
+export async function voidManualInvoice(id: string): Promise<void> {
+  await guard();
+  const rowId = id.trim();
+  if (!rowId) return;
+  await supabaseAdmin()
+    .from("manual_invoices")
+    .update({ status: "void", updated_at: new Date().toISOString() })
+    .eq("id", rowId);
+  revalidateMoney();
 }
 
 // ── Scribe's proposals: mark accepted/declined, send via Hunter ───────────────
@@ -1012,6 +1202,53 @@ export async function setProposalStatus(
   if (!rowId || !["accepted", "declined"].includes(status)) return;
   await supabaseAdmin().from("proposals").update({ status }).eq("id", rowId);
   revalidatePath("/dashboard/agents/scribe");
+}
+
+// Approve a draft proposal (draft → approved) so it can be sent. The owner reads
+// Scribe's draft in the workspace and approves it there, rather than only through
+// a "send proposal to <company>" approval card.
+export async function approveProposal(id: string): Promise<void> {
+  await guard();
+  const rowId = id.trim();
+  if (!rowId) return;
+  const db = supabaseAdmin();
+  const { data } = await db
+    .from("proposals")
+    .select("status")
+    .eq("id", rowId)
+    .maybeSingle();
+  const status = (data as { status?: string } | null)?.status;
+  if (status && status !== "draft") return; // only a draft is approvable
+  await db.from("proposals").update({ status: "approved" }).eq("id", rowId);
+  revalidatePath("/dashboard/agents/scribe");
+  revalidatePath("/dashboard");
+}
+
+// Send a draft back to Scribe with edit notes. Keeps it a draft (the bridge will
+// upsert the revised markdown when Scribe rewrites the file) and messages Scribe so
+// the revision lands in its queue.
+export async function requestProposalEdits(
+  id: string,
+  note: string,
+): Promise<void> {
+  await guard();
+  const rowId = id.trim();
+  const n = note.trim();
+  if (!rowId || !n) return;
+  const db = supabaseAdmin();
+  const { data } = await db
+    .from("proposals")
+    .select("company, status")
+    .eq("id", rowId)
+    .maybeSingle();
+  const p = data as { company?: string; status?: string } | null;
+  const company = (p?.company ?? "").trim() || "the prospect";
+  // if it was already approved, drop it back to draft — it's being reworked.
+  if (p?.status === "approved")
+    await db.from("proposals").update({ status: "draft" }).eq("id", rowId);
+  await sendAgentCommand("scribe", `revise the proposal for ${company}: ${n}`);
+  revalidatePath("/dashboard/agents/scribe");
+  revalidatePath("/dashboard");
 }
 
 // "send via hunter": tell Hunter to email the proposal's public link; Hunter drafts
@@ -1552,9 +1789,18 @@ export async function updateCampaign(
     .flatMap((p) => p.split(/[\n,]/))
     .map((p) => p.trim())
     .filter((p) => MUSE_PLATFORMS.includes(p));
+  // day-47: the contact channels Hunter reaches out on, editable in the UI.
+  // Keep the previous set if the form submitted none (don't wipe it to empty).
+  const channels = fd
+    .getAll("channels")
+    .map(String)
+    .map((c) => c.trim().toLowerCase())
+    .filter((c) => ["email", "linkedin", "whatsapp", "instagram"].includes(c));
 
   const rules: CampaignRules = {
-    channels: prev.channels ?? [...DEFAULT_RULES.channels],
+    channels: channels.length
+      ? [...new Set(channels)]
+      : (prev.channels ?? [...DEFAULT_RULES.channels]),
     daily_cap:
       Number.isFinite(dailyCap) && dailyCap > 0
         ? Math.floor(dailyCap)
@@ -1663,7 +1909,9 @@ const GOAL_SRC = [
   "stripe-mrr",
   "stripe-month",
   "stripe-customers",
+  "revenue-since",
 ] as const;
+const GOAL_PRODUCT = ["all", "persept", "gyst"] as const;
 
 // Create a goal, then ask Chief to plan it. `src: manual` unless the owner picked
 // a live source (the bridge keeps `cur` current for live sources). We optimistically
@@ -1681,6 +1929,10 @@ export async function createGoal(
   const src = (GOAL_SRC as readonly string[]).includes(srcRaw)
     ? srcRaw
     : "manual";
+  const productRaw = String(fd.get("product") ?? "all");
+  const product = (GOAL_PRODUCT as readonly string[]).includes(productRaw)
+    ? productRaw
+    : "all";
   const model =
     String(fd.get("model") ?? "pace") === "pipeline" ? "pipeline" : "pace";
   const owner = String(fd.get("owner") ?? "chief").trim() || "chief";
@@ -1712,6 +1964,7 @@ export async function createGoal(
       tag,
       unit,
       src,
+      product,
       model,
       owner,
       team,
@@ -1745,10 +1998,15 @@ export async function updateGoal(
 
   const { data: existing } = await db
     .from("goals")
-    .select("target, due")
+    .select("target, due, src, product")
     .eq("id", id)
     .maybeSingle();
-  const prev = existing as { target?: number; due?: string | null } | null;
+  const prev = existing as {
+    target?: number;
+    due?: string | null;
+    src?: string | null;
+    product?: string | null;
+  } | null;
 
   const name = String(fd.get("name") ?? "").trim() || "untitled goal";
   const tag = String(fd.get("tag") ?? "").trim() || name.toLowerCase();
@@ -1760,10 +2018,21 @@ export async function updateGoal(
     .filter(Boolean);
   const target = Number(fd.get("target"));
   const due = String(fd.get("due") ?? "").trim() || null;
+  const start = String(fd.get("start") ?? "").trim() || null;
+  const srcRaw = String(fd.get("src") ?? "");
+  const src = (GOAL_SRC as readonly string[]).includes(srcRaw) ? srcRaw : null;
+  const productRaw = String(fd.get("product") ?? "");
+  const product = (GOAL_PRODUCT as readonly string[]).includes(productRaw)
+    ? productRaw
+    : null;
 
   const targetChanged =
     Number.isFinite(target) && target !== (prev?.target ?? null);
   const dueChanged = due !== (prev?.due ?? null);
+  // day-47: changing how a goal is counted (source or product) must re-plan.
+  const srcChanged = src !== null && src !== (prev?.src ?? "manual");
+  const productChanged =
+    product !== null && product !== (prev?.product ?? "all");
 
   let hasSteps = false;
   if (targetChanged || dueChanged) {
@@ -1784,11 +2053,38 @@ export async function updateGoal(
       team,
       target: Number.isFinite(target) ? target : (prev?.target ?? 0),
       due,
-      ...(hasSteps ? { plan_stale: true } : {}),
+      ...(start ? { start } : {}),
+      ...(src !== null ? { src } : {}),
+      ...(product !== null ? { product } : {}),
+      ...(hasSteps || srcChanged || productChanged ? { plan_stale: true } : {}),
     })
     .eq("id", id);
   if (error) return { error: error.message };
+  // a source/product change re-paces the goal entirely — re-plan so Chief's
+  // roadmap matches the new numbers.
+  if (srcChanged || productChanged)
+    await sendAgentCommand("chief", `re-plan goal ${id}`);
   return { ok: true };
+}
+
+// day-47 one-tap: switch a manual goal onto a live money source and re-plan.
+export async function setGoalSource(
+  id: string,
+  src: string,
+  product = "all",
+): Promise<void> {
+  await guard();
+  const goalId = id.trim();
+  if (!goalId) return;
+  if (!(GOAL_SRC as readonly string[]).includes(src)) return;
+  const prod = (GOAL_PRODUCT as readonly string[]).includes(product)
+    ? product
+    : "all";
+  await supabaseAdmin()
+    .from("goals")
+    .update({ src, product: prod, planning: true, plan_stale: false })
+    .eq("id", goalId);
+  await sendAgentCommand("chief", `re-plan goal ${goalId}`);
 }
 
 // "re-plan": ask Chief to redo the plan for a goal. Sets planning optimistically.

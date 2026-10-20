@@ -100,10 +100,21 @@ export type OSRun = {
   time: string; // HH:MM
   agent: AgentKey;
   name: string;
-  status: "planned" | "done" | "missed";
+  // "rerun" (day-47): the job missed its slot and the bridge ran it itself —
+  // shown neutrally ("re-run by system"), not as a miss.
+  status: "planned" | "done" | "missed" | "rerun";
 };
 
 export type OSReview = { title: string; date: string; markdown: string } | null;
+
+// day-47: today's copy flow for the "words" tile
+export type OSWords = {
+  requested: number;
+  writing: number;
+  questions: number;
+  drafted: number;
+  oldestWaitingMin: number;
+};
 
 export type OSCommand = {
   stateTiles: OSStateTile[];
@@ -114,6 +125,7 @@ export type OSCommand = {
   ideas: OSIdeaCard[];
   review: OSReview;
   runs: OSRun[];
+  words: OSWords;
   owners: AgentKey[];
   // §4 stale-data guard: one-line amber notice, null when data is fresh.
   staleNotice: string | null;

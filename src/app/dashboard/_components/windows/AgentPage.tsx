@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
+  rerunRun,
   restartAgent,
   setAgentBudget,
   setAgentModelTier,
@@ -13,6 +14,7 @@ import {
   type ModelTier,
   modelDisplay,
   type OSAgentExtras,
+  type OSAgentFile,
 } from "../../_data/agentpage-types";
 import type { OSAgent } from "../../_data/agents";
 import { AGENT_HUE_VAR, AGENT_TINT_VAR, WINDOWS } from "../../_data/windows";
@@ -667,6 +669,12 @@ export function AgentPage({
                   value={String(ex.overdueInvoices)}
                 />
               )}
+              {ex.qualifiedWeek != null && (
+                <Row
+                  label="qualified this week"
+                  value={`${ex.qualifiedWeek.accepted} accepted / ${ex.qualifiedWeek.dismissed} dismissed`}
+                />
+              )}
               <Row label="cost today" value={costTodayStr} />
               <Row label="cost this month" value={costMonthStr} />
               <Row label="tokens today" value={tokensTodayStr} />
@@ -1085,10 +1093,48 @@ export function AgentPage({
                                 : "var(--mute)",
                         }}
                       >
-                        {r.status}
+                        {r.status === "rerun" ? "re-run by system" : r.status}
                       </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void rerunRun(agent.id, r.name).then(() =>
+                            router.refresh(),
+                          );
+                          os.showToast(`re-running ${r.name}`);
+                        }}
+                        style={{
+                          fontSize: 11.5,
+                          padding: "4px 10px",
+                          borderRadius: 8,
+                          border: "1px solid var(--line)",
+                          background: "transparent",
+                          color: "var(--ink)",
+                          cursor: "pointer",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        run now
+                      </button>
                     </div>
                   ))
+                )}
+                {ex.qualifiedWeek != null && (
+                  <div
+                    style={{
+                      marginTop: 10,
+                      paddingTop: 10,
+                      borderTop: "1px solid var(--line)",
+                      fontSize: 12.5,
+                      color: "var(--soft)",
+                      lineHeight: 1.45,
+                    }}
+                  >
+                    lead qualifying: Hunter, up to 10 accepts a day{" "}
+                    <span className="os-mono" style={{ color: "var(--mute)" }}>
+                      (LEAD_QUALIFY, LEAD_ACCEPT_PER_DAY in the bridge .env)
+                    </span>
+                  </div>
                 )}
               </div>
               <div
@@ -1136,199 +1182,345 @@ export function AgentPage({
         {tab === "runs" && (
           <div
             style={{
-              display: "grid",
-              gridTemplateColumns: "minmax(0,1fr) minmax(0,1.3fr)",
+              display: "flex",
+              flexDirection: "column",
               gap: 16,
-              alignItems: "start",
               maxWidth: 1100,
             }}
           >
             <div
               style={{
-                padding: 16,
-                borderRadius: 16,
-                border: "1px solid var(--line)",
-                display: "flex",
-                flexDirection: "column",
-                gap: 12,
+                display: "grid",
+                gridTemplateColumns: "minmax(0,1fr) minmax(0,1.3fr)",
+                gap: 16,
+                alignItems: "start",
               }}
             >
               <div
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <span style={{ fontSize: 14, fontWeight: 600 }}>process</span>
-                {confirmRestart ? (
-                  <span
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      fontSize: 12.5,
-                    }}
-                  >
-                    <span style={{ color: "var(--soft)" }}>restart?</span>
-                    <button
-                      type="button"
-                      onClick={doRestart}
-                      style={{
-                        padding: "6px 11px",
-                        borderRadius: 8,
-                        border: "none",
-                        background: "var(--bad)",
-                        color: "#fff",
-                        fontSize: 12.5,
-                        fontWeight: 600,
-                        cursor: "pointer",
-                      }}
-                    >
-                      restart
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setConfirmRestart(false)}
-                      style={{
-                        padding: "6px 11px",
-                        borderRadius: 8,
-                        border: "1px solid var(--line)",
-                        background: "transparent",
-                        color: "var(--ink)",
-                        fontSize: 12.5,
-                        fontWeight: 600,
-                        cursor: "pointer",
-                      }}
-                    >
-                      cancel
-                    </button>
-                  </span>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setConfirmRestart(true)}
-                    style={{
-                      padding: "7px 12px",
-                      borderRadius: 9,
-                      border: "1px solid var(--line)",
-                      fontSize: 12.5,
-                      fontWeight: 600,
-                      cursor: "pointer",
-                      background: "transparent",
-                      color: "var(--ink)",
-                    }}
-                  >
-                    restart {agent.name}
-                  </button>
-                )}
-              </div>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "10px 16px",
-                  fontSize: 13,
-                }}
-              >
-                <span style={{ color: "var(--mute)" }}>status</span>
-                <b>{agent.status}</b>
-                <span style={{ color: "var(--mute)" }}>last active</span>
-                <b>{relTime(agent.lastActive)}</b>
-                <span style={{ color: "var(--mute)" }}>cost today</span>
-                <b className="os-mono">{costTodayStr}</b>
-                <span style={{ color: "var(--mute)" }}>tokens today</span>
-                <b className="os-mono">{tokensTodayStr}</b>
-              </div>
-              <span style={{ fontSize: 11.5, color: "var(--mute)" }}>
-                restart resets {agent.name}&apos;s session; memory files stay.
-              </span>
-            </div>
-            <div
-              style={{
-                borderRadius: 16,
-                overflow: "hidden",
-                border: "1px solid var(--line)",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  padding: "10px 14px",
-                  background: "#1a1816",
-                  color: "#b9b3aa",
-                  fontFamily: "var(--font-mono)",
-                  fontSize: 12,
-                }}
-              >
-                <span>events · {agent.id}</span>
-                <span>{ex.log.length}</span>
-              </div>
-              <div
-                style={{
-                  background: "#0e0d0c",
-                  color: "#e8e4dc",
-                  fontFamily: "var(--font-mono)",
-                  fontSize: 12.5,
-                  lineHeight: 1.7,
-                  padding: "14px 16px",
-                  height: 360,
-                  overflow: "auto",
+                  padding: 16,
+                  borderRadius: 16,
+                  border: "1px solid var(--line)",
                   display: "flex",
                   flexDirection: "column",
-                  gap: 3,
+                  gap: 12,
                 }}
               >
-                {ex.log.length === 0 ? (
-                  <span
-                    style={{
-                      margin: "auto",
-                      color: "#6f6a62",
-                      textAlign: "center",
-                    }}
-                  >
-                    nothing yet. {agent.name}&apos;s events show here as it
-                    works.
-                  </span>
-                ) : (
-                  ex.log.map((l) => (
-                    <div
-                      key={l.id}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <span style={{ fontSize: 14, fontWeight: 600 }}>process</span>
+                  {confirmRestart ? (
+                    <span
                       style={{
                         display: "flex",
-                        gap: 10,
-                        alignItems: "baseline",
+                        alignItems: "center",
+                        gap: 8,
+                        fontSize: 12.5,
                       }}
                     >
-                      <span
+                      <span style={{ color: "var(--soft)" }}>restart?</span>
+                      <button
+                        type="button"
+                        onClick={doRestart}
                         style={{
-                          color: logKindColor(l.kind),
-                          flex: "none",
-                          width: 64,
-                          textTransform: "uppercase",
-                          fontSize: 10,
-                          letterSpacing: "0.04em",
+                          padding: "6px 11px",
+                          borderRadius: 8,
+                          border: "none",
+                          background: "var(--bad)",
+                          color: "#fff",
+                          fontSize: 12.5,
+                          fontWeight: 600,
+                          cursor: "pointer",
                         }}
                       >
-                        {l.kind}
-                      </span>
-                      <span style={{ flex: 1, minWidth: 0, color: "#e8e4dc" }}>
-                        {l.text}
-                      </span>
-                      {l.ts && (
-                        <span style={{ color: "#6f6a62", flex: "none" }}>
-                          {l.ts}
+                        restart
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmRestart(false)}
+                        style={{
+                          padding: "6px 11px",
+                          borderRadius: 8,
+                          border: "1px solid var(--line)",
+                          background: "transparent",
+                          color: "var(--ink)",
+                          fontSize: 12.5,
+                          fontWeight: 600,
+                          cursor: "pointer",
+                        }}
+                      >
+                        cancel
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmRestart(true)}
+                      style={{
+                        padding: "7px 12px",
+                        borderRadius: 9,
+                        border: "1px solid var(--line)",
+                        fontSize: 12.5,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        background: "transparent",
+                        color: "var(--ink)",
+                      }}
+                    >
+                      restart {agent.name}
+                    </button>
+                  )}
+                </div>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "10px 16px",
+                    fontSize: 13,
+                  }}
+                >
+                  <span style={{ color: "var(--mute)" }}>status</span>
+                  <b>{agent.status}</b>
+                  <span style={{ color: "var(--mute)" }}>last active</span>
+                  <b>{relTime(agent.lastActive)}</b>
+                  <span style={{ color: "var(--mute)" }}>cost today</span>
+                  <b className="os-mono">{costTodayStr}</b>
+                  <span style={{ color: "var(--mute)" }}>tokens today</span>
+                  <b className="os-mono">{tokensTodayStr}</b>
+                </div>
+                <span style={{ fontSize: 11.5, color: "var(--mute)" }}>
+                  restart resets {agent.name}&apos;s session; memory files stay.
+                </span>
+              </div>
+              <div
+                style={{
+                  borderRadius: 16,
+                  overflow: "hidden",
+                  border: "1px solid var(--line)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    padding: "10px 14px",
+                    background: "#1a1816",
+                    color: "#b9b3aa",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 12,
+                  }}
+                >
+                  <span>events · {agent.id}</span>
+                  <span>{ex.log.length}</span>
+                </div>
+                <div
+                  style={{
+                    background: "#0e0d0c",
+                    color: "#e8e4dc",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 12.5,
+                    lineHeight: 1.7,
+                    padding: "14px 16px",
+                    height: 360,
+                    overflow: "auto",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 3,
+                  }}
+                >
+                  {ex.log.length === 0 ? (
+                    <span
+                      style={{
+                        margin: "auto",
+                        color: "#6f6a62",
+                        textAlign: "center",
+                      }}
+                    >
+                      nothing yet. {agent.name}&apos;s events show here as it
+                      works.
+                    </span>
+                  ) : (
+                    ex.log.map((l) => (
+                      <div
+                        key={l.id}
+                        style={{
+                          display: "flex",
+                          gap: 10,
+                          alignItems: "baseline",
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: logKindColor(l.kind),
+                            flex: "none",
+                            width: 64,
+                            textTransform: "uppercase",
+                            fontSize: 10,
+                            letterSpacing: "0.04em",
+                          }}
+                        >
+                          {l.kind}
                         </span>
-                      )}
-                    </div>
-                  ))
-                )}
+                        <span
+                          style={{ flex: 1, minWidth: 0, color: "#e8e4dc" }}
+                        >
+                          {l.text}
+                        </span>
+                        {l.ts && (
+                          <span style={{ color: "#6f6a62", flex: "none" }}>
+                            {l.ts}
+                          </span>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
+            {ex.files.length > 0 && <OutputFiles files={ex.files} />}
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// day-47: an agent's mirrored output folder (Scribe library/, Muse posts/, Hunter
+// drafts/) — one finished piece per file, expandable to its text, with a green
+// mark when the front matter says it was published.
+function OutputFiles({ files }: { files: OSAgentFile[] }) {
+  return (
+    <div
+      style={{
+        padding: 16,
+        borderRadius: 16,
+        border: "1px solid var(--line)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 4,
+      }}
+    >
+      <span style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>
+        output files
+      </span>
+      {files.map((f) => (
+        <OutputFileRow key={f.path} f={f} />
+      ))}
+    </div>
+  );
+}
+
+function OutputFileRow({ f }: { f: OSAgentFile }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ borderTop: "1px solid var(--line)", padding: "9px 0" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {f.published && (
+          <span
+            title="published"
+            style={{
+              width: 7,
+              height: 7,
+              borderRadius: 999,
+              background: "var(--ok)",
+              flex: "none",
+            }}
+          />
+        )}
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          style={{
+            flex: 1,
+            minWidth: 0,
+            textAlign: "left",
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            color: "var(--ink)",
+            fontSize: 13,
+            padding: 0,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {open ? "▾ " : "▸ "}
+          {f.name}
+        </button>
+        {f.status && (
+          <span
+            className="os-mono"
+            style={{
+              fontSize: 10,
+              textTransform: "uppercase",
+              letterSpacing: "0.04em",
+              color: f.published ? "var(--ok)" : "var(--soft)",
+              border: `1px solid ${f.published ? "var(--ok)" : "var(--line)"}`,
+              borderRadius: 999,
+              padding: "1px 6px",
+              flex: "none",
+            }}
+          >
+            {f.status}
+          </span>
+        )}
+        <span style={{ fontSize: 11, color: "var(--mute)", flex: "none" }}>
+          {f.updated}
+        </span>
+      </div>
+      {open && (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 6,
+            marginTop: 6,
+          }}
+        >
+          {(f.request || f.approval || f.url) && (
+            <div style={{ fontSize: 11.5, color: "var(--soft)" }}>
+              {[
+                f.request && `request ${f.request}`,
+                f.approval && `approval ${f.approval}`,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+              {f.url && (
+                <>
+                  {" · "}
+                  <a
+                    href={f.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "var(--soft)" }}
+                  >
+                    open ↗
+                  </a>
+                </>
+              )}
+            </div>
+          )}
+          <div
+            style={{
+              padding: "9px 11px",
+              borderRadius: 10,
+              background: "var(--surf2)",
+              fontSize: 12.5,
+              lineHeight: 1.5,
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+            }}
+          >
+            {f.body || "empty."}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

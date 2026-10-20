@@ -5,6 +5,7 @@ import type { OSAgentExtras } from "../_data/agentpage-types";
 import type { OSAgent } from "../_data/agents";
 import type { OSApproval, OSManualPost } from "../_data/approvals";
 import type { OSCommand } from "../_data/command-types";
+import type { OSFlightRow } from "../_data/copy-types";
 import type { OSDev } from "../_data/dev-types";
 import type { OSFrontDesk } from "../_data/frontdesk";
 import type { OSKnowledge } from "../_data/knowledge-types";
@@ -32,6 +33,7 @@ export function WindowFrame({
   pending,
   approvals,
   manual,
+  inFlight,
   frontdesk,
   marketing,
   dev,
@@ -44,6 +46,7 @@ export function WindowFrame({
   pending: number;
   approvals: OSApproval[];
   manual: OSManualPost[];
+  inFlight: OSFlightRow[];
   frontdesk: OSFrontDesk;
   marketing: OSMarketing;
   dev: OSDev;
@@ -444,6 +447,7 @@ export function WindowFrame({
             agents={agents}
             approvals={approvals}
             manual={manual}
+            inFlight={inFlight}
             frontdesk={frontdesk}
             marketing={marketing}
             dev={dev}
@@ -462,6 +466,7 @@ function WindowBody({
   agents,
   approvals,
   manual,
+  inFlight,
   frontdesk,
   marketing,
   dev,
@@ -473,6 +478,7 @@ function WindowBody({
   agents: OSAgent[];
   approvals: OSApproval[];
   manual: OSManualPost[];
+  inFlight: OSFlightRow[];
   frontdesk: OSFrontDesk;
   marketing: OSMarketing;
   dev: OSDev;
@@ -484,7 +490,9 @@ function WindowBody({
   const os = useOS();
   switch (os.win) {
     case "approvals":
-      return <Approvals approvals={approvals} manual={manual} />;
+      return (
+        <Approvals approvals={approvals} manual={manual} inFlight={inFlight} />
+      );
     case "frontdesk":
       return <FrontDesk data={frontdesk} approvals={approvals} />;
     case "command":

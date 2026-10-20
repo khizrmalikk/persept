@@ -15,7 +15,9 @@ import type {
   OSApprovalKind,
   OSManualPost,
 } from "../../_data/approvals";
+import type { OSFlightRow } from "../../_data/copy-types";
 import { AGENT_HUE_VAR, WINDOWS } from "../../_data/windows";
+import { InFlightStrip } from "../InFlightStrip";
 import { useOS } from "../os-store";
 import { type AgentKey, Persona } from "../Persona";
 import { Spinner } from "../Spinner";
@@ -97,9 +99,11 @@ function fd(entries: Record<string, string | string[]>): FormData {
 export function Approvals({
   approvals,
   manual,
+  inFlight,
 }: {
   approvals: OSApproval[];
   manual: OSManualPost[];
+  inFlight: OSFlightRow[];
 }) {
   const os = useOS();
   const router = useRouter();
@@ -462,51 +466,85 @@ export function Approvals({
                 style={{
                   flexBasis: "100%",
                   display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  paddingTop: 4,
+                  flexDirection: "column",
+                  gap: 8,
+                  paddingTop: 6,
                 }}
               >
-                <span style={{ fontSize: 11.5, color: "var(--mute)" }}>
-                  send {selIds.length} back to
-                </span>
-                {(["scribe", "hunter"] as AgentKey[]).map((k) => (
-                  <button
-                    key={k}
-                    type="button"
-                    disabled={busy != null}
-                    onClick={() =>
-                      bulkRun(
-                        "bulk-back",
-                        "return",
-                        `sent ${selIds.length} back to ${cap(k)}`,
-                        { recipients: [k] },
-                      )
-                    }
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                      padding: "4px 10px 4px 4px",
-                      borderRadius: 999,
-                      background: "var(--surf)",
-                      cursor: "pointer",
-                      fontSize: 12,
-                      fontWeight: 600,
-                      border: "1px solid var(--line)",
-                      color: "var(--ink)",
-                    }}
-                  >
-                    <Persona agent={k} size={20} />
-                    {cap(k)}
-                  </button>
-                ))}
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder={`a note for all ${selIds.length} (optional)…`}
+                  style={{
+                    width: "100%",
+                    minHeight: 56,
+                    borderRadius: 10,
+                    border: "1px solid var(--line)",
+                    background: "var(--surf)",
+                    color: "var(--ink)",
+                    padding: 10,
+                    fontFamily: "var(--font-ui)",
+                    fontSize: 13,
+                    resize: "vertical",
+                  }}
+                />
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <span style={{ fontSize: 11.5, color: "var(--mute)" }}>
+                    send {selIds.length} back to
+                  </span>
+                  {(["scribe", "hunter", "muse"] as AgentKey[]).map((k) => (
+                    <button
+                      key={k}
+                      type="button"
+                      disabled={busy != null}
+                      onClick={() =>
+                        bulkRun(
+                          "bulk-back",
+                          "return",
+                          `sent ${selIds.length} back to ${cap(k)}`,
+                          { recipients: [k], note },
+                        )
+                      }
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        padding: "4px 10px 4px 4px",
+                        borderRadius: 999,
+                        background: "var(--surf)",
+                        cursor: "pointer",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        border: "1px solid var(--line)",
+                        color: "var(--ink)",
+                      }}
+                    >
+                      <Persona agent={k} size={20} />
+                      {cap(k)}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
         )}
 
         <div style={{ flex: 1, overflow: "auto", padding: "8px 10px 14px" }}>
+          <InFlightStrip
+            rows={inFlight}
+            onOpenApproval={(id) => {
+              setSel(id);
+              setEditing(false);
+              setBack(false);
+            }}
+          />
           <Group
             name="waiting for you"
             col="var(--ambink)"
@@ -1049,6 +1087,8 @@ function Detail({
         editing={editing}
         back={back}
         busy={busy}
+        note={note}
+        setNote={setNote}
         setEditing={setEditing}
         setBack={setBack}
         setDraft={setDraft}
@@ -1394,6 +1434,8 @@ function Actions({
   editing,
   back,
   busy,
+  note,
+  setNote,
   setEditing,
   setBack,
   setDraft,
@@ -1407,6 +1449,8 @@ function Actions({
   editing: boolean;
   back: boolean;
   busy: string | null;
+  note: string;
+  setNote: (v: string) => void;
   setEditing: (v: boolean) => void;
   setBack: (v: boolean) => void;
   setDraft: (v: string) => void;
@@ -1483,8 +1527,8 @@ function Actions({
         }),
       );
     buttons.push(btn("hold", () => hold(cur), undefined, "hold"));
-    if (cur.kind === "email" || cur.kind === "proposal")
-      buttons.push(btn("send back", () => setBack(!back)));
+    // day-47: send back with a note — for posts (→ Muse) as well as outbound/proposals.
+    buttons.push(btn("send back", () => setBack(!back)));
     buttons.push(btn("reject", () => reject(cur), "r", "reject"));
   }
 
@@ -1502,47 +1546,85 @@ function Actions({
       {back && !cur.held && (
         <div
           style={{
+            flexBasis: "100%",
             display: "flex",
-            gap: 6,
-            alignItems: "center",
-            padding: 6,
+            flexDirection: "column",
+            gap: 8,
+            padding: 10,
             borderRadius: 12,
             border: "1px solid var(--line)",
             background: "var(--surf2)",
           }}
         >
-          <span
-            style={{ fontSize: 12, color: "var(--mute)", padding: "0 6px" }}
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="a note on what to change (optional)…"
+            style={{
+              width: "100%",
+              minHeight: 64,
+              borderRadius: 10,
+              border: "1px solid var(--line)",
+              background: "var(--surf)",
+              color: "var(--ink)",
+              padding: 10,
+              fontFamily: "var(--font-ui)",
+              fontSize: 13,
+              resize: "vertical",
+            }}
+          />
+          <div
+            style={{
+              display: "flex",
+              gap: 6,
+              alignItems: "center",
+              flexWrap: "wrap",
+            }}
           >
-            send back to
-          </span>
-          {(["scribe", "hunter"] as AgentKey[]).map((k) => (
-            <button
-              key={k}
-              type="button"
-              onClick={() => sendBack(cur, k)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "4px 10px 4px 4px",
-                borderRadius: 999,
-                background: "var(--surf)",
-                cursor: "pointer",
-                fontSize: 12.5,
-                fontWeight: 600,
-                border: "none",
-                color: "var(--ink)",
-              }}
+            <span
+              style={{ fontSize: 12, color: "var(--mute)", padding: "0 4px" }}
             >
-              <Persona agent={k} size={22} />
-              {cap(k)}
-            </button>
-          ))}
+              send back to
+            </span>
+            {backTargets(cur).map((k) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => sendBack(cur, k)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "4px 10px 4px 4px",
+                  borderRadius: 999,
+                  background: "var(--surf)",
+                  cursor: "pointer",
+                  fontSize: 12.5,
+                  fontWeight: 600,
+                  border: "1px solid var(--line)",
+                  color: "var(--ink)",
+                }}
+              >
+                <Persona agent={k} size={22} />
+                {cap(k)}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>
   );
+}
+
+// day-47: who a given approval can be sent back to — its drafter (Muse for a
+// post, Hunter for outbound) plus Scribe (the writer). Only these three can
+// receive a return; `returnOne` ignores any other.
+const BACK_AGENTS: AgentKey[] = ["scribe", "hunter", "muse"];
+function backTargets(a: OSApproval): AgentKey[] {
+  const out = [a.agent, "scribe"].filter((k) =>
+    BACK_AGENTS.includes(k as AgentKey),
+  ) as AgentKey[];
+  return [...new Set(out.length ? out : (["scribe"] as AgentKey[]))];
 }
 
 function Cell({

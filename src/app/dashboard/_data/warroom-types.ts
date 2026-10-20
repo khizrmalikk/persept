@@ -19,13 +19,31 @@ export type GoalSrc =
   | "prospects-count"
   | "replied-count"
   | "calls-count"
-  // day-40 Stripe live sources — the bridge keeps `goals.cur` current, so the
+  // day-40/47 money live sources — the bridge keeps `goals.cur` current, so the
   // maths reads `g.cur` for these exactly like the other live sources.
   | "stripe-mrr"
   | "stripe-month"
-  | "stripe-customers";
+  | "stripe-customers"
+  | "revenue-since";
+// day-47: which product a money source counts. "all" = both Stripe accounts +
+// the owner's manual invoices across products.
+export type GoalProduct = "all" | "persept" | "gyst";
 export type GoalStatus = "hit" | "new" | "on track" | "at risk" | "behind";
 export type GoalUnit = "" | "AED";
+
+// day-47: money sources are counted in AED; the rest are plain counts.
+export const AED_SRCS: GoalSrc[] = [
+  "won-value",
+  "stripe-mrr",
+  "stripe-month",
+  "revenue-since",
+];
+export const MONEY_SRCS: GoalSrc[] = [
+  "stripe-mrr",
+  "stripe-month",
+  "stripe-customers",
+  "revenue-since",
+];
 export type StepStatus = "todo" | "doing" | "waiting" | "done";
 
 export type OSGoalStep = {
@@ -52,6 +70,7 @@ export type OSWarGoal = {
   tag: string; // short tag for chips
   unit: GoalUnit;
   src: GoalSrc;
+  product: GoalProduct; // day-47: narrows a money source to one product
   model: GoalModel;
   target: number;
   cur: number; // stored value (used when src === "manual")
@@ -316,6 +335,55 @@ export function fmtGoal(
 export function dueLabel(dueISO: string): string {
   const d = new Date(`${dueISO}T00:00:00`);
   return `by ${d.getDate()} ${MONS[d.getMonth()]}`;
+}
+
+// day-47: "1 Oct"-style day for the source line
+export function dayLabel(iso: string): string {
+  const d = new Date(`${iso}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return "";
+  return `${d.getDate()} ${MONS[d.getMonth()]}`;
+}
+
+export const PRODUCT_LABEL: Record<GoalProduct, string> = {
+  all: "all",
+  persept: "Persept",
+  gyst: "GYST",
+};
+
+// the plain label shown in the "counted from" control and on the source line
+export function srcLabel(src: GoalSrc, start = ""): string {
+  switch (src) {
+    case "won-count":
+      return "pilots won";
+    case "won-value":
+      return "AED won";
+    case "prospects-count":
+      return "prospects in play";
+    case "replied-count":
+      return "replies";
+    case "calls-count":
+      return "calls";
+    case "stripe-mrr":
+      return "Stripe MRR";
+    case "stripe-month":
+      return "revenue this month";
+    case "stripe-customers":
+      return "paying customers";
+    case "revenue-since":
+      return start ? `revenue since ${dayLabel(start)}` : "revenue since start";
+    default:
+      return "typed by hand";
+  }
+}
+
+// the small muted line under a goal's name — null for manual goals (they show
+// "made by …" instead). e.g. "counted from Stripe MRR · GYST".
+export function goalSourceLine(g: OSWarGoal): string | null {
+  if (g.src === "manual") return null;
+  let s = `counted from ${srcLabel(g.src, g.start)}`;
+  if (g.product && g.product !== "all") s += ` · ${PRODUCT_LABEL[g.product]}`;
+  if (g.src === "revenue-since") s += " (incl. invoices)";
+  return s;
 }
 
 export const dayMon = (ms0: number) => {

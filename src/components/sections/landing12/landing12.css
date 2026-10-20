@@ -1071,7 +1071,7 @@
 /* ---- pricing ---- */
 .pl12 .tier-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   align-items: stretch;
 }
@@ -1137,6 +1137,26 @@
 .pl12 .tier-per {
   font-size: 13px;
   color: var(--mute);
+}
+/* "normally …" reference line under the Founding price — shows the discount */
+.pl12 .tier-was {
+  flex-basis: 100%;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--mute);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in oklch, var(--mute) 60%, transparent);
+}
+/* bespoke tier (Workforce) — custom tagline in place of a price */
+.pl12 .tier-price-custom {
+  min-height: 34px;
+}
+.pl12 .tier-custom {
+  font-family: var(--font-outfit), "Outfit", sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
 }
 .pl12 .tier-rows {
   margin: 0;

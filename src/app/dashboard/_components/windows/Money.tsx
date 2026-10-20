@@ -1,6 +1,12 @@
 "use client";
 
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import type { MoneyAccount, OSMoney } from "@/lib/workforce/stripe-types";
 
 // The money view (day-40 Stripe), owned by the war room. Pure presentational: it
@@ -37,17 +43,27 @@ export function Money({
   onRemind,
   onOpenDeal,
   onLink,
+  onAddInvoice,
+  onMarkPaid,
+  onVoid,
 }: {
   money: OSMoney;
   deals: MoneyDeal[];
   onRemind: (ref: string) => void;
   onOpenDeal: (key: string) => void;
   onLink: (paymentId: string, prospectKey: string) => void;
+  // day-47 manual invoices
+  onAddInvoice: (fd: FormData) => void;
+  onMarkPaid: (manualId: string, date: string, method: string) => void;
+  onVoid: (manualId: string) => void;
 }) {
   const m = money;
   // day-42: linking a persept payment to a prospect (picker over prospects).
   const [linking, setLinking] = useState<string | null>(null);
   const [pick, setPick] = useState("");
+  // day-47: add-invoice form + per-row mark-paid mini form
+  const [adding, setAdding] = useState(false);
+  const [paying, setPaying] = useState<string | null>(null);
 
   // chart series = the accounts that actually appear in revenue_daily, minus the
   // bridge's "all" aggregate row (summing it in would double-count). Known accounts
@@ -374,12 +390,42 @@ export function Money({
       {/* open invoices */}
       <Section
         title={`open invoices${openInvoices.length ? ` · ${openInvoices.length}` : ""}`}
+        action={
+          <button
+            type="button"
+            onClick={() => setAdding((v) => !v)}
+            style={{
+              fontSize: 11.5,
+              fontWeight: 600,
+              padding: "5px 11px",
+              borderRadius: 8,
+              border: "1px solid var(--line)",
+              background: adding ? "var(--surf2)" : "transparent",
+              color: "var(--ink)",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
+          >
+            + add invoice
+          </button>
+        }
       >
+        {adding && (
+          <InvoiceForm
+            deals={deals}
+            onCancel={() => setAdding(false)}
+            onSubmit={(fd) => {
+              onAddInvoice(fd);
+              setAdding(false);
+            }}
+          />
+        )}
         {openInvoices.length === 0 ? (
           <Empty>nothing open. all settled.</Empty>
         ) : (
           openInvoices.map((inv) => {
             const od = overdue(inv.dueAt);
+            const isManual = inv.source === "manual";
             return (
               <div
                 key={inv.id}
@@ -389,9 +435,10 @@ export function Money({
                   gap: 10,
                   padding: "9px 4px",
                   borderBottom: "1px solid var(--line)",
+                  flexWrap: "wrap",
                 }}
               >
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ flex: 1, minWidth: 140 }}>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>
                     {inv.name || inv.email || "customer"}
                     {inv.number && (
@@ -412,6 +459,23 @@ export function Money({
                     {inv.dueAt ? ` · due ${shortDay(inv.dueAt)}` : ""}
                   </div>
                 </div>
+                {isManual && (
+                  <span
+                    className="os-mono"
+                    style={{
+                      fontSize: 9,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.04em",
+                      color: "var(--soft)",
+                      border: "1px solid var(--line)",
+                      borderRadius: 999,
+                      padding: "1px 6px",
+                      flex: "none",
+                    }}
+                  >
+                    transfer
+                  </span>
+                )}
                 <span
                   className="os-mono"
                   style={{
@@ -459,20 +523,85 @@ export function Money({
                 >
                   remind
                 </button>
-                {inv.url && (
-                  <a
-                    href={inv.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      fontSize: 11.5,
-                      color: "var(--soft)",
-                      textDecoration: "none",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    open in Stripe ↗
-                  </a>
+                {isManual ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPaying((v) =>
+                          v === inv.manualId ? null : inv.manualId,
+                        )
+                      }
+                      style={{
+                        fontSize: 11.5,
+                        padding: "5px 10px",
+                        borderRadius: 8,
+                        border: "1px solid var(--ok)",
+                        background: "transparent",
+                        color: "var(--ok)",
+                        cursor: "pointer",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      mark paid
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onVoid(inv.manualId)}
+                      style={{
+                        fontSize: 11.5,
+                        padding: "5px 10px",
+                        borderRadius: 8,
+                        border: "1px solid var(--line)",
+                        background: "transparent",
+                        color: "var(--soft)",
+                        cursor: "pointer",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      void
+                    </button>
+                    {inv.fileUrl && (
+                      <a
+                        href={inv.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontSize: 11.5,
+                          color: "var(--soft)",
+                          textDecoration: "none",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        open PDF ↗
+                      </a>
+                    )}
+                    {paying === inv.manualId && (
+                      <PayForm
+                        onCancel={() => setPaying(null)}
+                        onConfirm={(date, method) => {
+                          onMarkPaid(inv.manualId, date, method);
+                          setPaying(null);
+                        }}
+                      />
+                    )}
+                  </>
+                ) : (
+                  inv.url && (
+                    <a
+                      href={inv.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        fontSize: 11.5,
+                        color: "var(--soft)",
+                        textDecoration: "none",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      open in Stripe ↗
+                    </a>
+                  )
                 )}
               </div>
             );
@@ -536,6 +665,23 @@ export function Money({
                 ) : (
                   <span style={{ flex: 1, minWidth: 0, fontSize: 13 }}>
                     {p.name || p.prospectKey || "payment"}
+                  </span>
+                )}
+                {p.kind === "manual" && (
+                  <span
+                    className="os-mono"
+                    style={{
+                      fontSize: 9,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.04em",
+                      color: "var(--soft)",
+                      border: "1px solid var(--line)",
+                      borderRadius: 999,
+                      padding: "1px 6px",
+                      flex: "none",
+                    }}
+                  >
+                    {p.method || "transfer"}
                   </span>
                 )}
                 <span
@@ -806,20 +952,38 @@ function gystMrr(gyst: MoneyAccount | undefined, fx: number) {
   return sum;
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({
+  title,
+  action,
+  children,
+}: {
+  title: string;
+  action?: ReactNode;
+  children: ReactNode;
+}) {
   return (
     <div style={{ marginBottom: 20 }}>
       <div
-        className="os-mono"
         style={{
-          fontSize: 10.5,
-          letterSpacing: "0.06em",
-          textTransform: "uppercase",
-          color: "var(--mute)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 10,
           marginBottom: 8,
         }}
       >
-        {title}
+        <div
+          className="os-mono"
+          style={{
+            fontSize: 10.5,
+            letterSpacing: "0.06em",
+            textTransform: "uppercase",
+            color: "var(--mute)",
+          }}
+        >
+          {title}
+        </div>
+        {action}
       </div>
       {children}
     </div>
@@ -830,6 +994,257 @@ function Empty({ children }: { children: ReactNode }) {
   return (
     <div style={{ fontSize: 12.5, color: "var(--mute)", padding: "6px 4px" }}>
       {children}
+    </div>
+  );
+}
+
+// day-47: raise a bank-transfer invoice yourself. Builds the FormData the
+// createManualInvoice action expects; the company picker spans non-archived
+// prospects (free text allowed — picking one fills the key + company).
+const iField: CSSProperties = {
+  height: 34,
+  padding: "0 10px",
+  borderRadius: 8,
+  border: "1px solid var(--line)",
+  background: "var(--surf2)",
+  color: "var(--ink)",
+  fontSize: 12.5,
+  outline: "none",
+  minWidth: 0,
+};
+function InvoiceForm({
+  deals,
+  onCancel,
+  onSubmit,
+}: {
+  deals: MoneyDeal[];
+  onCancel: () => void;
+  onSubmit: (fd: FormData) => void;
+}) {
+  const today = new Date().toISOString().slice(0, 10);
+  const due14 = new Date(Date.now() + 14 * DAY_MS).toISOString().slice(0, 10);
+  const [company, setCompany] = useState("");
+  const [prospectKey, setProspectKey] = useState("");
+  const [amount, setAmount] = useState("");
+  const [desc, setDesc] = useState("");
+  const [issued, setIssued] = useState(today);
+  const [due, setDue] = useState(due14);
+  const [file, setFile] = useState<File | null>(null);
+  const submit = () => {
+    if (!company.trim() || !(Number(amount) > 0)) return;
+    const fd = new FormData();
+    fd.set("company", company.trim());
+    if (prospectKey) fd.set("prospect_key", prospectKey);
+    fd.set("amount", amount);
+    fd.set("currency", "aed");
+    fd.set("product", "persept");
+    if (desc.trim()) fd.set("description", desc.trim());
+    fd.set("issued_at", issued);
+    fd.set("due_at", due);
+    if (file) fd.set("file", file);
+    onSubmit(fd);
+  };
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+        padding: 12,
+        borderRadius: 12,
+        border: "1px solid var(--line)",
+        background: "var(--surf)",
+        marginBottom: 10,
+      }}
+    >
+      <input
+        list="money-prospects"
+        value={company}
+        onChange={(e) => {
+          setCompany(e.target.value);
+          const d = deals.find((x) => x.company === e.target.value);
+          setProspectKey(d?.key ?? "");
+        }}
+        placeholder="company (pick a prospect or type a name)"
+        style={{ ...iField, fontSize: 13 }}
+      />
+      <datalist id="money-prospects">
+        {deals.map((d) => (
+          <option key={d.key} value={d.company} />
+        ))}
+      </datalist>
+      <div style={{ display: "flex", gap: 8 }}>
+        <input
+          type="number"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          placeholder="amount (AED)"
+          style={{ ...iField, flex: 1 }}
+        />
+        <input
+          type="date"
+          value={issued}
+          onChange={(e) => setIssued(e.target.value)}
+          title="issued"
+          style={{ ...iField, flex: 1 }}
+        />
+        <input
+          type="date"
+          value={due}
+          onChange={(e) => setDue(e.target.value)}
+          title="due"
+          style={{ ...iField, flex: 1 }}
+        />
+      </div>
+      <input
+        value={desc}
+        onChange={(e) => setDesc(e.target.value)}
+        placeholder="description (optional)"
+        style={iField}
+      />
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          flexWrap: "wrap",
+        }}
+      >
+        <label
+          style={{
+            fontSize: 11.5,
+            color: "var(--soft)",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
+          <input
+            type="file"
+            accept="application/pdf"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            style={{ display: "none" }}
+          />
+          <span
+            style={{
+              padding: "4px 10px",
+              borderRadius: 8,
+              border: "1px dashed var(--line)",
+            }}
+          >
+            {file ? file.name : "attach PDF (optional)"}
+          </span>
+        </label>
+        <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+          <button
+            type="button"
+            onClick={onCancel}
+            style={{
+              fontSize: 12,
+              padding: "6px 12px",
+              borderRadius: 8,
+              border: "1px solid var(--line)",
+              background: "transparent",
+              color: "var(--ink)",
+              cursor: "pointer",
+            }}
+          >
+            cancel
+          </button>
+          <button
+            type="button"
+            onClick={submit}
+            disabled={!company.trim() || !(Number(amount) > 0)}
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              padding: "6px 14px",
+              borderRadius: 8,
+              border: "none",
+              background: "var(--ink)",
+              color: "var(--bg)",
+              cursor: "pointer",
+              opacity: company.trim() && Number(amount) > 0 ? 1 : 0.5,
+            }}
+          >
+            save invoice
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// inline "mark paid" mini form: a date (default today) + a method.
+function PayForm({
+  onCancel,
+  onConfirm,
+}: {
+  onCancel: () => void;
+  onConfirm: (date: string, method: string) => void;
+}) {
+  const today = new Date().toISOString().slice(0, 10);
+  const [date, setDate] = useState(today);
+  const [method, setMethod] = useState("transfer");
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        flexBasis: "100%",
+        paddingTop: 6,
+      }}
+    >
+      <input
+        type="date"
+        value={date}
+        onChange={(e) => setDate(e.target.value)}
+        style={{ ...iField, height: 30, flex: "none", width: 150 }}
+      />
+      <select
+        value={method}
+        onChange={(e) => setMethod(e.target.value)}
+        style={{ ...iField, height: 30, flex: "none", width: 120 }}
+      >
+        {["transfer", "cash", "cheque", "card"].map((o) => (
+          <option key={o} value={o}>
+            {o}
+          </option>
+        ))}
+      </select>
+      <button
+        type="button"
+        onClick={() => onConfirm(date, method)}
+        style={{
+          fontSize: 11.5,
+          fontWeight: 600,
+          padding: "5px 11px",
+          borderRadius: 8,
+          border: "none",
+          background: "var(--ok)",
+          color: "var(--bg)",
+          cursor: "pointer",
+        }}
+      >
+        confirm paid
+      </button>
+      <button
+        type="button"
+        onClick={onCancel}
+        style={{
+          fontSize: 11.5,
+          padding: "5px 10px",
+          borderRadius: 8,
+          border: "1px solid var(--line)",
+          background: "transparent",
+          color: "var(--soft)",
+          cursor: "pointer",
+        }}
+      >
+        cancel
+      </button>
     </div>
   );
 }

@@ -8,15 +8,18 @@ export const EMAIL = "khizr@persept.ai";
 export const EMAIL_HREF = "mailto:khizr@persept.ai?subject=AI%20Workforce";
 export const GYST_HREF = "/projects/gyst";
 
-// pricing — the four-tier menu (all AED). Founding is the limited, featured rate.
+// pricing — the three-tier menu (all AED). Founding is the limited, featured rate;
+// Workforce is bespoke (5+ agents → a conversation, not a price).
 export type Tier = {
   name: string;
   tag?: string; // small chip next to the name
   featured?: boolean; // Founding — accent border
   guarantee?: boolean; // 30-day setup-refund guarantee applies
   gets: string; // "what they get"
-  setup: string; // full display string incl. "from"
-  monthly: string;
+  setup?: string; // full display string incl. "from" (omitted for custom tiers)
+  monthly?: string; // omitted for custom tiers
+  was?: string; // small "normally …" line under the price (shows the discount)
+  custom?: string; // replaces the price for a bespoke tier (Workforce)
   term: string;
   live: string;
 };
@@ -30,15 +33,7 @@ export const TIERS: Tier[] = [
     gets: "1 agent: lead response",
     setup: "AED 2,500",
     monthly: "AED 1,250",
-    term: "3 months",
-    live: "5 days",
-  },
-  {
-    name: "Starter",
-    guarantee: true,
-    gets: "1 agent: lead response",
-    setup: "AED 5,000",
-    monthly: "AED 1,800",
+    was: "normally AED 5,000 setup / AED 1,800 a month",
     term: "3 months",
     live: "5 days",
   },
@@ -53,8 +48,7 @@ export const TIERS: Tier[] = [
   {
     name: "Workforce",
     gets: "5+ agents, custom to your operations",
-    setup: "from AED 25,000",
-    monthly: "from AED 7,500",
+    custom: "Custom. Built around your operations.",
     term: "12 months",
     live: "4–6 weeks",
   },

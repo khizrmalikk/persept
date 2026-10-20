@@ -14,28 +14,38 @@ import {
   approveFromForm,
   archiveGoal,
   createGoal,
+  createManualInvoice,
   dismissMover,
   goalStepToBacklog,
+  markManualInvoicePaid,
   replanGoal,
   sendAgentCommand,
+  setGoalSource,
   setGoalStepStatus,
   setGoalValue,
   tapMover,
   updateGoal,
+  voidManualInvoice,
 } from "@/lib/workforce/actions";
+import type { OSMoney } from "@/lib/workforce/stripe-types";
 import type { OSApproval } from "../../_data/approvals";
 import {
+  AED_SRCS,
   dayMon,
   dueLabel,
   fmtGoal,
   type GoalCtx,
+  type GoalProduct,
   type GoalSrc,
+  goalSourceLine,
   goalStats,
+  MONEY_SRCS,
   MONS,
   NEXT_STEP,
   type OSGoalStats,
   type OSWarGoal,
   type OSWarRoom,
+  PRODUCT_LABEL,
   STC,
   STEP_STYLE,
   type StepStatus,
@@ -105,17 +115,114 @@ const TONE: Record<string, string> = {
 };
 const mono: CSSProperties = { fontFamily: "var(--font-mono)" };
 
-// name, target, unit, months-out, and an optional live src (day-40 Stripe chips
-// create a live goal the bridge keeps current).
-const SUGG: [string, number, "count" | "AED", number, GoalSrc?][] = [
-  ["monthly retainers signed", 5, "count", 5],
-  ["website demos booked", 20, "count", 2],
-  ["instagram followers", 2000, "count", 3],
-  ["monthly recurring revenue", 25000, "AED", 6],
-  ["MRR", 50000, "AED", 6, "stripe-mrr"],
-  ["revenue this month", 80000, "AED", 1, "stripe-month"],
-  ["paying customers", 100, "count", 6, "stripe-customers"],
+// date helpers for the suggestion chips (client, deterministic from `now`)
+const isoDay = (d: Date) => d.toISOString().slice(0, 10);
+const nextJan1 = (now: number) =>
+  isoDay(new Date(new Date(now).getFullYear() + 1, 0, 1));
+const monthsOut = (now: number, m: number) => {
+  const d = new Date(now);
+  return isoDay(new Date(d.getFullYear(), d.getMonth() + m + 1, 0));
+};
+const quarterStart = (now: number) => {
+  const d = new Date(now);
+  return isoDay(new Date(d.getFullYear(), Math.floor(d.getMonth() / 3) * 3, 1));
+};
+const quarterEnd = (now: number) => {
+  const d = new Date(now);
+  return isoDay(
+    new Date(d.getFullYear(), Math.floor(d.getMonth() / 3) * 3 + 3, 0),
+  );
+};
+
+// day-47 one-tap suggestions: each seeds a complete live goal (source + product).
+type Sugg = {
+  label: string;
+  n: string;
+  target: number;
+  unit: "count" | "AED";
+  src: GoalSrc;
+  product: GoalProduct;
+  dates: (now: number) => { start?: string; due: string };
+};
+const SUGG: Sugg[] = [
+  {
+    label: "AED 20k MRR by 1 Jan",
+    n: "monthly recurring revenue",
+    target: 20000,
+    unit: "AED",
+    src: "stripe-mrr",
+    product: "all",
+    dates: (now) => ({ due: nextJan1(now) }),
+  },
+  {
+    label: "First AED 6,000 pilot",
+    n: "first pilot revenue",
+    target: 6000,
+    unit: "AED",
+    src: "revenue-since",
+    product: "persept",
+    dates: (now) => ({ start: isoDay(new Date(now)), due: monthsOut(now, 3) }),
+  },
+  {
+    label: "10 paying GYST users",
+    n: "paying GYST users",
+    target: 10,
+    unit: "count",
+    src: "stripe-customers",
+    product: "gyst",
+    dates: (now) => ({ due: monthsOut(now, 6) }),
+  },
+  {
+    label: "AED 50k revenue this quarter",
+    n: "revenue this quarter",
+    target: 50000,
+    unit: "AED",
+    src: "revenue-since",
+    product: "all",
+    dates: (now) => ({ start: quarterStart(now), due: quarterEnd(now) }),
+  },
 ];
+
+// day-47: preview a money source's live value from the Stripe mirror, so the
+// read-only "now" field has a number before the bridge fills `goals.cur`.
+function liveGoalValue(
+  src: GoalSrc,
+  product: GoalProduct,
+  money: OSMoney,
+  startISO?: string,
+): number {
+  const accts = money.accounts.filter(
+    (a) => product === "all" || a.id === product,
+  );
+  const toAed = (rec: Record<string, number>) =>
+    Object.entries(rec).reduce(
+      (s, [c, v]) => s + (c.toLowerCase() === "aed" ? v : v * money.fx),
+      0,
+    );
+  switch (src) {
+    case "stripe-mrr":
+      return Math.round(accts.reduce((s, a) => s + toAed(a.mrr), 0));
+    case "stripe-month":
+      return Math.round(accts.reduce((s, a) => s + toAed(a.mtdNet), 0));
+    case "stripe-customers":
+      return accts.reduce((s, a) => s + a.activeSubs, 0);
+    case "revenue-since": {
+      const start = startISO ? Date.parse(`${startISO}T00:00:00`) : 0;
+      return Math.round(
+        money.payments
+          .filter(
+            (p) =>
+              (product === "all" || p.product === product) &&
+              p.paidAt &&
+              Date.parse(p.paidAt) >= start,
+          )
+          .reduce((s, p) => s + p.amountAed, 0),
+      );
+    }
+    default:
+      return 0;
+  }
+}
 
 type FormState = {
   n: string;
@@ -124,7 +231,9 @@ type FormState = {
   unit: "count" | "AED";
   due: string;
   owner: AgentKey;
-  src?: GoalSrc; // day-40: set by a live suggestion chip (else manual)
+  src: GoalSrc; // day-47: "manual" unless counted from pipeline/money
+  product: GoalProduct; // day-47: narrows a money source to one product
+  start?: string; // ISO; set for revenue-since
   tried?: boolean;
 };
 
@@ -286,6 +395,22 @@ export function WarRoom({
     if (!isLocal(g.id)) void replanGoal(g.id);
     os.showToast("asked chief to re-plan");
   };
+  // day-47: switch a manual MRR/revenue/customers goal onto live Stripe MRR.
+  const switchToLive = (g: OSWarGoal) => {
+    setPatches((p) => ({
+      ...p,
+      [g.id]: {
+        ...p[g.id],
+        src: "stripe-mrr",
+        product: "all",
+        unit: "AED",
+        planning: true,
+        stale: false,
+      },
+    }));
+    if (!isLocal(g.id)) void setGoalSource(g.id, "stripe-mrr", "all");
+    os.showToast("counting from live Stripe MRR — chief is re-planning");
+  };
   const removeGoal = (g: OSWarGoal) => {
     if (!isLocal(g.id)) void archiveGoal(g.id);
     setRemoved((r) => new Set(r).add(g.id));
@@ -315,7 +440,12 @@ export function WarRoom({
       return;
     }
     const unit = form.unit === "AED" ? "AED" : "";
-    const goalSrc = form.src ?? "manual";
+    const goalSrc = form.src;
+    const goalProduct = form.product;
+    const isManual = goalSrc === "manual";
+    // revenue-since needs a start; default to today
+    const start =
+      form.start?.trim() || new Date(now).toISOString().slice(0, 10);
     if (mode === "new") {
       const id = `local-${now}`;
       const g: OSWarGoal = {
@@ -324,10 +454,11 @@ export function WarRoom({
         tag: form.n.trim().split(/\s+/).slice(0, 2).join(" "),
         unit,
         src: goalSrc,
+        product: goalProduct,
         model: "pace",
         target: tgt,
         cur: cur || 0,
-        start: new Date(now).toISOString().slice(0, 10),
+        start,
         due: form.due,
         owner: form.owner,
         team: [],
@@ -349,12 +480,16 @@ export function WarRoom({
       fd.append("target", String(tgt));
       fd.append("cur", String(cur || 0));
       fd.append("due", form.due);
+      fd.append("start", start);
       fd.append("owner", form.owner);
       fd.append("src", goalSrc);
+      fd.append("product", goalProduct);
       void createGoal(fd);
       os.showToast("chief is writing the plan");
       setSel(id);
     } else if (selected) {
+      const srcChanged =
+        goalSrc !== selected.src || goalProduct !== selected.product;
       setPatches((p) => ({
         ...p,
         [selected.id]: {
@@ -364,7 +499,11 @@ export function WarRoom({
           due: form.due,
           owner: form.owner,
           unit,
-          ...(selected.src === "manual" ? { cur: cur || 0 } : {}),
+          src: goalSrc,
+          product: goalProduct,
+          start,
+          ...(isManual ? { cur: cur || 0 } : {}),
+          ...(srcChanged ? { planning: true } : {}),
           stale: true,
         },
       }));
@@ -376,11 +515,18 @@ export function WarRoom({
         fd.append("owner", form.owner);
         fd.append("target", String(tgt));
         fd.append("due", form.due);
+        fd.append("start", start);
+        fd.append("src", goalSrc);
+        fd.append("product", goalProduct);
         void updateGoal(fd);
         // manual goal's "now at" is a separate patch (cur + the old value col)
-        if (selected.src === "manual") void setGoalValue(selected.id, cur || 0);
+        if (isManual) void setGoalValue(selected.id, cur || 0);
       }
-      os.showToast("saved — asked chief to re-check the plan");
+      os.showToast(
+        srcChanged
+          ? "saved — chief is re-planning for the new source"
+          : "saved — asked chief to re-check the plan",
+      );
     }
     setMode("view");
     setForm(null);
@@ -617,6 +763,8 @@ export function WarRoom({
                     .toISOString()
                     .slice(0, 10),
                   owner: "hunter",
+                  src: "manual",
+                  product: "all",
                 });
               }}
               className="os-lift"
@@ -815,6 +963,20 @@ export function WarRoom({
                             : "flat wk"}
                         </span>
                       </span>
+                      {goalSourceLine(g) && (
+                        <span
+                          style={{
+                            ...mono,
+                            fontSize: 10,
+                            color: "var(--mute)",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {goalSourceLine(g)}
+                        </span>
+                      )}
                     </div>
                     <Mini g={g} t={t} />
                     <div
@@ -878,6 +1040,7 @@ export function WarRoom({
               isNew={mode === "new"}
               selected={selected}
               now={now}
+              money={data.money}
               onSubmit={submitForm}
               onCancel={() => {
                 setMode("view");
@@ -898,6 +1061,8 @@ export function WarRoom({
                     .toISOString()
                     .slice(0, 10),
                   owner: "hunter",
+                  src: "manual",
+                  product: "all",
                 });
               }}
             />
@@ -920,12 +1085,16 @@ export function WarRoom({
                   unit: selected.unit === "AED" ? "AED" : "count",
                   due: selected.due,
                   owner: selected.owner,
+                  src: selected.src,
+                  product: selected.product,
+                  start: selected.start,
                 });
               }}
               onAskRemove={() => setConfirm(true)}
               onKeep={() => setConfirm(false)}
               onRemove={() => removeGoal(selected)}
               onReplan={() => replan(selected)}
+              onSwitchSource={() => switchToLive(selected)}
               onCycle={cycleStep}
               onStepBl={(step) => stepToBacklog(selected, step)}
               onAllBl={() => allToBacklog(selected)}
@@ -1209,6 +1378,23 @@ export function WarRoom({
                 );
                 os.showToast("asked Chief to link the payment");
               }}
+              onAddInvoice={(fd) => {
+                void createManualInvoice(fd).then((r) =>
+                  os.showToast(
+                    "error" in r
+                      ? r.error
+                      : "invoice saved — it appears once the bridge syncs",
+                  ),
+                );
+              }}
+              onMarkPaid={(id, date, method) => {
+                void markManualInvoicePaid(id, date, method);
+                os.showToast("marked paid");
+              }}
+              onVoid={(id) => {
+                void voidManualInvoice(id);
+                os.showToast("invoice voided");
+              }}
             />
           </div>
         </div>
@@ -1333,6 +1519,7 @@ function GoalDetail({
   onKeep,
   onRemove,
   onReplan,
+  onSwitchSource,
   onCycle,
   onStepBl,
   onAllBl,
@@ -1348,6 +1535,7 @@ function GoalDetail({
   onKeep: () => void;
   onRemove: () => void;
   onReplan: () => void;
+  onSwitchSource: () => void;
   onCycle: (id: string, cur: StepStatus) => void;
   onStepBl: (step: OSWarGoal["plan"][number]) => void;
   onAllBl: () => void;
@@ -1496,7 +1684,34 @@ function GoalDetail({
             {dueLabel(g.due)} ·{" "}
             {t.left > 0 ? `${t.wl.toFixed(1)} weeks left` : "deadline passed"}
           </span>
+          {goalSourceLine(g) && (
+            <span
+              style={{
+                ...mono,
+                fontSize: 11,
+                color: "var(--mute)",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {goalSourceLine(g)}
+            </span>
+          )}
         </div>
+        {g.src === "manual" && /mrr|revenue|customers/i.test(g.n) && (
+          <button
+            type="button"
+            onClick={onSwitchSource}
+            style={{
+              ...ghostBtn,
+              borderColor: "var(--c-hunter)",
+              color: "var(--c-hunter)",
+            }}
+          >
+            switch to live Stripe MRR
+          </button>
+        )}
         <button type="button" onClick={onEdit} style={ghostBtn}>
           edit
         </button>
@@ -2525,6 +2740,7 @@ function GoalForm({
   isNew,
   selected,
   now,
+  money,
   onSubmit,
   onCancel,
 }: {
@@ -2533,10 +2749,13 @@ function GoalForm({
   isNew: boolean;
   selected: OSWarGoal | null;
   now: number;
+  money: OSMoney;
   onSubmit: () => void;
   onCancel: () => void;
 }) {
-  const locked = !isNew && selected && selected.src !== "manual";
+  // day-47: the "now" field is read-only + live for any non-manual source.
+  const live = form.src !== "manual";
+  const isMoney = MONEY_SRCS.includes(form.src);
   const tgt = Number.parseFloat(form.target);
   const dueOk = form.due && msOf(form.due) > now;
   const err = !form.n.trim()
@@ -2548,6 +2767,31 @@ function GoalForm({
         : "";
   const upd = (k: keyof FormState) => (e: { target: { value: string } }) =>
     setForm({ ...form, [k]: e.target.value });
+
+  // the live "now" value. For an existing live goal the bridge keeps `cur`; for a
+  // new one (or revenue-since) we preview it from the money mirror.
+  const liveNow = live
+    ? !isNew && selected && selected.src === form.src
+      ? selected.cur
+      : liveGoalValue(form.src, form.product, money, form.start)
+    : Number.parseFloat(form.cur || "0");
+
+  // pick a source: locks the unit (AED sources → AED, counts → count) and, for a
+  // money source, reveals the product control.
+  const pickSrc = (src: GoalSrc) => {
+    const unit: FormState["unit"] = AED_SRCS.includes(src) ? "AED" : "count";
+    setForm({
+      ...form,
+      src,
+      unit,
+      product: MONEY_SRCS.includes(src) ? form.product : "all",
+      // seed a start for revenue-since
+      start:
+        src === "revenue-since"
+          ? form.start || new Date(now).toISOString().slice(0, 10)
+          : form.start,
+    });
+  };
 
   const field: CSSProperties = {
     height: 38,
@@ -2599,6 +2843,44 @@ function GoalForm({
             : "changing the target or deadline flags the plan for a re-plan"}
         </span>
       </div>
+
+      {isNew && (
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {SUGG.map((s) => (
+            <button
+              key={s.label}
+              type="button"
+              onClick={() => {
+                const { start, due } = s.dates(now);
+                setForm({
+                  ...form,
+                  n: s.n,
+                  target: String(s.target),
+                  unit: s.unit,
+                  src: s.src,
+                  product: s.product,
+                  due,
+                  start,
+                  cur: "0",
+                });
+              }}
+              style={{
+                fontSize: 12,
+                padding: "6px 11px",
+                borderRadius: 999,
+                border: "1px solid var(--line)",
+                background: "var(--surf2)",
+                cursor: "pointer",
+                color: "var(--ink)",
+                fontWeight: 600,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         <span style={label}>goal</span>
@@ -2662,7 +2944,8 @@ function GoalForm({
               <button
                 key={u}
                 type="button"
-                onClick={() => setForm({ ...form, unit: u })}
+                disabled={live}
+                onClick={() => !live && setForm({ ...form, unit: u })}
                 style={{
                   flex: 1,
                   display: "flex",
@@ -2671,10 +2954,11 @@ function GoalForm({
                   borderRadius: 7,
                   fontSize: 12.5,
                   fontWeight: 600,
-                  cursor: "pointer",
+                  cursor: live ? "default" : "pointer",
                   border: "none",
                   background: form.unit === u ? "var(--surf)" : "transparent",
                   color: form.unit === u ? "var(--ink)" : "var(--soft)",
+                  opacity: live && form.unit !== u ? 0.4 : 1,
                 }}
               >
                 {u}
@@ -2690,13 +2974,14 @@ function GoalForm({
             minWidth: 0,
           }}
         >
-          <span style={label}>{locked ? "now at · live" : "now at"}</span>
+          <span style={label}>now at{live ? " · live" : ""}</span>
           <input
             type="number"
-            value={form.cur}
+            value={live ? String(liveNow) : form.cur}
             onChange={upd("cur")}
-            disabled={!!locked}
-            style={{ ...field, opacity: locked ? 0.55 : 1 }}
+            disabled={live}
+            title={live ? "counted live from the source below" : undefined}
+            style={{ ...field, opacity: live ? 0.55 : 1 }}
           />
         </div>
         <div
@@ -2749,48 +3034,126 @@ function GoalForm({
         </div>
       </div>
 
-      {isNew && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <span style={label}>or start from</span>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {SUGG.map(([n, tv, u, mo, src]) => {
-              const d = new Date(
-                new Date(now).getFullYear(),
-                new Date(now).getMonth() + mo + 1,
-                0,
-              );
-              return (
+      {/* day-47: counted from — how this goal's number is measured */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <span style={label}>counted from</span>
+        {(
+          [
+            ["typed", [["manual", "typed by hand"]]],
+            [
+              "pipeline",
+              [
+                ["won-count", "pilots won"],
+                ["won-value", "AED won"],
+                ["prospects-count", "prospects in play"],
+                ["replied-count", "replies"],
+                ["calls-count", "calls"],
+              ],
+            ],
+            [
+              "money",
+              [
+                ["stripe-mrr", "MRR"],
+                ["stripe-month", "revenue this month"],
+                ["stripe-customers", "paying customers"],
+                ["revenue-since", "revenue since start"],
+              ],
+            ],
+          ] as [string, [GoalSrc, string][]][]
+        ).map(([grp, opts]) => (
+          <div
+            key={grp}
+            style={{
+              display: "flex",
+              alignItems: "baseline",
+              gap: 8,
+              flexWrap: "wrap",
+            }}
+          >
+            <span style={{ ...label, width: 64, flex: "none" }}>{grp}</span>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {opts.map(([s, lab]) => {
+                const on = form.src === s;
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => pickSrc(s)}
+                    style={{
+                      fontSize: 12,
+                      padding: "5px 11px",
+                      borderRadius: 999,
+                      border: `1px solid ${on ? "var(--ink)" : "var(--line)"}`,
+                      background: on ? "var(--surf)" : "transparent",
+                      color: on ? "var(--ink)" : "var(--soft)",
+                      fontWeight: on ? 700 : 500,
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {lab}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+
+        {isMoney && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginTop: 2,
+            }}
+          >
+            <span style={{ ...label, width: 64, flex: "none" }}>product</span>
+            <div
+              style={{
+                display: "flex",
+                padding: 3,
+                borderRadius: 10,
+                background: "var(--surf2)",
+                border: "1px solid var(--line)",
+              }}
+            >
+              {(["all", "persept", "gyst"] as GoalProduct[]).map((p) => (
                 <button
-                  key={n}
+                  key={p}
                   type="button"
-                  onClick={() =>
-                    setForm({
-                      ...form,
-                      n,
-                      target: String(tv),
-                      unit: u,
-                      src: src ?? "manual",
-                      due: d.toISOString().slice(0, 10),
-                    })
-                  }
+                  onClick={() => setForm({ ...form, product: p })}
                   style={{
-                    fontSize: 12,
-                    padding: "6px 11px",
-                    borderRadius: 999,
-                    border: "1px solid var(--line)",
-                    background: "transparent",
+                    padding: "5px 13px",
+                    borderRadius: 7,
+                    fontSize: 12.5,
+                    fontWeight: 600,
                     cursor: "pointer",
-                    color: "var(--soft)",
-                    whiteSpace: "nowrap",
+                    border: "none",
+                    background:
+                      form.product === p ? "var(--surf)" : "transparent",
+                    color: form.product === p ? "var(--ink)" : "var(--soft)",
                   }}
                 >
-                  {`${n} · ${u === "AED" ? "AED " : ""}${tv.toLocaleString("en-US")} ${dueLabel(d.toISOString().slice(0, 10))}`}
+                  {PRODUCT_LABEL[p]}
                 </button>
-              );
-            })}
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {form.src === "revenue-since" && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ ...label, width: 64, flex: "none" }}>since</span>
+            <input
+              type="date"
+              value={form.start ?? ""}
+              onChange={upd("start")}
+              style={{ ...field, fontSize: 13, width: 180 }}
+            />
+          </div>
+        )}
+      </div>
 
       {form.tried && err && (
         <span style={{ fontSize: 12.5, color: "var(--bad)" }}>{err}</span>

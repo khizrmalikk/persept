@@ -3445,15 +3445,24 @@ export function Landing12() {
                   {t.tag && <span className="tier-tag">{t.tag}</span>}
                 </div>
                 <p className="tier-gets">{t.gets}</p>
-                <div className="tier-price">
-                  <span className="tier-amt">{t.monthly}</span>
-                  <span className="tier-per">/ month</span>
-                </div>
-                <dl className="tier-rows">
-                  <div>
-                    <dt>Setup</dt>
-                    <dd>{t.setup}</dd>
+                {t.custom ? (
+                  <div className="tier-price tier-price-custom">
+                    <span className="tier-custom">{t.custom}</span>
                   </div>
+                ) : (
+                  <div className="tier-price">
+                    <span className="tier-amt">{t.monthly}</span>
+                    <span className="tier-per">/ month</span>
+                    {t.was && <span className="tier-was">{t.was}</span>}
+                  </div>
+                )}
+                <dl className="tier-rows">
+                  {t.setup && (
+                    <div>
+                      <dt>Setup</dt>
+                      <dd>{t.setup}</dd>
+                    </div>
+                  )}
                   <div>
                     <dt>Minimum term</dt>
                     <dd>{t.term}</dd>
@@ -3484,9 +3493,9 @@ export function Landing12() {
             </p>
             <p>
               <span className="pn-mark" />
-              30-day guarantee on Founding and Starter: if your agent
-              hasn&apos;t won you a lead or saved you real time in the first
-              month, your setup fee is refunded.
+              30-day guarantee on Founding: if your agent hasn&apos;t won you a
+              lead or saved you real time in the first month, your setup fee is
+              refunded.
             </p>
           </div>
         </div>

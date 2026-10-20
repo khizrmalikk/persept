@@ -1,5 +1,10 @@
 import { supabaseAdmin } from "@/lib/supabase/server";
-import { getHandledLeads, getSuggestedLeads } from "@/lib/workforce/leads";
+import { getCopyLibrary, getInFlightCopy } from "@/lib/workforce/copy";
+import {
+  getHunterQualified,
+  getRecentlyDecidedLeads,
+  getSuggestedLeads,
+} from "@/lib/workforce/leads";
 import { getMessages, groupThreads } from "@/lib/workforce/outreach";
 import { getProposals } from "@/lib/workforce/proposals";
 import {
@@ -10,6 +15,7 @@ import {
 } from "@/lib/workforce/stripe";
 import { ago } from "@/lib/workforce/types";
 import type { AgentKey } from "../_components/Persona";
+import type { OSCopyRow } from "./copy-types";
 import {
   type OSConvMsg,
   type OSDeal,
@@ -66,9 +72,30 @@ const sourceKey = (l: { campaign: string; source_url: string }) => {
   return m ? m[1].replace(/^www\./, "") : "research";
 };
 
-function leadVM(
-  l: Awaited<ReturnType<typeof getSuggestedLeads>>[number],
-): OSLead {
+const DAY_MS = 86400000;
+const sameDay = (iso: string | null, now: Date): boolean => {
+  if (!iso) return false;
+  const d = new Date(iso);
+  return (
+    !Number.isNaN(d.getTime()) &&
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate()
+  );
+};
+const decider = (by: string): OSLead["decidedBy"] => {
+  const v = by.toLowerCase();
+  return v === "hunter" || v === "chief" || v === "owner" ? v : "";
+};
+
+type LeadRow = Awaited<ReturnType<typeof getSuggestedLeads>>[number];
+
+function leadVM(l: LeadRow): OSLead {
+  const notYetQualified =
+    l.status === "suggested" &&
+    !l.qualify_sent_at &&
+    !!l.ts &&
+    Date.now() - new Date(l.ts).getTime() > DAY_MS;
   return {
     id: l.id,
     company: l.company,
@@ -76,45 +103,92 @@ function leadVM(
     signal: l.angle || l.evidence || "new signal",
     src: sourceKey(l),
     status: l.status,
+    fit: l.fit,
+    reason: l.reason,
+    decidedBy: decider(l.decided_by),
+    decidedAt: l.decided_at ? ago(l.decided_at) : "",
+    notYetQualified,
   };
+}
+
+// which "for you" bucket a suggested lead lands in (null = still with Hunter, so
+// it is not shown as a card — only counted in the collapsed "with Hunter" line).
+function forYouReason(l: LeadRow): "left" | "not-yet" | null {
+  if (l.status !== "suggested") return null;
+  if (l.reason.trim()) return "left"; // Hunter looked and left it for you
+  const old = !!l.ts && Date.now() - new Date(l.ts).getTime() > DAY_MS;
+  if (!l.qualify_sent_at && old) return "not-yet"; // Hunter never got it
+  return null;
 }
 
 export async function loadFrontDesk(): Promise<OSFrontDesk> {
   const db = supabaseAdmin();
-  const [prospectsRes, suggested, handled, proposals, messages, money] =
-    await Promise.all([
-      (async () => {
-        try {
-          return await db
-            .from("prospects")
-            .select(
-              "key, company, contact, size, angle, stage, status, value_aed, campaign, last_touch, notes, archived, won_at",
-            )
-            .order("updated_at", { ascending: false });
-        } catch {
-          return { data: null };
-        }
-      })(),
-      getSuggestedLeads().catch(() => []),
-      getHandledLeads(20).catch(() => []),
-      getProposals().catch(() => []),
-      getMessages("hunter").catch(() => []),
-      loadMoney().catch(
-        () =>
-          ({
-            ok: false,
-            fx: 0,
-            accounts: [],
-            revenueDaily: [],
-            subscriptions: [],
-            invoices: [],
-            payments: [],
-            collectedAed: 0,
-            overdueCount: 0,
-            errored: [],
-          }) as Awaited<ReturnType<typeof loadMoney>>,
-      ),
-    ]);
+  const [
+    prospectsRes,
+    suggested,
+    recentlyDecided,
+    hunterQualified,
+    proposals,
+    messages,
+    money,
+    copyLib,
+    inFlightAll,
+  ] = await Promise.all([
+    (async () => {
+      try {
+        return await db
+          .from("prospects")
+          .select(
+            "key, company, contact, size, angle, stage, status, value_aed, campaign, last_touch, notes, archived, won_at",
+          )
+          .order("updated_at", { ascending: false });
+      } catch {
+        return { data: null };
+      }
+    })(),
+    getSuggestedLeads().catch(() => []),
+    getRecentlyDecidedLeads(7).catch(() => []),
+    getHunterQualified().catch(() => ({
+      companies: new Set<string>(),
+      weekAccepted: 0,
+      weekDismissed: 0,
+    })),
+    getProposals().catch(() => []),
+    getMessages("hunter").catch(() => []),
+    loadMoney().catch(
+      () =>
+        ({
+          ok: false,
+          fx: 0,
+          accounts: [],
+          revenueDaily: [],
+          subscriptions: [],
+          invoices: [],
+          payments: [],
+          collectedAed: 0,
+          overdueCount: 0,
+          errored: [],
+        }) as Awaited<ReturnType<typeof loadMoney>>,
+    ),
+    getCopyLibrary(200).catch(() => []),
+    getInFlightCopy().catch(() => []),
+  ]);
+
+  const copy: OSCopyRow[] = copyLib.map((r) => ({
+    id: r.id,
+    forAgent: r.for_agent,
+    writer: r.writer,
+    kind: r.kind,
+    channel: r.channel,
+    company: r.company,
+    contact: r.contact,
+    campaign: r.campaign,
+    subject: r.subject,
+    body: r.body,
+    when: ago(r.ts),
+    ts: r.ts,
+    status: r.approvalStatus,
+  }));
 
   const propByCompany = new Map<string, (typeof proposals)[number]>();
   for (const p of proposals)
@@ -152,6 +226,10 @@ export async function loadFrontDesk(): Promise<OSFrontDesk> {
         lastWhen: p.last_touch ? ago(p.last_touch) : "",
         team,
         proposalId: prop?.id ?? null,
+        fromHunter: !!(
+          p.company &&
+          hunterQualified.companies.has(p.company.trim().toLowerCase())
+        ),
         paid: pay
           ? {
               aed: pay.amountAed,
@@ -207,6 +285,14 @@ export async function loadFrontDesk(): Promise<OSFrontDesk> {
       value: p.markdown.match(/AED[\s\d,]+/)?.[0]?.trim() ?? "—",
       updated: ago(p.updated_at),
       dealKey,
+      markdown: p.markdown,
+      contact: p.contact,
+      preparedBy: p.prepared_by,
+      validUntil: p.valid_until,
+      token: p.token,
+      sentAt: p.sent_at,
+      firstViewedAt: p.first_viewed_at,
+      lastViewedAt: p.last_viewed_at,
     };
   });
 
@@ -232,7 +318,7 @@ export async function loadFrontDesk(): Promise<OSFrontDesk> {
 
   // sources: lead counts grouped by their source key (this week's sweeps)
   const srcCount = new Map<string, number>();
-  for (const l of [...suggested, ...handled]) {
+  for (const l of [...suggested, ...recentlyDecided]) {
     const k = sourceKey(l);
     srcCount.set(k, (srcCount.get(k) ?? 0) + 1);
   }
@@ -241,13 +327,43 @@ export async function loadFrontDesk(): Promise<OSFrontDesk> {
     .sort((a, b) => b.count - a.count)
     .slice(0, 8);
 
+  // day-47 research desk groups. "for you" = leads Hunter left (newest reasons
+  // first) then the ones he never got. "with Hunter" = everything else still
+  // suggested (he has it in hand). "decided recently" = his/your accept+dismiss.
+  const forYou: OSLead[] = [];
+  let withHunter = 0;
+  for (const l of suggested) {
+    const bucket = forYouReason(l);
+    if (bucket) forYou.push(leadVM(l));
+    else withHunter += 1;
+  }
+  // Hunter-left leads before never-qualified ones; stable within each group.
+  forYou.sort((a, b) => Number(a.notYetQualified) - Number(b.notYetQualified));
+  const decidedRecently = recentlyDecided.map(leadVM);
+
+  // today's tally — only decisions stamped today count.
+  const leadsToday = { accepted: 0, dismissed: 0, left: 0 };
+  for (const l of recentlyDecided) {
+    if (!sameDay(l.decided_at, now)) continue;
+    if (l.status === "sent_to_hunter") leadsToday.accepted += 1;
+    else if (l.status === "dismissed") leadsToday.dismissed += 1;
+  }
+  for (const l of suggested) {
+    if (l.reason.trim() && l.qualify_sent_at && sameDay(l.decided_at, now))
+      leadsToday.left += 1;
+  }
+
   return {
     deals,
-    leads: suggested.map(leadVM),
-    handledLeads: handled.map(leadVM),
+    forYou,
+    withHunter,
+    decidedRecently,
+    leadsToday,
     proposals: proposalRows,
     threads,
     sources,
+    copy,
+    inFlight: inFlightAll.filter((r) => r.forAgent === "hunter"),
     pipelineValue,
     wonThisMonth,
     wonPaidThisMonth,
