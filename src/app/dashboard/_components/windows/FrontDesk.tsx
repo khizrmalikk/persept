@@ -1334,7 +1334,7 @@ function Conversations({
                   maxWidth: 520,
                   padding: 14,
                   borderRadius: 14,
-                  border: "1.5px dashed oklch(0.8 0.14 70)",
+                  border: "1.5px dashed oklch(0.68 0.21 38)",
                   display: "flex",
                   flexDirection: "column",
                   gap: 8,

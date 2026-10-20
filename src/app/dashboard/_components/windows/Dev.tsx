@@ -279,7 +279,7 @@ export function Dev({ data }: { data: OSDev }) {
                   width: 8,
                   height: 8,
                   borderRadius: "50%",
-                  background: "oklch(0.8 0.14 70)",
+                  background: "oklch(0.68 0.21 38)",
                 }}
               />
               deploying
@@ -352,7 +352,7 @@ export function Dev({ data }: { data: OSDev }) {
                       padding: "1px 6px",
                       borderRadius: 999,
                       background:
-                        k === "prs" ? "oklch(0.8 0.14 70)" : "var(--surf2)",
+                        k === "prs" ? "oklch(0.68 0.21 38)" : "var(--surf2)",
                       color: k === "prs" ? "#0e0d0c" : "var(--soft)",
                     }}
                   >

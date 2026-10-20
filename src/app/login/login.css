@@ -12,9 +12,9 @@
   --mute: #85847d;
   --line: rgba(255, 255, 255, 0.09);
   --line2: rgba(255, 255, 255, 0.22);
-  --acc: #eeb04a;
-  --acc-ring: rgba(238, 176, 74, 0.22);
-  --acc-hover: rgba(238, 176, 74, 0.6);
+  --acc: #ff5a1f;
+  --acc-ring: rgba(255, 90, 31, 0.22);
+  --acc-hover: rgba(255, 90, 31, 0.6);
   --bad: oklch(0.66 0.19 28);
   --bad-soft: oklch(0.66 0.19 28 / 0.7);
   --bad-text: oklch(0.82 0.09 28);

@@ -1209,7 +1209,7 @@ export function WarRoom({
                       borderRadius: 8,
                       background:
                         m.kind === "approve"
-                          ? "oklch(0.8 0.14 70)"
+                          ? "oklch(0.68 0.21 38)"
                           : "var(--surf2)",
                       color: m.kind === "approve" ? "#0e0d0c" : "var(--ink)",
                       border:
@@ -1879,7 +1879,7 @@ function GoalDetail({
                 fontWeight: 700,
                 padding: "5px 10px",
                 borderRadius: 8,
-                background: "oklch(0.8 0.14 70)",
+                background: "oklch(0.68 0.21 38)",
                 color: "#0e0d0c",
                 cursor: "pointer",
                 border: "none",
@@ -2366,7 +2366,7 @@ function Chart({
               style={{
                 width: 14,
                 height: 0,
-                borderTop: "2px dotted oklch(0.8 0.14 70)",
+                borderTop: "2px dotted oklch(0.68 0.21 38)",
               }}
             />
           }
@@ -2459,7 +2459,7 @@ function Chart({
             strokeWidth="1.8"
             strokeDasharray="1.5 4"
             strokeLinecap="round"
-            style={{ stroke: "oklch(0.8 0.14 70)" }}
+            style={{ stroke: "oklch(0.68 0.21 38)" }}
           />
         )}
         <path
@@ -3166,7 +3166,7 @@ function GoalForm({
           style={{
             padding: "10px 16px",
             borderRadius: 10,
-            background: "oklch(0.8 0.14 70)",
+            background: "oklch(0.68 0.21 38)",
             color: "#0e0d0c",
             fontSize: 13.5,
             fontWeight: 700,

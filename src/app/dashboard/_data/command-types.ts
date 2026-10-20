@@ -184,7 +184,7 @@ export const COMMAND_TABS: [string, string][] = [
 
 export const PRIORITY_DOT: Record<string, string> = {
   high: "var(--bad)",
-  normal: "oklch(0.8 0.14 70)",
+  normal: "oklch(0.68 0.21 38)",
   low: "var(--mute)",
 };
 

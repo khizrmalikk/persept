@@ -10,7 +10,7 @@
   --line: rgba(255, 255, 255, 0.09);
   --light-bg: #ecebe5;
   --light-ink: #0c0c0c;
-  --acc: #eeb04a;
+  --acc: #ff5a1f;
   --on-acc: #0c0c0c;
 
   position: relative;
@@ -108,10 +108,10 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  font-family: var(--font-outfit), "Outfit", sans-serif;
+  font-family: var(--font-archivo), "Archivo", sans-serif;
   font-weight: 800;
   font-size: 22px;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.02em;
 }
 .pl12 .wa-pill {
   display: flex;
