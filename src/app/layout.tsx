@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import {
   Archivo,
   Geist,
@@ -105,10 +105,6 @@ export const metadata: Metadata = {
   },
   // Icons are provided by the app-router file conventions (app/icon.svg,
   // app/favicon.ico, app/apple-icon.png) so Next injects the links once.
-  other: {
-    "theme-color": "#f7f2ea",
-    "color-scheme": "light",
-  },
   openGraph: {
     type: "website",
     title: DEFAULT_TITLE,
@@ -124,6 +120,14 @@ export const metadata: Metadata = {
       "Practical AI agents that take over repetitive small-business work 24/7, plus consultations and our own product, GYST.",
     creator: "@persept",
   },
+};
+
+// Light browser chrome by default (the about/contact/projects/legal pages use
+// the Terracotta Sand light theme). The dark surfaces — home, dashboard, login —
+// override this to #0c0c0c via their own `viewport` export.
+export const viewport: Viewport = {
+  themeColor: "#f7f2ea",
+  colorScheme: "light",
 };
 
 const organizationLd = {

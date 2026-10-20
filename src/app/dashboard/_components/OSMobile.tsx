@@ -10,6 +10,7 @@ import {
 import type { OSAgent } from "../_data/agents";
 import type { OSApproval } from "../_data/approvals";
 import type { OSThreadMsg } from "../_data/threads";
+import { waHref } from "../_data/whatsapp";
 import { AGENT_HUE_VAR } from "../_data/windows";
 import { AttachButton, AttachChips } from "./ChatAttach";
 import { ChatBody } from "./ChatBody";
@@ -406,94 +407,122 @@ function MobileApprovals({ approvals }: { approvals: OSApproval[] }) {
         gap: 12,
       }}
     >
-      {shown.map((a) => (
-        <div
-          key={a.id}
-          style={{
-            border: "1px solid var(--line)",
-            borderRadius: 16,
-            padding: 14,
-            display: "flex",
-            flexDirection: "column",
-            gap: 10,
-          }}
-        >
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <Persona agent={a.agent} size={30} />
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 2,
-                minWidth: 0,
-                flex: 1,
-              }}
-            >
-              <span
-                className="os-mono"
+      {shown.map((a) => {
+        // whatsapp: open the chat app straight to the found number with the
+        // draft prefilled — the point of approving on your phone.
+        const wa = a.kind === "whatsapp" ? waHref(a.to, a.body) : null;
+        return (
+          <div
+            key={a.id}
+            style={{
+              border: "1px solid var(--line)",
+              borderRadius: 16,
+              padding: 14,
+              display: "flex",
+              flexDirection: "column",
+              gap: 10,
+            }}
+          >
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              <Persona agent={a.agent} size={30} />
+              <div
                 style={{
-                  fontSize: 10,
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
-                  color: `var(${AGENT_HUE_VAR[a.agent]})`,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2,
+                  minWidth: 0,
+                  flex: 1,
                 }}
               >
-                {a.kind} · {a.age}
-              </span>
-              <span style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3 }}>
-                {a.title}
-              </span>
+                <span
+                  className="os-mono"
+                  style={{
+                    fontSize: 10,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    color: `var(${AGENT_HUE_VAR[a.agent]})`,
+                  }}
+                >
+                  {a.kind} · {a.age}
+                </span>
+                <span
+                  style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3 }}
+                >
+                  {a.title}
+                </span>
+              </div>
+            </div>
+            {a.body && (
+              <div
+                style={{
+                  fontSize: 13.5,
+                  lineHeight: 1.5,
+                  color: "var(--soft)",
+                  whiteSpace: "pre-wrap",
+                  maxHeight: 160,
+                  overflow: "auto",
+                }}
+              >
+                {a.body.slice(0, 400)}
+              </div>
+            )}
+            {wa && (
+              <a
+                href={wa}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: 11,
+                  borderRadius: 10,
+                  border: "1px solid var(--accent)",
+                  color: "var(--accent)",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  textDecoration: "none",
+                }}
+              >
+                open in whatsapp
+              </a>
+            )}
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => decide(a, approveFromForm)}
+                style={{
+                  flex: 1,
+                  padding: 11,
+                  borderRadius: 10,
+                  background: "var(--accent)",
+                  color: "var(--accent-ink)",
+                  fontSize: 14,
+                  fontWeight: 700,
+                  border: "none",
+                }}
+              >
+                approve
+              </button>
+              <button
+                type="button"
+                onClick={() => decide(a, rejectFromForm)}
+                style={{
+                  padding: "11px 16px",
+                  borderRadius: 10,
+                  border: "1px solid var(--line)",
+                  background: "transparent",
+                  color: "var(--bad)",
+                  fontSize: 14,
+                  fontWeight: 600,
+                }}
+              >
+                reject
+              </button>
             </div>
           </div>
-          {a.body && (
-            <div
-              style={{
-                fontSize: 13.5,
-                lineHeight: 1.5,
-                color: "var(--soft)",
-                whiteSpace: "pre-wrap",
-                maxHeight: 160,
-                overflow: "auto",
-              }}
-            >
-              {a.body.slice(0, 400)}
-            </div>
-          )}
-          <div style={{ display: "flex", gap: 8 }}>
-            <button
-              type="button"
-              onClick={() => decide(a, approveFromForm)}
-              style={{
-                flex: 1,
-                padding: 11,
-                borderRadius: 10,
-                background: "var(--accent)",
-                color: "var(--accent-ink)",
-                fontSize: 14,
-                fontWeight: 700,
-                border: "none",
-              }}
-            >
-              approve
-            </button>
-            <button
-              type="button"
-              onClick={() => decide(a, rejectFromForm)}
-              style={{
-                padding: "11px 16px",
-                borderRadius: 10,
-                border: "1px solid var(--line)",
-                background: "transparent",
-                color: "var(--bad)",
-                fontSize: 14,
-                fontWeight: 600,
-              }}
-            >
-              reject
-            </button>
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

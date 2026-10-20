@@ -1,6 +1,13 @@
+import type { Viewport } from "next";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { LoginView } from "./LoginView";
 import "./login.css";
+
+// Dark sign-in surface — override the light root default for mobile chrome.
+export const viewport: Viewport = {
+  themeColor: "#0c0c0c",
+  colorScheme: "dark",
+};
 
 // Public sign-in — OUTSIDE /dashboard. Dark v12 look (see LOGIN.md): a live clock,
 // the "wake the team" avatar button, and email + password via the existing
