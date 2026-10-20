@@ -28,7 +28,7 @@ export default async function OSPage() {
   const [
     { agents, working },
     vps,
-    { approvals, manual, pending },
+    { approvals, manual, pending, inFlight },
     frontdesk,
     desktop,
     marketing,
@@ -63,6 +63,7 @@ export default async function OSPage() {
           vps={vps}
           approvals={approvals}
           manual={manual}
+          inFlight={inFlight}
           frontdesk={frontdesk}
           desktop={desktop}
           marketing={marketing}

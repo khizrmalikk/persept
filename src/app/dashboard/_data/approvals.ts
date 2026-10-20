@@ -1,9 +1,11 @@
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { getInFlightCopy } from "@/lib/workforce/copy";
 import { getApprovalChains } from "@/lib/workforce/drafts";
 import { parseOutbound } from "@/lib/workforce/outreach";
 import { type Approval, ago } from "@/lib/workforce/types";
 import type { WindowKey } from "../_components/os-store";
 import type { AgentKey } from "../_components/Persona";
+import type { OSFlightRow } from "./copy-types";
 
 // Approvals, shaped for the OS window. Reads the real `approvals` table plus the
 // day-30 columns (kind / workspace / company), falling back to text inference for
@@ -124,8 +126,10 @@ export async function loadApprovals(): Promise<{
   approvals: OSApproval[];
   manual: OSManualPost[];
   pending: number;
+  inFlight: OSFlightRow[];
 }> {
   const db = supabaseAdmin();
+  const inFlight = await getInFlightCopy().catch(() => [] as OSFlightRow[]);
   let rows: Approval[] = [];
   let manual: OSManualPost[] = [];
   try {
@@ -152,7 +156,7 @@ export async function loadApprovals(): Promise<{
       title: (p.text ?? "").split("\n")[0]?.slice(0, 80) || "instagram post",
     }));
   } catch {
-    return { approvals: [], manual: [], pending: 0 };
+    return { approvals: [], manual: [], pending: 0, inFlight };
   }
 
   // the trail (drafted by / checked / being revised) for every row at once
@@ -233,6 +237,7 @@ export async function loadApprovals(): Promise<{
     approvals,
     manual,
     pending: approvals.filter((a) => !a.held).length,
+    inFlight,
   };
 }
 

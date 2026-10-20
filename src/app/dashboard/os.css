@@ -35,13 +35,13 @@
   --tile2: #111111;
 
   /* semantic */
-  --ambink: #eeb04a; /* "needs you" amber text — equals --accent in dark */
+  --ambink: #ff5a1f; /* "needs you" signal text — equals --accent in dark */
   --ok: oklch(0.75 0.15 150);
   --bad: oklch(0.66 0.19 28);
   --code: #0d0d0d;
 
   /* the accent: the one "waiting on you" colour (fill + its text) */
-  --accent: #eeb04a;
+  --accent: #ff5a1f;
   --accent-ink: #0c0c0c;
   --onacc: #0c0c0c;
 
@@ -103,11 +103,11 @@
   --tile2: #ebebeb;
   --scrim: rgba(48, 36, 22, 0.16);
   --shadow: 0 1px 2px rgba(60, 42, 22, 0.06), 0 12px 32px rgba(60, 42, 22, 0.1);
-  --ambink: oklch(0.56 0.13 70); /* v3 amber ink */
+  --ambink: oklch(0.6 0.2 33); /* v3 signal ink, darkened for light-surface contrast */
   --ok: oklch(0.5 0.13 150);
   --bad: oklch(0.53 0.17 28);
   --code: #1b1814;
-  --accent: #eeb04a;
+  --accent: oklch(0.6 0.2 33);
   --accent-ink: #0c0c0c;
   --onacc: #0c0c0c;
   /* agent colours: darker in light for contrast; tints lighter + more opaque */

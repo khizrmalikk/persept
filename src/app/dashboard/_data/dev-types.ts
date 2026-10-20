@@ -158,7 +158,7 @@ export const severityColor = (sev: string): string =>
   sev === "fatal" || sev === "error"
     ? "var(--bad)"
     : sev === "warning"
-      ? "oklch(0.8 0.14 70)"
+      ? "oklch(0.68 0.21 38)"
       : "var(--mute)";
 
 export const deployDot = (
@@ -168,8 +168,8 @@ export const deployDot = (
     return { dot: "oklch(0.72 0.17 150)", glow: "none", color: "var(--ink)" };
   if (status === "building" || status === "queued")
     return {
-      dot: "oklch(0.8 0.14 70)",
-      glow: "0 0 10px oklch(0.8 0.14 70)",
+      dot: "oklch(0.68 0.21 38)",
+      glow: "0 0 10px oklch(0.68 0.21 38)",
       color: "var(--ambink)",
     };
   if (status === "failed")

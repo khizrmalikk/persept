@@ -15,7 +15,9 @@ export type OSIntegration = {
 export type OSRun = {
   time: string; // HH:MM Dubai
   name: string;
-  status: "planned" | "done" | "missed";
+  // "rerun" (day-47): the job missed its slot and the bridge ran it itself —
+  // shown neutrally, not as a miss.
+  status: "planned" | "done" | "missed" | "rerun";
 };
 
 // One line in the runs & logs pane — an `events` row for this agent.
@@ -61,6 +63,20 @@ export type OSCapability = {
   defaultOn: boolean;
 };
 
+// day-47: a finished piece in an agent's mirrored output folder (Scribe
+// library/, Muse posts/, Hunter drafts/), with its front-matter metadata.
+export type OSAgentFile = {
+  path: string;
+  name: string; // basename
+  updated: string; // "ago"
+  request: string;
+  approval: string;
+  status: string; // front-matter status; "published" gets a green mark
+  url: string;
+  published: boolean;
+  body: string; // content below the front matter, for expand
+};
+
 export type OSAgentExtras = {
   integrations: OSIntegration[];
   runs: OSRun[];
@@ -72,6 +88,10 @@ export type OSAgentExtras = {
   // day-42 money, only set for Hunter's page (at-a-glance). null elsewhere.
   paidThisMonth: number | null;
   overdueInvoices: number | null;
+  // day-47 lead qualifying, only set for Hunter's page. null elsewhere.
+  qualifiedWeek: { accepted: number; dismissed: number } | null;
+  // day-47: this agent's mirrored output folder (empty for agents without one)
+  files: OSAgentFile[];
 };
 
 // Model tiers the owner can pick on the permissions tab (CONFIG block to Chief).

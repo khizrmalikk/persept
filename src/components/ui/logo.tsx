@@ -2,11 +2,12 @@ import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Persept mark — the official brand logo (`persept-logo` handoff): an amber
- * "slash" (tall parallelogram) with a bar across the top. The slash is always
- * amber (#f2a93b ≈ oklch(0.8 0.14 70)); the bar uses `currentColor` so it
- * follows the surrounding text — cream on dark surfaces, near-black on light.
- * `size` is the mark HEIGHT in px; width follows the 136.6 : 125.56 ratio.
+ * Persept mark — the official brand logo (v13 "9k" handoff): two square-ended
+ * bars crossing like an opened compass, forming a 7, with a pin punched through
+ * the crossing. It is always ONE colour on one ground — the mark fills with
+ * `currentColor`, so set the colour on the parent (Signal `#ff5a1f` on black,
+ * `#0c0c0c` on Signal/white, white on dark photos).
+ * `size` is the mark HEIGHT in px; width follows the 79.38 : 84 ratio.
  */
 export function PerseptMark({
   size = 22,
@@ -19,22 +20,19 @@ export function PerseptMark({
 }) {
   return (
     <svg
-      width={Math.round((size * 136.6) / 125.56)}
+      width={Math.round((size * 79.38) / 84)}
       height={size}
-      viewBox="0 0 136.6 125.56"
-      fill="none"
+      viewBox="10.31 8 79.38 84"
+      fill="currentColor"
       className={className}
       style={style}
       aria-hidden="true"
       focusable="false"
     >
+      <path d="M10.31 16.51L68.86 16.51L56.69 32.09L10.31 32.09ZM80.26 32.09L89.16 20.7L89.16 32.09Z" />
       <path
-        fill="#f2a93b"
-        d="M27.37,119.56L96.19,1.97c.71-1.22,2.02-1.97,3.44-1.97h32.97c3.08,0,5,3.35,3.44,6l-69.05,117.59c-.72,1.22-2.02,1.97-3.44,1.97H30.81c-3.08,0-4.99-3.34-3.44-6Z"
-      />
-      <path
-        fill="currentColor"
-        d="M95.24,0H3.94C.67,0-1.17,3.76.83,6.34l19.74,25.49c.75.96,1.89,1.53,3.11,1.53h52.04"
+        fillRule="evenodd"
+        d="M77.41 8L89.69 17.59L31.55 92L19.28 82.41ZM70.67 24.3a3.89 3.89 0 1 0 7.79 0a3.89 3.89 0 1 0 -7.79 0Z"
       />
     </svg>
   );

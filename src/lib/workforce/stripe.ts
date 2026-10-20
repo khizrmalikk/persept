@@ -102,21 +102,31 @@ const normSub = (r: Record<string, unknown>): StripeSub => ({
   canceledAt: (r.canceled_at as string | null) ?? null,
 });
 
-const normInvoice = (r: Record<string, unknown>): StripeInvoice => ({
-  id: S(r.id),
-  number: S(r.number) || S(r.invoice_number),
-  account: S(r.account) || "persept",
-  status: S(r.status).toLowerCase(),
-  amountDue: N(r.amount_due),
-  amountPaid: N(r.amount_paid),
-  currency: S(r.currency).toLowerCase() || "usd",
-  dueAt: (r.due_at as string | null) ?? null,
-  paidAt: (r.paid_at as string | null) ?? null,
-  url: S(r.url),
-  name: S(r.name),
-  email: S(r.email),
-  product: "persept", // classified in loadMoney once subscriptions are known
-});
+const normInvoice = (r: Record<string, unknown>): StripeInvoice => {
+  const id = S(r.id);
+  const source =
+    S(r.source) === "manual" || id.startsWith("man_") ? "manual" : "stripe";
+  return {
+    id,
+    number: S(r.number) || S(r.invoice_number),
+    account: S(r.account) || "persept",
+    status: S(r.status).toLowerCase(),
+    amountDue: N(r.amount_due),
+    amountPaid: N(r.amount_paid),
+    currency: S(r.currency).toLowerCase() || "usd",
+    dueAt: (r.due_at as string | null) ?? null,
+    paidAt: (r.paid_at as string | null) ?? null,
+    url: S(r.url),
+    name: S(r.name),
+    email: S(r.email),
+    product: "persept", // classified in loadMoney once subscriptions are known
+    source,
+    manualId:
+      source === "manual" ? S(r.manual_id) || id.replace(/^man_/, "") : "",
+    fileUrl: S(r.file_url),
+    prospectKey: S(r.prospect_key),
+  };
+};
 
 const normPayment = (r: Record<string, unknown>): Payment => ({
   id: S(r.id),
@@ -131,6 +141,8 @@ const normPayment = (r: Record<string, unknown>): Payment => ({
   email: S(r.email),
   description: S(r.description),
   product: "persept", // set in loadMoney once subscriptions are known
+  kind: S(r.kind) || "stripe",
+  method: S(r.method),
 });
 
 async function read<T>(

@@ -1,4 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { type AgentFile, listAgentFiles } from "@/lib/workforce/files";
+import { getHunterQualified } from "@/lib/workforce/leads";
+import { parseFrontMatter } from "@/lib/workforce/posts";
 import { ROSTER } from "@/lib/workforce/roster";
 import { isThisMonth, loadMoney } from "@/lib/workforce/stripe";
 import { ago } from "@/lib/workforce/types";
@@ -7,6 +10,7 @@ import {
   AGENT_INTEGRATIONS,
   CAPABILITIES,
   type OSAgentExtras,
+  type OSAgentFile,
   type OSIntegration,
   type OSLogLine,
   type OSRun,
@@ -43,7 +47,7 @@ type EventRow = {
 const STATUS = (s: string | null): OSIntegration["status"] =>
   s === "connected" || s === "pending" || s === "off" ? s : "off";
 const RUN_STATUS = (s: string | null): OSRun["status"] =>
-  s === "done" || s === "missed" ? s : "planned";
+  s === "done" || s === "missed" || s === "rerun" ? s : "planned";
 
 export async function loadAgentExtras(): Promise<
   Record<string, OSAgentExtras>
@@ -135,6 +139,48 @@ export async function loadAgentExtras(): Promise<
     : 0;
   const hunterOverdue = money?.overdueCount ?? 0;
 
+  // day-47 lead qualifying for Hunter's at-a-glance: this week's accept/dismiss.
+  const hunterQualified = await getHunterQualified().catch(() => ({
+    companies: new Set<string>(),
+    weekAccepted: 0,
+    weekDismissed: 0,
+  }));
+
+  // day-47: each writer agent's mirrored output folder — one file per finished
+  // piece, with front matter (request/approval/status/url). Scribe → library/,
+  // Muse → posts/, Hunter → drafts/.
+  const OUTPUT_FOLDER: Record<string, string> = {
+    scribe: "library/",
+    muse: "posts/",
+    hunter: "drafts/",
+  };
+  const filesByAgent = new Map<string, OSAgentFile[]>();
+  await Promise.all(
+    Object.entries(OUTPUT_FOLDER).map(async ([id, prefix]) => {
+      const rows = await listAgentFiles(id, prefix).catch(
+        () => [] as AgentFile[],
+      );
+      filesByAgent.set(
+        id,
+        rows.slice(0, 60).map((f) => {
+          const { data, body } = parseFrontMatter(f.content);
+          const status = (data.status ?? "").toLowerCase();
+          return {
+            path: f.path,
+            name: (f.path.split("/").pop() ?? f.path).replace(/\.md$/i, ""),
+            updated: f.updated_at ? ago(f.updated_at) : "",
+            request: data.request ?? "",
+            approval: data.approval ?? "",
+            status,
+            url: data.url ?? "",
+            published: status === "published",
+            body,
+          } satisfies OSAgentFile;
+        }),
+      );
+    }),
+  );
+
   const intById = new Map<string, IntegrationRow>();
   for (const r of integrations) {
     const key = (r.id ?? r.name ?? "").toLowerCase();
@@ -184,6 +230,14 @@ export async function loadAgentExtras(): Promise<
       staleNotice,
       paidThisMonth: id === "hunter" ? hunterPaid : null,
       overdueInvoices: id === "hunter" ? hunterOverdue : null,
+      qualifiedWeek:
+        id === "hunter"
+          ? {
+              accepted: hunterQualified.weekAccepted,
+              dismissed: hunterQualified.weekDismissed,
+            }
+          : null,
+      files: filesByAgent.get(id) ?? [],
     };
   }
   return out;

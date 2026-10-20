@@ -29,7 +29,7 @@ const HUE: Record<Exclude<AgentKey, "you">, number> = {
 };
 const DOT: Record<Exclude<PersonaStatus, "">, string> = {
   working: "oklch(0.72 0.17 150)",
-  waiting: "oklch(0.8 0.14 70)",
+  waiting: "oklch(0.68 0.21 38)",
   idle: "#6f6a62",
   soon: "#3a3631",
 };
@@ -84,7 +84,7 @@ export function Persona({
   const h = isYou ? 70 : HUE[agent];
   const fg = `oklch(0.8 0.13 ${h})`;
   const fold = `oklch(0.64 0.12 ${h})`;
-  const bg = isYou ? "oklch(0.8 0.14 70)" : `oklch(0.34 0.07 ${h})`;
+  const bg = isYou ? "oklch(0.68 0.21 38)" : `oklch(0.34 0.07 ${h})`;
   const ringShadow = ring
     ? `0 0 0 ${Math.max(2, size / 20)}px var(--surf, #151311), 0 0 0 ${Math.max(
         3.5,

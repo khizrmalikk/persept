@@ -2975,18 +2975,19 @@ export function Landing12() {
         </div>
         <a href="#top" className="wordmark">
           <svg
-            viewBox="0 0 136.6 125.56"
-            width="22"
-            height="20"
+            viewBox="10.31 8 79.38 84"
+            width="18"
+            height="19"
             aria-hidden="true"
           >
             <path
-              d="M27.37,119.56L96.19,1.97c.71-1.22,2.02-1.97,3.44-1.97h32.97c3.08,0,5,3.35,3.44,6l-69.05,117.59c-.72,1.22-2.02,1.97-3.44,1.97H30.81c-3.08,0-4.99-3.34-3.44-6Z"
+              d="M10.31 16.51L68.86 16.51L56.69 32.09L10.31 32.09ZM80.26 32.09L89.16 20.7L89.16 32.09Z"
               style={{ fill: "var(--acc)" }}
             />
             <path
-              d="M95.24,0H3.94C.67,0-1.17,3.76.83,6.34l19.74,25.49c.75.96,1.89,1.53,3.11,1.53h52.04"
-              fill="#ecebe5"
+              fillRule="evenodd"
+              d="M77.41 8L89.69 17.59L31.55 92L19.28 82.41ZM70.67 24.3a3.89 3.89 0 1 0 7.79 0a3.89 3.89 0 1 0 -7.79 0Z"
+              style={{ fill: "var(--acc)" }}
             />
           </svg>
           <span>persept</span>
@@ -3445,15 +3446,24 @@ export function Landing12() {
                   {t.tag && <span className="tier-tag">{t.tag}</span>}
                 </div>
                 <p className="tier-gets">{t.gets}</p>
-                <div className="tier-price">
-                  <span className="tier-amt">{t.monthly}</span>
-                  <span className="tier-per">/ month</span>
-                </div>
-                <dl className="tier-rows">
-                  <div>
-                    <dt>Setup</dt>
-                    <dd>{t.setup}</dd>
+                {t.custom ? (
+                  <div className="tier-price tier-price-custom">
+                    <span className="tier-custom">{t.custom}</span>
                   </div>
+                ) : (
+                  <div className="tier-price">
+                    <span className="tier-amt">{t.monthly}</span>
+                    <span className="tier-per">/ month</span>
+                    {t.was && <span className="tier-was">{t.was}</span>}
+                  </div>
+                )}
+                <dl className="tier-rows">
+                  {t.setup && (
+                    <div>
+                      <dt>Setup</dt>
+                      <dd>{t.setup}</dd>
+                    </div>
+                  )}
                   <div>
                     <dt>Minimum term</dt>
                     <dd>{t.term}</dd>
@@ -3484,9 +3494,9 @@ export function Landing12() {
             </p>
             <p>
               <span className="pn-mark" />
-              30-day guarantee on Founding and Starter: if your agent
-              hasn&apos;t won you a lead or saved you real time in the first
-              month, your setup fee is refunded.
+              30-day guarantee on Founding: if your agent hasn&apos;t won you a
+              lead or saved you real time in the first month, your setup fee is
+              refunded.
             </p>
           </div>
         </div>

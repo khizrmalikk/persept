@@ -103,11 +103,8 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
-  icons: {
-    icon: "/icon.svg",
-    shortcut: "/icon.svg",
-    apple: "/apple-touch-icon.png",
-  },
+  // Icons are provided by the app-router file conventions (app/icon.svg,
+  // app/favicon.ico, app/apple-icon.png) so Next injects the links once.
   other: {
     "theme-color": "#f7f2ea",
     "color-scheme": "light",

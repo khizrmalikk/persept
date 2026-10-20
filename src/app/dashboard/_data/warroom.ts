@@ -5,6 +5,7 @@ import type { AgentKey } from "../_components/Persona";
 import {
   dealP,
   type GoalModel,
+  type GoalProduct,
   type GoalSrc,
   type GoalUnit,
   type OSGoalPhase,
@@ -271,7 +272,12 @@ export async function loadWarRoom(): Promise<OSWarRoom> {
     "prospects-count",
     "replied-count",
     "calls-count",
+    "stripe-mrr",
+    "stripe-month",
+    "stripe-customers",
+    "revenue-since",
   ];
+  const PRODUCTS = ["all", "persept", "gyst"];
   const goals: OSWarGoal[] = (goalRows ?? [])
     .filter((r) => !r.archived)
     .map((r, i) => {
@@ -282,6 +288,10 @@ export async function loadWarRoom(): Promise<OSWarRoom> {
       const src: GoalSrc = SRCS.includes(srcRaw)
         ? (srcRaw as GoalSrc)
         : "manual";
+      const prodRaw = S(r.product).toLowerCase();
+      const product: GoalProduct = PRODUCTS.includes(prodRaw)
+        ? (prodRaw as GoalProduct)
+        : "all";
       const modelRaw = S(r.model).toLowerCase();
       // deal-based sources project from the pipeline; everything else paces
       // from its own snapshots (the bridge keeps `cur` current for live sources).
@@ -312,6 +322,7 @@ export async function loadWarRoom(): Promise<OSWarRoom> {
         tag: S(r.tag) || name.split(/\s+/).slice(0, 2).join(" "),
         unit,
         src,
+        product,
         model,
         target: N(r.target),
         cur,

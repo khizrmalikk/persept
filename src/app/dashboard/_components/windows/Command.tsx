@@ -18,6 +18,8 @@ import {
   DROPPED_COLUMN,
   type OSBacklogCard,
   type OSCommand,
+  type OSRun,
+  type OSWords,
   PRIORITY_DOT,
 } from "../../_data/command-types";
 import { AGENT_HUE_VAR, AGENT_TINT_VAR } from "../../_data/windows";
@@ -208,7 +210,276 @@ export function Command({ data }: { data: OSCommand }) {
   );
 }
 
+// ── today's runs strip (day-47) ───────────────────────────────────────────────
+// A one-line timeline of today's scheduled jobs. Dots sit at their time; when two
+// land within 45 min their labels stack onto a lower row so nothing overlaps.
+// done = agent colour · missed = --bad · rerun = agent colour + ring · planned =
+// hollow. The count reads "n of m done" over today's real jobs only.
+const runMinutes = (t: string) => {
+  const [h, m] = t.split(":").map(Number);
+  return (h || 0) * 60 + (m || 0);
+};
+
+function TodayRuns({ runs }: { runs: OSRun[] }) {
+  const todayIdx = (new Date().getDay() + 6) % 7; // mon=0 … sun=6
+  const today = runs
+    .filter((r) => r.day === todayIdx)
+    .sort((a, b) => runMinutes(a.time) - runMinutes(b.time));
+  if (today.length === 0) return null;
+
+  const times = today.map((r) => runMinutes(r.time));
+  const min = Math.min(...times);
+  const max = Math.max(...times);
+  const span = Math.max(1, max - min);
+  const leftOf = (t: string) =>
+    max === min ? 50 : ((runMinutes(t) - min) / span) * 100;
+
+  // stack labels: place each on the lowest row whose last label is >45 min back
+  const rowLast: number[] = [];
+  const rowOf = times.map((t) => {
+    for (let i = 0; i < rowLast.length; i++) {
+      if (t - rowLast[i] > 45) {
+        rowLast[i] = t;
+        return i;
+      }
+    }
+    rowLast.push(t);
+    return rowLast.length - 1;
+  });
+  const rowCount = Math.max(1, rowLast.length);
+
+  const doneN = today.filter(
+    (r) => r.status === "done" || r.status === "rerun",
+  ).length;
+
+  const dotStyle = (agent: AgentKey, status: string): React.CSSProperties => {
+    const c = col(agent);
+    const base: React.CSSProperties = {
+      width: 12,
+      height: 12,
+      borderRadius: 999,
+      position: "relative",
+      zIndex: 1,
+    };
+    if (status === "missed") return { ...base, background: "var(--bad)" };
+    if (status === "planned")
+      return {
+        ...base,
+        background: "var(--bg)",
+        border: `1.5px solid ${c}`,
+      };
+    if (status === "rerun")
+      return {
+        ...base,
+        background: c,
+        boxShadow: `0 0 0 2px var(--surf), 0 0 0 3.5px ${c}`,
+      };
+    return { ...base, background: c }; // done (and any unknown live state)
+  };
+
+  return (
+    <div
+      style={{
+        padding: "14px 16px 10px",
+        borderRadius: 16,
+        border: "1px solid var(--line)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          justifyContent: "space-between",
+          gap: 10,
+        }}
+      >
+        <span style={{ fontSize: 13, fontWeight: 600 }}>today&apos;s runs</span>
+        <span
+          className="os-mono"
+          style={{ fontSize: 11, color: "var(--mute)" }}
+        >
+          {doneN} of {today.length} done
+        </span>
+      </div>
+      <div
+        style={{
+          position: "relative",
+          margin: "0 10px",
+          paddingTop: 6,
+          height: 14 + rowCount * 30,
+        }}
+      >
+        {/* the line */}
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: 11,
+            height: 1,
+            background: "var(--line)",
+          }}
+        />
+        {today.map((r, i) => {
+          const left = leftOf(r.time);
+          const align = left < 10 ? "0" : left > 90 ? "-100%" : "-50%";
+          const tip =
+            `${r.time} · ${r.name} · ${cap(r.agent)}` +
+            (r.status === "rerun"
+              ? " · re-run by system"
+              : r.status === "missed"
+                ? " · missed"
+                : r.status === "planned"
+                  ? " · planned"
+                  : " · done");
+          return (
+            <div
+              key={`${r.time}-${r.name}-${i}`}
+              title={tip}
+              style={{
+                position: "absolute",
+                left: `${left}%`,
+                top: 5,
+                transform: "translateX(-50%)",
+              }}
+            >
+              <div style={dotStyle(r.agent, r.status)} />
+              <div
+                style={{
+                  position: "absolute",
+                  top: 18 + rowOf[i] * 30,
+                  left: 0,
+                  transform: `translateX(${align})`,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems:
+                    align === "0"
+                      ? "flex-start"
+                      : align === "-100%"
+                        ? "flex-end"
+                        : "center",
+                  gap: 1,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                <span
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 5,
+                    fontSize: 11.5,
+                    fontWeight: 600,
+                    opacity: r.status === "planned" ? 0.6 : 1,
+                  }}
+                >
+                  <Persona agent={r.agent} size={15} />
+                  {r.name}
+                </span>
+                <span
+                  className="os-mono"
+                  style={{
+                    fontSize: 10,
+                    color: r.status === "missed" ? "var(--bad)" : "var(--mute)",
+                  }}
+                >
+                  {r.time}
+                  {r.status === "missed" ? " · missed" : ""}
+                  {r.status === "rerun" ? " · re-run" : ""}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── today ─────────────────────────────────────────────────────────────────────
+// day-47: the "words" tile — today's copy flow beside the STATE tiles. The
+// oldest still-waiting request turns --bad once it has waited over 30 minutes.
+function WordsTile({ words, onOpen }: { words: OSWords; onOpen: () => void }) {
+  const w = words;
+  const waiting = w.oldestWaitingMin;
+  const over = waiting > 30;
+  const stat = (label: string, n: number) => (
+    <span style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+      <span className="os-display" style={{ fontWeight: 800, fontSize: 22 }}>
+        {n}
+      </span>
+      <span
+        className="os-mono"
+        style={{
+          fontSize: 9.5,
+          letterSpacing: "0.06em",
+          textTransform: "uppercase",
+          color: "var(--mute)",
+        }}
+      >
+        {label}
+      </span>
+    </span>
+  );
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      style={{
+        gridColumn: "1 / -1",
+        padding: 16,
+        borderRadius: 16,
+        background: "transparent",
+        border: "1px solid var(--line)",
+        cursor: "pointer",
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+        textAlign: "left",
+        color: "var(--ink)",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          justifyContent: "space-between",
+          gap: 10,
+        }}
+      >
+        <span
+          className="os-mono"
+          style={{
+            fontSize: 10.5,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            color: "var(--mute)",
+          }}
+        >
+          words
+        </span>
+        <span
+          style={{
+            fontSize: 11.5,
+            color: over ? "var(--bad)" : "var(--soft)",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {waiting > 0 ? `oldest waiting ${waiting} min` : "nothing waiting"}
+        </span>
+      </div>
+      <div style={{ display: "flex", gap: 22 }}>
+        {stat("requested", w.requested)}
+        {stat("writing", w.writing)}
+        {stat("questions", w.questions)}
+        {stat("drafted today", w.drafted)}
+      </div>
+    </button>
+  );
+}
+
 function Today({ data }: { data: OSCommand }) {
   const os = useOS();
   const STB: Record<string, [string, string]> = {
@@ -220,6 +491,7 @@ function Today({ data }: { data: OSCommand }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <StaleNotice text={data.staleNotice} />
+      <TodayRuns runs={data.runs} />
       <div
         style={{
           display: "grid",
@@ -285,6 +557,7 @@ function Today({ data }: { data: OSCommand }) {
                 </span>
               </button>
             ))}
+            <WordsTile words={data.words} onOpen={() => os.open("approvals")} />
           </div>
           <div
             style={{
@@ -1357,6 +1630,7 @@ function Markdown({ text }: { text: string }) {
 
 // ── schedule ──────────────────────────────────────────────────────────────────
 function Schedule({ data }: { data: OSCommand }) {
+  // rerun is neutral, like planned — the bridge caught the miss and ran it.
   const dotFor = (s: string) =>
     s === "done" ? "var(--ok)" : s === "missed" ? "var(--bad)" : "var(--mute)";
   if (data.runs.length === 0)
@@ -1441,6 +1715,22 @@ function Schedule({ data }: { data: OSCommand }) {
                     >
                       {r.time}
                     </span>
+                    {r.status === "rerun" && (
+                      <span
+                        style={{
+                          marginTop: 2,
+                          fontSize: 9.5,
+                          padding: "1px 6px",
+                          borderRadius: 999,
+                          alignSelf: "flex-start",
+                          background: "var(--surf)",
+                          color: "var(--mute)",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        re-run by system
+                      </span>
+                    )}
                   </div>
                   <span
                     style={{
