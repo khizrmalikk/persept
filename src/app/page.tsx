@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { FAQ } from "@/components/sections/landing12/faq";
 import { Landing12 } from "@/components/sections/landing12/Landing12";
 
 /*
@@ -26,19 +27,38 @@ export const metadata: Metadata = {
     description: DESCRIPTION,
     url: "https://persept.ai",
     type: "website",
-    images: [{ url: "/images/og.png" }],
+    siteName: "Persept",
+    locale: "en_US",
+    // Image comes from the app/opengraph-image.png file convention (1200×630).
   },
   twitter: {
     card: "summary_large_image",
     title: "Persept · an AI workforce for your business",
     description: DESCRIPTION,
-    images: ["/images/og.png"],
+    // Image comes from the app/twitter-image.png file convention (1200×630).
   },
+};
+
+// FAQPage structured data — mirrors the on-page FAQ so Google can surface the
+// questions as rich results. Content is the single source in landing12/faq.ts.
+const faqLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ.map(([question, answer]) => ({
+    "@type": "Question",
+    name: question,
+    acceptedAnswer: { "@type": "Answer", text: answer },
+  })),
 };
 
 export default function Home() {
   return (
     <main>
+      <script
+        type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD is static, server-generated structured data
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
+      />
       <Landing12 />
     </main>
   );
