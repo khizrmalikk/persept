@@ -57,15 +57,15 @@ import { type AgentKey, Persona } from "../Persona";
 import { Money } from "./Money";
 
 // The war room — a trading-terminal overlook of every goal: a live ticker, a
-// goals watchlist, the selected goal's projection chart + roadmap + Chief-written
+// goals watchlist, the selected goal's projection chart + roadmap + Percy-written
 // plan, and the ranked "needle movers" that move the numbers most. All the
 // projection maths lives in ../../_data/warroom-types (shared, pure); this file
 // is the UI. New tables (goals / goal_steps / goal_phases / goal_snapshots) feed
 // it; until the goal-mutation actions exist, create / edit / re-plan send a
-// `plan goal:` command to Chief and step edits stay local.
+// `plan goal:` command to Percy and step edits stay local.
 
 const ORDER: AgentKey[] = [
-  "chief",
+  "percy",
   "scout",
   "hunter",
   "scribe",
@@ -73,7 +73,7 @@ const ORDER: AgentKey[] = [
   "fixer",
 ];
 const AG_NAME: Record<AgentKey, string> = {
-  chief: "Chief",
+  percy: "Percy",
   scout: "Scout",
   hunter: "Hunter",
   scribe: "Scribe",
@@ -265,7 +265,7 @@ export function WarRoom({
   const chartRef = useRef<SVGSVGElement>(null);
 
   // local overlays — the goal-mutation server actions don't exist yet, so edits
-  // live on the client and a command is sent to Chief in parallel.
+  // live on the client and a command is sent to Percy in parallel.
   const [added, setAdded] = useState<OSWarGoal[]>([]);
   const [patches, setPatches] = useState<Record<string, Partial<OSWarGoal>>>(
     {},
@@ -393,7 +393,7 @@ export function WarRoom({
   };
   const replan = (g: OSWarGoal) => {
     if (!isLocal(g.id)) void replanGoal(g.id);
-    os.showToast("asked chief to re-plan");
+    os.showToast("asked percy to re-plan");
   };
   // day-47: switch a manual MRR/revenue/customers goal onto live Stripe MRR.
   const switchToLive = (g: OSWarGoal) => {
@@ -409,7 +409,7 @@ export function WarRoom({
       },
     }));
     if (!isLocal(g.id)) void setGoalSource(g.id, "stripe-mrr", "all");
-    os.showToast("counting from live Stripe MRR — chief is re-planning");
+    os.showToast("counting from live Stripe MRR — percy is re-planning");
   };
   const removeGoal = (g: OSWarGoal) => {
     if (!isLocal(g.id)) void archiveGoal(g.id);
@@ -471,8 +471,8 @@ export function WarRoom({
         stale: false,
         madeBy: "you",
       };
-      // optimistic local goal; the real row (with Chief's plan) arrives on the
-      // next tick. createGoal also sends Chief the `plan goal <id>` command.
+      // optimistic local goal; the real row (with Percy's plan) arrives on the
+      // next tick. createGoal also sends Percy the `plan goal <id>` command.
       setAdded((a) => [...a, g]);
       const fd = new FormData();
       fd.append("name", form.n.trim());
@@ -485,7 +485,7 @@ export function WarRoom({
       fd.append("src", goalSrc);
       fd.append("product", goalProduct);
       void createGoal(fd);
-      os.showToast("chief is writing the plan");
+      os.showToast("percy is writing the plan");
       setSel(id);
     } else if (selected) {
       const srcChanged =
@@ -524,8 +524,8 @@ export function WarRoom({
       }
       os.showToast(
         srcChanged
-          ? "saved — chief is re-planning for the new source"
-          : "saved — asked chief to re-check the plan",
+          ? "saved — percy is re-planning for the new source"
+          : "saved — asked percy to re-check the plan",
       );
     }
     setMode("view");
@@ -535,7 +535,7 @@ export function WarRoom({
     if (m.kind === "approve" && m.apId != null) {
       const fd = new FormData();
       fd.append("id", String(m.apId));
-      fd.append("agent", m.apAgent ?? "chief");
+      fd.append("agent", m.apAgent ?? "percy");
       void approveFromForm(fd);
       setMoverDone((s) => new Set(s).add(m.id));
       os.showToast("approved");
@@ -546,7 +546,7 @@ export function WarRoom({
     } else if (m.kind === "bl") {
       os.open("command", { tab: m.blTab ?? "backlog" });
     } else if (m.kind === "mover") {
-      // Chief's mover: send the agent its `ask`, mark the mover done
+      // Percy's mover: send the agent its `ask`, mark the mover done
       if (m.moverId) void tapMover(m.moverId, m.apAgent ?? m.a, m.ask ?? "");
       setMoverDone((s) => new Set(s).add(m.id));
       os.showToast(m.ask ? `sent to ${AG_NAME[m.a]}` : "done");
@@ -1017,7 +1017,7 @@ export function WarRoom({
                   lineHeight: 1.45,
                 }}
               >
-                no goals yet. add one and Chief writes the plan.
+                no goals yet. add one and Percy writes the plan.
               </div>
             )}
           </div>
@@ -1373,10 +1373,10 @@ export function WarRoom({
               onOpenDeal={(key) => os.open("frontdesk", { deal: key })}
               onLink={(paymentId, key) => {
                 void sendAgentCommand(
-                  "chief",
+                  "percy",
                   `link payment ${paymentId} to ${key}`,
                 );
-                os.showToast("asked Chief to link the payment");
+                os.showToast("asked Percy to link the payment");
               }}
               onAddInvoice={(fd) => {
                 void createManualInvoice(fd).then((r) =>
@@ -1467,7 +1467,7 @@ function EmptyState({ onNew }: { onNew: () => void }) {
         textAlign: "center",
       }}
     >
-      <Persona agent="chief" size={56} />
+      <Persona agent="percy" size={56} />
       <span
         className="os-display"
         style={{ fontWeight: 800, fontSize: 24, letterSpacing: "-0.02em" }}
@@ -1482,7 +1482,7 @@ function EmptyState({ onNew }: { onNew: () => void }) {
           lineHeight: 1.5,
         }}
       >
-        add a goal with a number and a deadline. Chief writes a plan and a
+        add a goal with a number and a deadline. Percy writes a plan and a
         roadmap for it and tracks the odds every day.
       </span>
       <button
@@ -1834,9 +1834,9 @@ function GoalDetail({
             {g.planning
               ? "writing…"
               : g.planAt
-                ? `made by chief · ${g.planAt}`
-                : g.madeBy === "chief"
-                  ? "made by chief"
+                ? `made by percy · ${g.planAt}`
+                : g.madeBy === "percy"
+                  ? "made by percy"
                   : ""}
           </span>
           {!g.planning && (
@@ -1845,7 +1845,7 @@ function GoalDetail({
               onClick={onReplan}
               style={{ ...ghostBtn, marginLeft: "auto" }}
             >
-              re-plan with chief
+              re-plan with percy
             </button>
           )}
         </div>
@@ -1901,10 +1901,10 @@ function GoalDetail({
               background: "var(--surf2)",
             }}
           >
-            <Persona agent="chief" size={46} status="working" />
+            <Persona agent="percy" size={46} status="working" />
             <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
               <span style={{ fontSize: 14, fontWeight: 600 }}>
-                Chief is writing the plan and roadmap
+                Percy is writing the plan and roadmap
               </span>
               <span style={{ fontSize: 12.5, color: "var(--soft)" }}>
                 checking the numbers with {AG_NAME[g.owner]} first. it takes a
@@ -1922,11 +1922,11 @@ function GoalDetail({
                   alignItems: "flex-start",
                   padding: "10px 12px",
                   borderRadius: 11,
-                  background: "var(--t-chief)",
+                  background: "var(--t-percy)",
                   marginBottom: 12,
                 }}
               >
-                <Persona agent="chief" size={22} />
+                <Persona agent="percy" size={22} />
                 <span style={{ fontSize: 13, lineHeight: 1.45 }}>
                   {g.summary}
                 </span>
@@ -1943,7 +1943,7 @@ function GoalDetail({
               lineHeight: 1.45,
             }}
           >
-            no plan yet. “re-plan with chief” asks Chief to write the steps and
+            no plan yet. “re-plan with percy” asks Percy to write the steps and
             roadmap.
           </div>
         )}
@@ -2839,7 +2839,7 @@ function GoalForm({
         </span>
         <span style={{ fontSize: 12.5, color: "var(--soft)" }}>
           {isNew
-            ? "Chief writes a plan and a roadmap as soon as you create it"
+            ? "Percy writes a plan and a roadmap as soon as you create it"
             : "changing the target or deadline flags the plan for a re-plan"}
         </span>
       </div>

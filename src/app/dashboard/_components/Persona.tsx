@@ -10,7 +10,7 @@ import { type CSSProperties, useEffect, useState } from "react";
 // prefers-reduced-motion; ?demo=working forces every avatar on for checking.
 
 export type AgentKey =
-  | "chief"
+  | "percy"
   | "scout"
   | "hunter"
   | "scribe"
@@ -20,7 +20,7 @@ export type AgentKey =
 export type PersonaStatus = "working" | "waiting" | "idle" | "soon" | "";
 
 const HUE: Record<Exclude<AgentKey, "you">, number> = {
-  chief: 75,
+  percy: 75,
   scout: 32,
   hunter: 150,
   scribe: 225,
@@ -136,7 +136,7 @@ export function Persona({
           </>
         )}
 
-        {agent === "chief" && (
+        {agent === "percy" && (
           <>
             <rect x="13" y="14" width="38" height="38" rx="13" fill={fg} />
             <circle cx="25.5" cy="31" r="2.4" fill={FACE} />

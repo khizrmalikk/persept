@@ -74,7 +74,7 @@ const KINDS = new Set<OSApprovalKind>([
   "other",
 ]);
 const AGENTS = new Set<AgentKey>([
-  "chief",
+  "percy",
   "scout",
   "hunter",
   "scribe",
@@ -172,7 +172,7 @@ export async function loadApprovals(): Promise<{
   const approvals: OSApproval[] = rows.map((ap) => {
     const agent: AgentKey = AGENTS.has(ap.agent_id as AgentKey)
       ? (ap.agent_id as AgentKey)
-      : "chief";
+      : "percy";
     const outbound = parseOutbound(ap.draft);
     const rawKind = (ap as unknown as { kind?: string | null }).kind;
     const kind: OSApprovalKind =

@@ -18,7 +18,7 @@ import { MessageBody } from "./MessageBody";
 import { Persona, type PersonaStatus } from "./Persona";
 import { useChatAttachments } from "./useChatAttachments";
 
-// Workforce Mobile (<1280px): chat with Chief + the approval queue. Shares the
+// Workforce Mobile (<1280px): chat with Percy + the approval queue. Shares the
 // desktop's server data (threads/approvals) and its TickPoller (which keeps
 // polling even while the desktop is display:none), so replies and new approvals
 // arrive live. Sends/decisions go through the same server actions.
@@ -34,7 +34,7 @@ export function OSMobile({
 }) {
   const [tab, setTab] = useState<"chat" | "approvals">("chat");
   const live = approvals.filter((a) => !a.held);
-  const chiefStatus = agents.find((a) => a.id === "chief")?.status ?? "";
+  const percyStatus = agents.find((a) => a.id === "percy")?.status ?? "";
 
   return (
     <div className="os-mobile">
@@ -71,14 +71,14 @@ export function OSMobile({
         <span
           style={{ marginLeft: "auto", fontSize: 12.5, color: "var(--soft)" }}
         >
-          {tab === "chat" ? "chief" : `${live.length} waiting`}
+          {tab === "chat" ? "percy" : `${live.length} waiting`}
         </span>
       </div>
 
       {/* body */}
       <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
         {tab === "chat" ? (
-          <MobileChat threads={threads} status={chiefStatus} />
+          <MobileChat threads={threads} status={percyStatus} />
         ) : (
           <MobileApprovals approvals={live} />
         )}
@@ -113,7 +113,7 @@ export function OSMobile({
               gap: 6,
             }}
           >
-            {t === "chat" ? "chat with chief" : "approvals"}
+            {t === "chat" ? "chat with percy" : "approvals"}
             {t === "approvals" && live.length > 0 && (
               <span
                 style={{
@@ -154,7 +154,7 @@ function MobileChat({
   const nid = useRef(0);
   const att = useChatAttachments();
 
-  const serverMsgs = threads.chief ?? [];
+  const serverMsgs = threads.percy ?? [];
   const mineTexts = new Set(
     serverMsgs.filter((m) => m.mine).map((m) => m.text.trim()),
   );
@@ -190,7 +190,7 @@ function MobileChat({
     att.clear();
     if (composerRef.current) composerRef.current.style.height = "auto";
     const fd = new FormData();
-    fd.append("agent", "chief");
+    fd.append("agent", "percy");
     fd.append("text", body);
     void sendMessageFromForm(fd);
   };
@@ -226,7 +226,7 @@ function MobileChat({
               maxWidth: 260,
             }}
           >
-            tell chief what you need. it turns it into tasks and anything
+            tell percy what you need. it turns it into tasks and anything
             outbound comes to approvals.
           </div>
         )}
@@ -240,7 +240,7 @@ function MobileChat({
               justifyContent: m.mine ? "flex-end" : "flex-start",
             }}
           >
-            {!m.mine && <Persona agent="chief" size={26} status={status} />}
+            {!m.mine && <Persona agent="percy" size={26} status={status} />}
             <div
               style={{
                 maxWidth: "78%",
@@ -252,7 +252,7 @@ function MobileChat({
               }}
             >
               {!m.mine && m.parts?.some((p) => p.kind !== "text") ? (
-                <MessageBody parts={m.parts} thread="chief" />
+                <MessageBody parts={m.parts} thread="percy" />
               ) : (
                 <div
                   style={{
@@ -294,7 +294,7 @@ function MobileChat({
             background: "var(--surf2)",
           }}
         >
-          <AttachButton agentId="chief" att={att} />
+          <AttachButton agentId="percy" att={att} />
           <textarea
             ref={composerRef}
             value={draft}
@@ -311,7 +311,7 @@ function MobileChat({
                 send();
               }
             }}
-            placeholder="tell chief what you need…"
+            placeholder="tell percy what you need…"
             style={{
               flex: 1,
               border: "none",

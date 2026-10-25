@@ -163,7 +163,7 @@ export function MenuBar({
                 />
                 <Sep />
                 <Row
-                  label="ask chief…"
+                  label="ask percy…"
                   shortcut="⌘K"
                   onClick={() => {
                     os.openPal();
@@ -171,10 +171,10 @@ export function MenuBar({
                   }}
                 />
                 <Row
-                  label="talk to chief"
+                  label="talk to percy"
                   shortcut="⌘J"
                   onClick={() => {
-                    os.openDrawer("chief");
+                    os.openDrawer("percy");
                     os.setMenu(null);
                   }}
                 />
@@ -326,9 +326,9 @@ export function MenuBar({
             ))}
             <Sep />
             <Row
-              label="talk to chief"
+              label="talk to percy"
               onClick={() => {
-                os.openDrawer("chief");
+                os.openDrawer("percy");
                 os.setMenu(null);
               }}
             />

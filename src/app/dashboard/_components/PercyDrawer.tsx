@@ -13,8 +13,8 @@ import { useOS } from "./os-store";
 import { type AgentKey, Persona } from "./Persona";
 import { useChatAttachments } from "./useChatAttachments";
 
-// The conversations drawer: one panel, six threads. Chief is pinned first (you
-// tell Chief what you need), then a `direct` label and the five other agents.
+// The conversations drawer: one panel, six threads. Percy is pinned first (you
+// tell Percy what you need), then a `direct` label and the five other agents.
 // Sending routes through the real `sendMessageFromForm` action (an `actions` row
 // the bridge relays); replies and task cards arrive from the bridge as events —
 // history loading is wired with the agent page. Optimistic bubbles show sends now.
@@ -27,7 +27,7 @@ type Bubble = {
   parts?: Part[];
 };
 const ORDER: AgentKey[] = [
-  "chief",
+  "percy",
   "scout",
   "hunter",
   "scribe",
@@ -35,7 +35,7 @@ const ORDER: AgentKey[] = [
   "fixer",
 ];
 
-export function ChiefDrawer({
+export function PercyDrawer({
   agents,
   threads,
 }: {
@@ -55,7 +55,7 @@ export function ChiefDrawer({
 
   const thread = os.thread;
   const agent = agents.find((a) => a.id === thread);
-  const name = thread === "chief" ? "Chief" : (agent?.name ?? thread);
+  const name = thread === "percy" ? "Percy" : (agent?.name ?? thread);
 
   // drop any staged attachments when switching threads — they belong to the
   // message you were composing for the thread you left.
@@ -125,17 +125,17 @@ export function ChiefDrawer({
     });
   }, [threads]);
 
-  // palette "ask chief: …" handoff
+  // palette "ask percy: …" handoff
   useEffect(() => {
     const onAsk = () => {
-      const q = window.sessionStorage.getItem("os-ask-chief");
+      const q = window.sessionStorage.getItem("os-ask-percy");
       if (q) {
-        window.sessionStorage.removeItem("os-ask-chief");
-        send(q, "chief");
+        window.sessionStorage.removeItem("os-ask-percy");
+        send(q, "percy");
       }
     };
-    window.addEventListener("os-ask-chief", onAsk);
-    return () => window.removeEventListener("os-ask-chief", onAsk);
+    window.addEventListener("os-ask-percy", onAsk);
+    return () => window.removeEventListener("os-ask-percy", onAsk);
   }, [send]);
 
   // server thread + unmatched optimistic bubbles, oldest→newest
@@ -170,8 +170,8 @@ export function ChiefDrawer({
   if (!os.drawer) return null;
 
   const sub =
-    thread === "chief"
-      ? "tell Chief what you need. Chief hands it to the right agent."
+    thread === "percy"
+      ? "tell Percy what you need. Percy hands it to the right agent."
       : `direct line · ${agent?.room ?? ""}`;
 
   return (
@@ -270,7 +270,7 @@ export function ChiefDrawer({
         {ORDER.map((k) => {
           const active = k === thread;
           const st = agents.find((a) => a.id === k)?.status ?? "";
-          const isChief = k === "chief";
+          const isPercy = k === "percy";
           return (
             <div
               key={k}
@@ -280,8 +280,8 @@ export function ChiefDrawer({
                 type="button"
                 onClick={() => os.setThread(k)}
                 title={
-                  k === "chief"
-                    ? "Chief"
+                  k === "percy"
+                    ? "Percy"
                     : (agents.find((a) => a.id === k)?.name ?? k)
                 }
                 style={{
@@ -289,7 +289,7 @@ export function ChiefDrawer({
                   alignItems: "center",
                   gap: 7,
                   padding: 3,
-                  paddingRight: isChief ? 10 : 3,
+                  paddingRight: isPercy ? 10 : 3,
                   borderRadius: 999,
                   background: active ? "var(--surf2)" : "transparent",
                   cursor: "pointer",
@@ -297,7 +297,7 @@ export function ChiefDrawer({
                 }}
               >
                 <Persona agent={k} size={26} status={st} />
-                {isChief && (
+                {isPercy && (
                   <span
                     style={{
                       fontSize: 12,
@@ -306,11 +306,11 @@ export function ChiefDrawer({
                       color: "var(--ink)",
                     }}
                   >
-                    chief
+                    percy
                   </span>
                 )}
               </button>
-              {isChief && (
+              {isPercy && (
                 <span
                   className="os-mono"
                   style={{
@@ -353,9 +353,9 @@ export function ChiefDrawer({
               maxWidth: 280,
             }}
           >
-            {thread === "chief"
-              ? "say what you need. Chief turns it into tasks for the right agent and anything outbound comes to approvals."
-              : `message ${name} directly. Chief still sees this thread.`}
+            {thread === "percy"
+              ? "say what you need. Percy turns it into tasks for the right agent and anything outbound comes to approvals."
+              : `message ${name} directly. Percy still sees this thread.`}
           </div>
         )}
         {list.map((m) => (
@@ -511,8 +511,8 @@ export function ChiefDrawer({
               }
             }}
             placeholder={
-              thread === "chief"
-                ? "tell chief what you need…"
+              thread === "percy"
+                ? "tell percy what you need…"
                 : `message ${name}…`
             }
             style={{

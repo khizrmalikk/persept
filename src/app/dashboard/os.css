@@ -46,13 +46,13 @@
   --onacc: #0c0c0c;
 
   /* agent identity — UI colour + tint. Never recoloured. */
-  --c-chief: oklch(0.78 0.12 70);
+  --c-percy: oklch(0.78 0.12 70);
   --c-scout: oklch(0.78 0.12 20);
   --c-hunter: oklch(0.78 0.12 150);
   --c-scribe: oklch(0.78 0.12 220);
   --c-muse: oklch(0.78 0.12 110);
   --c-fixer: oklch(0.78 0.12 290);
-  --t-chief: oklch(0.78 0.12 70 / 0.14);
+  --t-percy: oklch(0.78 0.12 70 / 0.14);
   --t-scout: oklch(0.78 0.12 20 / 0.14);
   --t-hunter: oklch(0.78 0.12 150 / 0.14);
   --t-scribe: oklch(0.78 0.12 220 / 0.14);
@@ -111,13 +111,13 @@
   --accent-ink: #0c0c0c;
   --onacc: #0c0c0c;
   /* agent colours: darker in light for contrast; tints lighter + more opaque */
-  --c-chief: oklch(0.5 0.13 70);
+  --c-percy: oklch(0.5 0.13 70);
   --c-scout: oklch(0.5 0.13 20);
   --c-hunter: oklch(0.5 0.13 150);
   --c-scribe: oklch(0.5 0.13 220);
   --c-muse: oklch(0.5 0.13 110);
   --c-fixer: oklch(0.5 0.13 290);
-  --t-chief: oklch(0.8 0.1 70 / 0.24);
+  --t-percy: oklch(0.8 0.1 70 / 0.24);
   --t-scout: oklch(0.8 0.1 20 / 0.24);
   --t-hunter: oklch(0.8 0.1 150 / 0.24);
   --t-scribe: oklch(0.8 0.1 220 / 0.24);

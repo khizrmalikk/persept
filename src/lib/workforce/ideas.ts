@@ -1,7 +1,7 @@
 // Server-only reads for the ideas inbox — suggestions agents raise for the owner.
-// `ideas` is BRIDGE-owned (agents insert rows; Chief escalates by raising an
+// `ideas` is BRIDGE-owned (agents insert rows; Percy escalates by raising an
 // approval); the dashboard only flips `status` to `dismiss` (see actions.ts) or
-// tells Chief to decide. Reads are DEFENSIVE: a missing table returns empty.
+// tells Percy to decide. Reads are DEFENSIVE: a missing table returns empty.
 
 import { supabaseAdmin } from "@/lib/supabase/server";
 
@@ -88,7 +88,7 @@ export async function getOpenIdeaCount(): Promise<number> {
   }
 }
 
-// For each escalated idea, the open approval Chief raised for it — matched by the
+// For each escalated idea, the open approval Percy raised for it — matched by the
 // idea's short_id appearing in the approval's `why` or `raw`. Returns a map
 // short_id → approval id. Defensive; approvals without `raw` still match on `why`.
 export async function getEscalatedApprovalMap(

@@ -33,14 +33,14 @@ export type { OSWarRoom } from "./warroom-types";
 type Row = Record<string, unknown>;
 
 const ROSTER = new Set<AgentKey>([
-  "chief",
+  "percy",
   "scout",
   "hunter",
   "scribe",
   "muse",
   "fixer",
 ]);
-const asAgent = (v: unknown, fallback: AgentKey = "chief"): AgentKey =>
+const asAgent = (v: unknown, fallback: AgentKey = "percy"): AgentKey =>
   ROSTER.has(String(v ?? "").toLowerCase() as AgentKey)
     ? (String(v).toLowerCase() as AgentKey)
     : fallback;
@@ -146,7 +146,7 @@ export async function loadWarRoom(): Promise<OSWarRoom> {
         (await db.from("goal_snapshots").select("*")).data as Row[] | null,
       null,
     ),
-    // Chief's hand-authored movers (merged with the derived ones below)
+    // Percy's hand-authored movers (merged with the derived ones below)
     safe(
       async () =>
         (await db.from("goal_movers").select("*").eq("status", "open")).data as
@@ -339,7 +339,7 @@ export async function loadWarRoom(): Promise<OSWarRoom> {
         planAt: S(r.plan_at ?? r.planAt),
         planning: !!r.planning,
         stale: !!(r.plan_stale ?? r.stale),
-        madeBy: S(r.made_by ?? r.madeBy) || (S(r.summary) ? "chief" : ""),
+        madeBy: S(r.made_by ?? r.madeBy) || (S(r.summary) ? "percy" : ""),
       };
     });
 
@@ -411,7 +411,7 @@ export async function loadWarRoom(): Promise<OSWarRoom> {
     const due = S(b.due);
     const dueSoon = due && Date.parse(`${due}T00:00:00`) - nowMs < 7 * 86400000;
     if (!dueSoon) continue;
-    const owner = asAgent(b.owner, "chief");
+    const owner = asAgent(b.owner, "percy");
     movers.push({
       id: `bl${S(b.id)}`,
       a: owner,
@@ -423,7 +423,7 @@ export async function loadWarRoom(): Promise<OSWarRoom> {
       fx: fxFor(owner),
     });
   }
-  // Chief's hand-authored movers (goal_movers). `impacts` is [{goal, delta}]
+  // Percy's hand-authored movers (goal_movers). `impacts` is [{goal, delta}]
   // where goal is a tag or a name; resolve each to a live goal id.
   const byTag = (key: string) =>
     goals.find(

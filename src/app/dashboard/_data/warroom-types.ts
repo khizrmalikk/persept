@@ -82,10 +82,10 @@ export type OSWarGoal = {
   road: OSGoalPhase[];
   hist: [number, number][]; // [days-since-start, value] weekly snapshots
   summary: string;
-  planAt: string; // when Chief re-plans, e.g. "mon" (shown in the roadmap line)
+  planAt: string; // when Percy re-plans, e.g. "mon" (shown in the roadmap line)
   planning: boolean;
   stale: boolean;
-  madeBy: string; // "you" | "chief"
+  madeBy: string; // "you" | "percy"
 };
 
 export type OSWarDeal = { stage: string; value: number };
@@ -98,7 +98,7 @@ export type OSRawMover = {
   title: string;
   why: string;
   cta: string;
-  // derived kinds (approve/openap/fix/bl) + "mover" = a Chief-authored goal_movers
+  // derived kinds (approve/openap/fix/bl) + "mover" = a Percy-authored goal_movers
   // row, tapping it sends `ask` to agent `a` and marks the mover done.
   kind: "approve" | "openap" | "fix" | "bl" | "mover";
   apId?: number;

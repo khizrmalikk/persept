@@ -17,7 +17,7 @@ export type FixStatus =
 export type FixKind = "fix" | "feature" | "chore" | "research";
 export type FixRequestedBy =
   | "owner"
-  | "chief"
+  | "percy"
   | "fixer"
   | "schedule"
   | "feedback";

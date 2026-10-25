@@ -7,7 +7,7 @@ import { OSProvider } from "./_components/os-store";
 import "./os.css";
 
 // Persept OS — the workforce dashboard. Full-screen desktop surface on wide
-// screens; below 1280px the page hands off to the mobile app (chat with Chief +
+// screens; below 1280px the page hands off to the mobile app (chat with Percy +
 // approvals). Same Supabase magic-link allowlist (see proxy.ts + currentUser).
 
 // Dark OS surface — override the light root default for mobile browser chrome.

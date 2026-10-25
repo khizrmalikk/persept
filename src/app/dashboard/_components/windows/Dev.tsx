@@ -512,7 +512,7 @@ function Changes({
               color: "var(--soft)",
             }}
           >
-            no fixes on this project yet. ask Fixer, or Chief will add one when
+            no fixes on this project yet. ask Fixer, or Percy will add one when
             something breaks.
           </div>
         ) : (

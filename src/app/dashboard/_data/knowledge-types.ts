@@ -6,7 +6,7 @@ import type { AgentKey } from "../_components/Persona";
 
 // The six agents that can be given read access (never "you").
 export const KNOWLEDGE_AGENTS: Exclude<AgentKey, "you">[] = [
-  "chief",
+  "percy",
   "scout",
   "hunter",
   "scribe",

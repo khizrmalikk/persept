@@ -3,7 +3,7 @@ import type { AgentKey } from "../_components/Persona";
 
 // Window metadata — owner, collaborators, category chip, subtitle and the dock
 // glyph. Mirrors the handoff's WIN/DOCKWS. The window header shows one owner
-// large, collaborators as chips, and (on workspaces) a dashed chief-oversight
+// large, collaborators as chips, and (on workspaces) a dashed percy-oversight
 // chip. Approvals + Knowledge are global (no single owner). v3 §2/§6: dock,
 // header and palette icon tiles are all monochrome (the --tile1→--tile2
 // gradient), so per-window tile fills are gone — approvals is the one accent
@@ -17,7 +17,7 @@ export type WinMeta = {
   collab: AgentKey[];
   cat: string;
   glyph: string; // 24x24 stroke path
-  // oversight chip shows on every workspace except Command (Chief owns it) and
+  // oversight chip shows on every workspace except Command (Percy owns it) and
   // the two globals (Approvals, Knowledge).
   oversight: boolean;
 };
@@ -27,7 +27,7 @@ export const WINDOWS: Record<Exclude<WindowKey, "agent">, WinMeta> = {
     key: "command",
     name: "command",
     sub: "everything the team is doing, in one place",
-    owner: "chief",
+    owner: "percy",
     collab: [],
     cat: "command",
     glyph: "M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 12l8-4.5M12 12v9M12 12L4 7.5",
@@ -107,7 +107,7 @@ export const DOCK_WS: Exclude<WindowKey, "agent">[] = [
 ];
 
 export const AGENT_HUE_VAR: Record<AgentKey, string> = {
-  chief: "--c-chief",
+  percy: "--c-percy",
   scout: "--c-scout",
   hunter: "--c-hunter",
   scribe: "--c-scribe",
@@ -116,11 +116,11 @@ export const AGENT_HUE_VAR: Record<AgentKey, string> = {
   you: "--accent",
 };
 export const AGENT_TINT_VAR: Record<AgentKey, string> = {
-  chief: "--t-chief",
+  percy: "--t-percy",
   scout: "--t-scout",
   hunter: "--t-hunter",
   scribe: "--t-scribe",
   muse: "--t-muse",
   fixer: "--t-fixer",
-  you: "--t-chief",
+  you: "--t-percy",
 };

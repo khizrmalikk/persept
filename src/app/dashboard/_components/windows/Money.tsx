@@ -157,7 +157,7 @@ export function Money({
           style={{
             padding: "9px 12px",
             borderRadius: 10,
-            background: "var(--t-chief)",
+            background: "var(--t-percy)",
             color: "var(--ambink)",
             fontSize: 12.5,
             lineHeight: 1.45,

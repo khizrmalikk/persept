@@ -23,7 +23,7 @@ export type OSThreadMsg = {
   parts?: Part[];
 };
 
-const AGENTS = ["chief", "scout", "hunter", "scribe", "muse", "fixer"];
+const AGENTS = ["percy", "scout", "hunter", "scribe", "muse", "fixer"];
 const hm = (iso: string | null): string => {
   if (!iso) return "";
   const d = new Date(iso);

@@ -75,7 +75,7 @@ export default async function OSPage() {
           threads={threads}
         />
       </div>
-      {/* < 1280px: the mobile app (chat with Chief + approvals) */}
+      {/* < 1280px: the mobile app (chat with Percy + approvals) */}
       <OSMobile agents={agents} approvals={approvals} threads={threads} />
     </>
   );

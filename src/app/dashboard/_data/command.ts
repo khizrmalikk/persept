@@ -94,8 +94,8 @@ export async function loadCommand(): Promise<OSCommand> {
       }
     })(),
     getActiveIdeas(40).catch(() => []),
-    getAgentFile("chief", "STATE.md").catch(() => null),
-    listAgentFiles("chief", "improvements/").catch(() => []),
+    getAgentFile("percy", "STATE.md").catch(() => null),
+    listAgentFiles("percy", "improvements/").catch(() => []),
     (async () => {
       try {
         return await db

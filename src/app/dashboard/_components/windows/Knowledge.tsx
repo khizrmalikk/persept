@@ -22,7 +22,7 @@ import { GraphView } from "./GraphView";
 
 const GRID = "60px minmax(0,1.6fr) 80px 80px minmax(0,1.4fr)";
 const NAMES: Record<string, string> = {
-  chief: "Chief",
+  percy: "Percy",
   scout: "Scout",
   hunter: "Hunter",
   scribe: "Scribe",

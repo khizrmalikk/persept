@@ -378,14 +378,14 @@ export function FrontDesk({
               );
               os.openDrawer("hunter");
             }}
-            onAskChief={() => {
+            onAskPercy={() => {
               refresh(
                 sendAgentCommand(
-                  "chief",
+                  "percy",
                   `what's the next step on ${curDeal.company}?`,
                 ),
               );
-              os.openDrawer("chief");
+              os.openDrawer("percy");
             }}
             onOpenConv={() => {
               setConv(curDeal.key);
@@ -1975,7 +1975,7 @@ function DealPanel({
   onClose,
   onApproval,
   onAskHunter,
-  onAskChief,
+  onAskPercy,
   onOpenConv,
 }: {
   deal: OSDeal;
@@ -1984,7 +1984,7 @@ function DealPanel({
   onClose: () => void;
   onApproval: (id: number) => void;
   onAskHunter: () => void;
-  onAskChief: () => void;
+  onAskPercy: () => void;
   onOpenConv: () => void;
 }) {
   const si = OS_STAGES.findIndex((x) => x.key === deal.stage);
@@ -2700,7 +2700,7 @@ function DealPanel({
           </button>
           <button
             type="button"
-            onClick={onAskChief}
+            onClick={onAskPercy}
             style={{
               padding: "10px 14px",
               borderRadius: 10,
@@ -2711,7 +2711,7 @@ function DealPanel({
               color: "var(--ink)",
             }}
           >
-            ask Chief
+            ask Percy
           </button>
         </div>
       </div>

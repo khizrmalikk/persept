@@ -122,7 +122,7 @@ export function InFlightStrip({
                 style={{ display: "flex", alignItems: "center", flex: "none" }}
               >
                 <Persona
-                  agent={(r.forAgent as AgentKey) || "chief"}
+                  agent={(r.forAgent as AgentKey) || "percy"}
                   size={20}
                 />
                 <span style={{ color: "var(--mute)", margin: "0 5px" }}>→</span>

@@ -8,7 +8,7 @@ import type { OSDesktop, OSEvent, OSGoal, OSRun } from "./desktop-types";
 // yields an empty widget.
 
 const AGENTS = new Set<AgentKey>([
-  "chief",
+  "percy",
   "scout",
   "hunter",
   "scribe",
@@ -16,7 +16,7 @@ const AGENTS = new Set<AgentKey>([
   "fixer",
 ]);
 const asAgent = (v: unknown): AgentKey =>
-  AGENTS.has(v as AgentKey) ? (v as AgentKey) : "chief";
+  AGENTS.has(v as AgentKey) ? (v as AgentKey) : "percy";
 
 const safe = async <T>(
   p: PromiseLike<{ data: T | null }>,

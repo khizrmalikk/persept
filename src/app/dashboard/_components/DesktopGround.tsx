@@ -21,7 +21,7 @@ import { type AgentKey, Persona } from "./Persona";
 // stage). Per the contract the node ring is cost, not CPU.
 
 const HUE: Record<Exclude<AgentKey, "you">, number> = {
-  chief: 70,
+  percy: 70,
   scout: 20,
   hunter: 150,
   scribe: 220,
@@ -30,7 +30,7 @@ const HUE: Record<Exclude<AgentKey, "you">, number> = {
 };
 // offsets from stage centre (y centre +10)
 const OFF: Record<string, [number, number]> = {
-  chief: [0, -20],
+  percy: [0, -20],
   scout: [-262, -175],
   hunter: [-275, 95],
   scribe: [-20, 205],
@@ -43,11 +43,11 @@ const EDGES: [string, string, string][] = [
   ["scribe", "hunter", ""],
   ["hunter", "muse", "campaigns"],
   ["muse", "scribe", "copy check"],
-  ["chief", "fixer", "tasks"],
-  ["chief", "scout", ""],
-  ["chief", "hunter", ""],
-  ["chief", "muse", ""],
-  ["chief", "scribe", ""],
+  ["percy", "fixer", "tasks"],
+  ["percy", "scout", ""],
+  ["percy", "hunter", ""],
+  ["percy", "muse", ""],
+  ["percy", "scribe", ""],
 ];
 const DOT: Record<string, string> = {
   working: "var(--dot-working)",
@@ -242,8 +242,8 @@ export function DesktopGround({
         >
           <Card>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <Persona agent="chief" size={30} />
-              <span style={{ fontSize: 12.5, fontWeight: 600 }}>Chief</span>
+              <Persona agent="percy" size={30} />
+              <span style={{ fontSize: 12.5, fontWeight: 600 }}>Percy</span>
               <span className="os-kicker">today&apos;s brief</span>
             </div>
             <div
@@ -276,9 +276,9 @@ export function DesktopGround({
               <button
                 type="button"
                 className="os-btn os-btn-primary"
-                onClick={() => os.openDrawer("chief")}
+                onClick={() => os.openDrawer("percy")}
               >
-                reply to chief
+                reply to percy
               </button>
               <button
                 type="button"

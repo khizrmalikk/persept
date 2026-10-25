@@ -15,7 +15,7 @@ import {
 // cosmetic signing-in animation (useFormStatus.pending drives it; the action's
 // redirect to /dashboard ends it, where the OS plays its own boot screen).
 
-const TEAM = ["chief", "scout", "hunter", "scribe", "muse", "fixer"] as const;
+const TEAM = ["percy", "scout", "hunter", "scribe", "muse", "fixer"] as const;
 const DAYS = [
   "sunday",
   "monday",

@@ -16,7 +16,6 @@ import type { OSWarRoom } from "../_data/warroom-types";
 import { DOCK_WS, WINDOWS } from "../_data/windows";
 import { AboutSheet } from "./AboutSheet";
 import { BootScreen } from "./BootScreen";
-import { ChiefDrawer } from "./ChiefDrawer";
 import { DesktopContextMenu } from "./DesktopContextMenu";
 import { DesktopGround, type OSPipeline } from "./DesktopGround";
 import { LockScreen } from "./LockScreen";
@@ -24,6 +23,7 @@ import { MenuBar } from "./MenuBar";
 import { NotificationBanners } from "./NotificationBanners";
 import { useOS } from "./os-store";
 import { Palette } from "./Palette";
+import { PercyDrawer } from "./PercyDrawer";
 import { Persona } from "./Persona";
 import { SystemMonitor } from "./SystemMonitor";
 import { TickPoller } from "./TickPoller";
@@ -166,14 +166,14 @@ export function Desktop({
         agentExtras={agentExtras}
       />
 
-      {/* ── chief drawer ───────────────────────────────────────────────────── */}
-      <ChiefDrawer agents={agents} threads={threads} />
+      {/* ── percy drawer ───────────────────────────────────────────────────── */}
+      <PercyDrawer agents={agents} threads={threads} />
 
-      {/* ── chief button (hidden while a window is zoomed, §6) ─────────────── */}
+      {/* ── percy button (hidden while a window is zoomed, §6) ─────────────── */}
       {!os.drawer && !os.zoomed && (
         <button
           type="button"
-          onClick={() => os.toggleDrawer("chief")}
+          onClick={() => os.toggleDrawer("percy")}
           style={{
             position: "absolute",
             right: 18,
@@ -193,10 +193,10 @@ export function Desktop({
           }}
         >
           <Persona
-            agent="chief"
+            agent="percy"
             size={46}
             ring
-            status={agents.find((a) => a.id === "chief")?.status ?? ""}
+            status={agents.find((a) => a.id === "percy")?.status ?? ""}
           />
           <span
             style={{
@@ -206,7 +206,7 @@ export function Desktop({
               textAlign: "left",
             }}
           >
-            <span style={{ fontSize: 14, fontWeight: 700 }}>chief</span>
+            <span style={{ fontSize: 14, fontWeight: 700 }}>Percy</span>
             <span
               style={{
                 fontSize: 11.5,
@@ -214,7 +214,8 @@ export function Desktop({
                 whiteSpace: "nowrap",
               }}
             >
-              tell chief what you need
+              leading {agents.filter((a) => a.id !== "percy").length} agents
+              {pending > 0 ? ` · ${pending} for you` : ""}
             </span>
           </span>
         </button>

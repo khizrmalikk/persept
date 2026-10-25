@@ -59,8 +59,8 @@ export type OSDeal = {
 };
 
 export type OSLeadFit = "high" | "medium" | "low" | "";
-// who decided a lead: Hunter (auto-qualify), Chief, the owner, or nobody yet.
-export type OSLeadDecider = "hunter" | "chief" | "owner" | "";
+// who decided a lead: Hunter (auto-qualify), Percy, the owner, or nobody yet.
+export type OSLeadDecider = "hunter" | "percy" | "owner" | "";
 
 export type OSLead = {
   id: string;

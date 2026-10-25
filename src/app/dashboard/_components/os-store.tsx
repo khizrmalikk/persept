@@ -129,7 +129,7 @@ export function OSProvider({ children }: { children: ReactNode }) {
     win: null,
     sub: {},
     drawer: false,
-    thread: "chief",
+    thread: "percy",
     pal: false,
     notif: false,
     toast: null,
@@ -319,7 +319,7 @@ export function OSProvider({ children }: { children: ReactNode }) {
     [s, patch, toast],
   );
 
-  // keyboard: ⌘K palette, ⌘J Chief drawer, ⌥0–⌥7 windows + ⌥L lock (§11 — use
+  // keyboard: ⌘K palette, ⌘J Percy drawer, ⌥0–⌥7 windows + ⌥L lock (§11 — use
   // e.code because ⌥ rewrites e.key on macOS), Esc closes the top-most thing:
   // menu/monitor/about → palette/notifications → drawer → window.
   useEffect(() => {
@@ -350,7 +350,7 @@ export function OSProvider({ children }: { children: ReactNode }) {
         setS((p) => ({
           ...p,
           drawer: !p.drawer,
-          thread: "chief",
+          thread: "percy",
           pal: false,
           notif: false,
           menu: null,

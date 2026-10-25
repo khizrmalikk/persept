@@ -12,7 +12,7 @@ export const KNOWLEDGE_AGENTS = [
   "scribe",
   "hunter",
   "muse",
-  "chief",
+  "percy",
   "scout",
   "fixer",
 ] as const;
