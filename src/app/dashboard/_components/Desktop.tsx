@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { PercyBusDriver } from "@/components/percy/PercyBusDriver";
 import type { OSAgentExtras } from "../_data/agentpage-types";
 import type { OSAgent, OSVps } from "../_data/agents";
 import type { OSApproval, OSManualPost } from "../_data/approvals";
@@ -126,6 +127,12 @@ export function Desktop({
     <>
       {/* live-update heartbeat: refreshes server data only when the tick changes */}
       <TickPoller />
+      {/* single writer of the shared Percy avatar's mode (window.PercyBus) */}
+      <PercyBusDriver
+        percyWorking={agents.some(
+          (a) => a.id === "percy" && a.status === "working",
+        )}
+      />
 
       {/* ── desktop ground: the vps map + widgets ──────────────────────────── */}
       <DesktopGround
