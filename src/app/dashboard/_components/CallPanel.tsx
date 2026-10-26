@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type CSSProperties,
   createContext,
   type ReactNode,
   useCallback,
@@ -19,8 +20,9 @@ import { useOS } from "./os-store";
 // A voice call with Percy over the existing bridge plumbing: browser speech in →
 // POST /api/workforce/call/send; Percy's speech-only replies stream back over the
 // SSE channel (GET /api/workforce/call/stream) and show as captions. No
-// speechSynthesis in production — the prototype used it only as a stand-in. When
-// a plan event arrives mid-call the panel goes mini and the live view runs.
+// speechSynthesis in production — the prototype used it only as a stand-in. A
+// session also lives as a compact pill in the menu bar (started by holding ⌘⌥);
+// while Percy drives the screen the full card hides and the pill represents it.
 
 type Phase = "ringing" | "live";
 type Caption = { who: "percy" | "you"; text: string };
@@ -31,13 +33,16 @@ type Call = {
   lines: Caption[];
   heard: string;
   bridge: boolean; // live bridge channel reachable
+  bar: boolean; // session lives only in the menu-bar pill (no full card)
 } | null;
 
 type CallApi = {
   call: Call;
-  start: () => void;
+  holding: boolean;
+  start: (opts?: { bar?: boolean }) => void;
   end: () => void;
   toggleMute: () => void;
+  showCall: () => void;
 };
 
 const CallCtx = createContext<CallApi | null>(null);
@@ -80,9 +85,11 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const os = useOS();
   const [call, setCall] = useState<Call>(null);
   const [, setNow] = useState(0); // 1s tick so the timer re-renders
+  const [holding, setHolding] = useState(false);
 
   const osRef = useRef(os);
   osRef.current = os;
+  const holdTimerRef = useRef<number | undefined>(undefined);
   const esRef = useRef<EventSource | null>(null);
   const recRef = useRef<SpeechRec | null>(null);
   const callRef = useRef<Call>(call);
@@ -106,6 +113,11 @@ export function CallProvider({ children }: { children: ReactNode }) {
     setCall(null);
     void endCallAction("percy").catch(() => {});
   }, [teardown]);
+
+  // bring the full card forward from a bar-only session
+  const showCall = useCallback(() => {
+    setCall((c) => (c ? { ...c, bar: false } : c));
+  }, []);
 
   const sendUtterance = useCallback((text: string) => {
     const t = text.trim();
@@ -185,42 +197,48 @@ export function CallProvider({ children }: { children: ReactNode }) {
     esRef.current = es;
   }, []);
 
-  const start = useCallback(() => {
-    if (callRef.current) return;
-    setCall({
-      phase: "ringing",
-      t0: Date.now(),
-      muted: false,
-      lines: [],
-      heard: "",
-      bridge: false,
-    });
-    setPercyCall(true);
-    setPercyMode("listening");
-    // probe the bridge, then go live
-    void (async () => {
-      let bridge = false;
-      try {
-        const r = await fetch("/api/workforce/call/stream?agent=percy&ping=1");
-        bridge = r.status === 200;
-      } catch {
-        bridge = false;
-      }
-      // short ring, then connect
-      await new Promise((res) => setTimeout(res, 1200));
-      if (!callRef.current) return; // ended during ring
-      setCall((c) => (c ? { ...c, phase: "live", bridge } : c));
-      if (bridge) {
-        openStream();
-        startListening();
-      } else {
-        osRef.current.showToast(
-          "live voice needs the bridge — your words still reach Percy",
-        );
-        startListening(); // utterances still POST (queue for when the bridge is up)
-      }
-    })();
-  }, [openStream, startListening]);
+  const start = useCallback(
+    (opts?: { bar?: boolean }) => {
+      if (callRef.current) return;
+      setCall({
+        phase: "ringing",
+        t0: Date.now(),
+        muted: false,
+        lines: [],
+        heard: "",
+        bridge: false,
+        bar: opts?.bar ?? false,
+      });
+      setPercyCall(true);
+      setPercyMode("listening");
+      // probe the bridge, then go live
+      void (async () => {
+        let bridge = false;
+        try {
+          const r = await fetch(
+            "/api/workforce/call/stream?agent=percy&ping=1",
+          );
+          bridge = r.status === 200;
+        } catch {
+          bridge = false;
+        }
+        // short ring, then connect
+        await new Promise((res) => setTimeout(res, 1200));
+        if (!callRef.current) return; // ended during ring
+        setCall((c) => (c ? { ...c, phase: "live", bridge } : c));
+        if (bridge) {
+          openStream();
+          startListening();
+        } else {
+          osRef.current.showToast(
+            "live voice needs the bridge — your words still reach Percy",
+          );
+          startListening(); // utterances still POST (queue for when the bridge is up)
+        }
+      })();
+    },
+    [openStream, startListening],
+  );
 
   const toggleMute = useCallback(() => {
     setCall((c) => {
@@ -243,17 +261,57 @@ export function CallProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  // ⌥P toggles the call
+  // ⌥P toggles the full call card
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.altKey && e.code === "KeyP") {
         e.preventDefault();
         if (callRef.current) end();
-        else start();
+        else start({ bar: false });
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
+  }, [start, end]);
+
+  // hold ⌘ + ⌥ (Ctrl+Alt) for 500ms to start/end a Percy session (into the bar).
+  // Cancels on an early modifier release, any other key, or window blur; ignored
+  // on the lock screen and on key auto-repeat.
+  useEffect(() => {
+    const cancel = () => {
+      if (holdTimerRef.current) window.clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = undefined;
+      setHolding(false);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (osRef.current.locked || e.repeat) return;
+      const isMod = e.key === "Meta" || e.key === "Alt" || e.key === "Control";
+      const bothMods = (e.metaKey || e.ctrlKey) && e.altKey;
+      if (bothMods && isMod) {
+        if (holdTimerRef.current) return;
+        setHolding(true);
+        holdTimerRef.current = window.setTimeout(() => {
+          holdTimerRef.current = undefined;
+          setHolding(false);
+          if (callRef.current) end();
+          else start({ bar: true });
+        }, 500);
+      } else if (holdTimerRef.current) {
+        cancel();
+      }
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === "Meta" || e.key === "Alt" || e.key === "Control") cancel();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", cancel);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", cancel);
+      cancel();
+    };
   }, [start, end]);
 
   // 1s timer tick while a call is live
@@ -267,9 +325,12 @@ export function CallProvider({ children }: { children: ReactNode }) {
   useEffect(() => teardown, [teardown]);
 
   return (
-    <CallCtx.Provider value={{ call, start, end, toggleMute }}>
+    <CallCtx.Provider
+      value={{ call, holding, start, end, toggleMute, showCall }}
+    >
       {children}
       <CallPanel />
+      <SessionPill />
     </CallCtx.Provider>
   );
 }
@@ -305,47 +366,9 @@ function CallPanel() {
         ? "muted"
         : "listening";
 
-  // mini while Percy is working on screen (the live view takes the foreground)
-  if (liveRunning) {
-    return (
-      <div
-        style={{
-          position: "fixed",
-          right: 18,
-          bottom: 94,
-          zIndex: 27,
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          padding: 8,
-          borderRadius: 16,
-          background: "#0c0c0c",
-          color: "#ecebe5",
-          border: "1px solid rgba(255,255,255,0.12)",
-          boxShadow: "0 30px 80px rgba(0,0,0,0.5)",
-        }}
-      >
-        <span
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: "50%",
-            overflow: "hidden",
-            flex: "none",
-          }}
-        >
-          <PercyAvatar mode="speaking" />
-        </span>
-        <span style={{ fontSize: 12.5, fontWeight: 600 }}>Percy · {dur}</span>
-        <IconBtn label="mute" onClick={toggleMute} active={call.muted}>
-          {call.muted ? "🔇" : "🎙"}
-        </IconBtn>
-        <IconBtn label="end call" onClick={end} danger>
-          ✕
-        </IconBtn>
-      </div>
-    );
-  }
+  // the full card shows only when the session isn't bar-only and Percy isn't
+  // driving the screen; otherwise the menu-bar session pill represents the call.
+  if (call.bar || liveRunning) return null;
 
   const last3 = call.lines.slice(-3);
 
@@ -355,7 +378,7 @@ function CallPanel() {
       style={{
         position: "fixed",
         right: 18,
-        bottom: 94,
+        bottom: 66,
         width: 340,
         zIndex: 27,
         borderRadius: 20,
@@ -485,6 +508,197 @@ function IconBtn({
         fontSize: 12.5,
         fontWeight: 600,
         cursor: "pointer",
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+// ── menu-bar session pill ───────────────────────────────────────────────────
+// Shows whenever any call/session is active (and while ⌘⌥ is held). Replaces the
+// old bottom-right mini card, including while Percy drives the screen.
+const PILL_WRAP: CSSProperties = {
+  position: "fixed",
+  left: "50%",
+  top: 4,
+  transform: "translateX(-50%)",
+  zIndex: 42,
+  height: 28,
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "0 3px",
+  borderRadius: 14,
+  background: "#0c0c0c",
+  color: "#ecebe5",
+  border: "1px solid rgba(255,255,255,0.14)",
+  boxShadow: "0 8px 24px rgba(0,0,0,0.35)",
+  overflow: "hidden",
+};
+const PILL_AVATAR: CSSProperties = {
+  width: 22,
+  height: 22,
+  borderRadius: "50%",
+  overflow: "hidden",
+  flex: "none",
+  background: "#141416",
+};
+const EQ_KEYS = ["a", "b", "c", "d"];
+
+function SessionPill() {
+  const { call, holding, end, toggleMute, showCall } = useCall();
+  const { run } = useLive();
+  const os = useOS();
+  const [, tick] = useState(0);
+  const barOn = !!call || holding;
+  useEffect(() => {
+    if (!barOn) return;
+    const t = setInterval(() => tick((n) => n + 1), 500);
+    return () => clearInterval(t);
+  }, [barOn]);
+  if (!barOn) return null;
+
+  // hold feedback (modifier held, no call yet)
+  if (!call) {
+    return (
+      <div className="os-popin" style={PILL_WRAP}>
+        <span style={PILL_AVATAR}>
+          <PercyAvatar mode="idle" />
+        </span>
+        <span style={{ fontSize: 12, color: "#a4a39d", paddingRight: 6 }}>
+          keep holding to start Percy
+        </span>
+        <span className="os-hold-fill" />
+      </div>
+    );
+  }
+
+  const liveRunning = run?.status === "running";
+  const working = liveRunning
+    ? `working · step ${run.i + 1} of ${run.plan.steps.length}`
+    : null;
+  const status =
+    call.phase === "ringing"
+      ? "connecting…"
+      : (working ?? (call.muted ? "you're muted" : "listening"));
+  const accent = !!working;
+  const live = call.phase === "live" && !call.muted;
+
+  return (
+    <div
+      className="os-popin"
+      style={{
+        ...PILL_WRAP,
+        border: accent
+          ? "1px solid var(--accent)"
+          : "1px solid rgba(255,255,255,0.14)",
+      }}
+    >
+      <span style={PILL_AVATAR}>
+        <PercyAvatar mode={accent ? "working" : "listening"} />
+      </span>
+      <button
+        type="button"
+        onClick={() => os.openDrawer("percy")}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-start",
+          border: "none",
+          background: "transparent",
+          color: "#ecebe5",
+          cursor: "pointer",
+          lineHeight: 1.1,
+          padding: 0,
+        }}
+      >
+        <span style={{ fontSize: 12.5, fontWeight: 700 }}>Percy</span>
+        <span
+          style={{
+            fontSize: 11.5,
+            color: accent ? "var(--accent)" : "#a4a39d",
+            maxWidth: 220,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {status}
+        </span>
+      </button>
+      <span
+        style={{ display: "flex", gap: 2, alignItems: "flex-end", height: 12 }}
+      >
+        {EQ_KEYS.map((k, i) => (
+          <span
+            key={k}
+            style={{
+              width: 2,
+              height: 12,
+              background: "var(--accent)",
+              borderRadius: 1,
+              transformOrigin: "bottom",
+              transform: "scaleY(0.3)",
+              animation: live
+                ? `os-eq-bar ${working ? "0.7s" : "1.3s"} ease-in-out ${(
+                    -0.23 * i
+                  ).toFixed(2)}s infinite`
+                : "none",
+            }}
+          />
+        ))}
+      </span>
+      <span style={{ fontSize: 11.5, color: "#85847d" }}>
+        {fmtDur(Date.now() - call.t0)}
+      </span>
+      <SessBtn label="mute" onClick={toggleMute} active={call.muted}>
+        {call.muted ? "🔇" : "🎙"}
+      </SessBtn>
+      <SessBtn label="show call" onClick={showCall}>
+        ⤢
+      </SessBtn>
+      <SessBtn label="end call" onClick={end} danger>
+        ✕
+      </SessBtn>
+    </div>
+  );
+}
+
+function SessBtn({
+  children,
+  onClick,
+  label,
+  danger,
+  active,
+}: {
+  children: ReactNode;
+  onClick: () => void;
+  label: string;
+  danger?: boolean;
+  active?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      style={{
+        width: 22,
+        height: 22,
+        borderRadius: "50%",
+        border: "none",
+        background: danger
+          ? "oklch(0.6 0.2 27)"
+          : active
+            ? "#ecebe5"
+            : "rgba(255,255,255,0.08)",
+        color: danger ? "#fff" : active ? "#0c0c0c" : "#ecebe5",
+        fontSize: 10,
+        cursor: "pointer",
+        display: "grid",
+        placeItems: "center",
+        flex: "none",
       }}
     >
       {children}

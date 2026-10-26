@@ -761,6 +761,34 @@
   opacity: 1;
   background: rgba(128, 128, 128, 0.25);
 }
+/* Percy session pill (§5): level meter + hold-to-start progress fill */
+@keyframes os-eq-bar {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+@keyframes os-hold-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.os-root .os-hold-fill {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 100%;
+  background: var(--accent);
+  transform-origin: left;
+  animation: os-hold-fill 0.5s linear forwards;
+}
 
 /* v3 §12: pop-in for the centred overlays (palette, toast) — a variant of
    os-pop that preserves the translateX(-50%) centring. */
