@@ -85,10 +85,16 @@ export async function GET(req: NextRequest) {
         signal: req.signal,
       },
     );
-  } catch {
+  } catch (e) {
+    console.error(
+      `[call/stream] bridge fetch failed via ${host}: ${(e as Error)?.message ?? e}`,
+    );
     return new NextResponse(null, { status: 502 });
   }
   if (!upstream.ok || !upstream.body) {
+    console.error(
+      `[call/stream] bridge returned ${upstream.status} via ${host} — the call stream backend is likely down`,
+    );
     return new NextResponse(null, { status: upstream.status || 502 });
   }
 
