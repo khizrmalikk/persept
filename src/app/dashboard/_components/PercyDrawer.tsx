@@ -8,6 +8,7 @@ import type { OSThreadMsg } from "../_data/threads";
 import { AGENT_HUE_VAR } from "../_data/windows";
 import { AttachButton, AttachChips } from "./ChatAttach";
 import { ChatBody } from "./ChatBody";
+import { useLive } from "./LiveView";
 import { MessageBody } from "./MessageBody";
 import { useOS } from "./os-store";
 import { type AgentKey, Persona } from "./Persona";
@@ -43,6 +44,7 @@ export function PercyDrawer({
   threads: Record<string, OSThreadMsg[]>;
 }) {
   const os = useOS();
+  const live = useLive();
   // optimistic sends not yet echoed back as a `user` event, per thread
   const [pending, setPending] = useState<Record<string, Bubble[]>>({});
   const [typing, setTyping] = useState<Record<string, boolean>>({});
@@ -225,6 +227,46 @@ export function PercyDrawer({
             {sub}
           </span>
         </div>
+        <button
+          type="button"
+          onClick={() => live.setShowWorking(!live.showWorking)}
+          aria-label={
+            live.showWorking
+              ? "hide Percy working on your screen"
+              : "show Percy working on your screen"
+          }
+          title={
+            live.showWorking ? "Percy working: shown" : "Percy working: hidden"
+          }
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 9,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            color: live.showWorking ? "var(--accent)" : "var(--soft)",
+            background: "transparent",
+            border: "none",
+          }}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+            <circle cx="12" cy="12" r="3" />
+            {!live.showWorking && <path d="M4 4l16 16" />}
+          </svg>
+        </button>
         <button
           type="button"
           onClick={os.closeDrawer}

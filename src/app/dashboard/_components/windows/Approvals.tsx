@@ -38,6 +38,7 @@ const KL: Record<OSApprovalKind, string> = {
   merge: "code · merge",
   payment: "money",
   question: "scribe asks",
+  ops: "system op",
   other: "review",
 };
 const WANTS: Record<OSApprovalKind, string> = {
@@ -50,6 +51,7 @@ const WANTS: Record<OSApprovalKind, string> = {
   merge: "wants to merge code",
   payment: "wants to pay for something",
   question: "has a question for you",
+  ops: "wants to run a system op",
   other: "needs your decision",
 };
 const PRIM: Record<OSApprovalKind, string> = {
@@ -62,6 +64,7 @@ const PRIM: Record<OSApprovalKind, string> = {
   merge: "merge",
   payment: "pay",
   question: "send to scribe",
+  ops: "approve",
   other: "approve",
 };
 // kind-filter chips → the kinds each covers
@@ -1118,6 +1121,44 @@ function KindBody({
   draft: string;
   setDraft: (v: string) => void;
 }) {
+  // operational ops (sql / host / protected config) — the block in monospace +
+  // an amber risk line; approve/reject only, never editable.
+  if (cur.kind === "ops") {
+    return (
+      <div
+        style={{
+          borderRadius: 16,
+          border: "1px solid var(--line)",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          className="os-mono"
+          style={{
+            padding: 18,
+            fontSize: 13,
+            lineHeight: 1.6,
+            whiteSpace: "pre-wrap",
+            background: "var(--surf2)",
+          }}
+        >
+          {cur.body}
+        </div>
+        <div
+          style={{
+            padding: "8px 18px",
+            background: "oklch(0.8 0.14 70 / 0.16)",
+            borderTop: "1px solid var(--line)",
+            color: "var(--ambink)",
+            fontSize: 12,
+            fontWeight: 600,
+          }}
+        >
+          operational action · review carefully
+        </div>
+      </div>
+    );
+  }
   const bodyBlock = editing ? (
     <textarea
       value={draft}

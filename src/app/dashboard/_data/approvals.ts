@@ -22,6 +22,7 @@ export type OSApprovalKind =
   | "merge"
   | "payment"
   | "question"
+  | "ops"
   | "other";
 
 export type OSApprovalWs = Extract<
@@ -71,6 +72,7 @@ const KINDS = new Set<OSApprovalKind>([
   "merge",
   "payment",
   "question",
+  "ops",
   "other",
 ]);
 const AGENTS = new Set<AgentKey>([
