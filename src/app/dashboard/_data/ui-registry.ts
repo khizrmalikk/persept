@@ -34,7 +34,37 @@ export const UI_WINDOWS: UiWindow[] = [
   { id: "command", label: "Command" },
   { id: "approvals", label: "Approvals" },
   { id: "frontdesk", label: "Front desk" },
-  { id: "marketing", label: "Marketing" },
+  {
+    id: "marketing",
+    label: "Marketing",
+    tabs: [
+      { id: "studio", label: "Studio" },
+      { id: "library", label: "Library" },
+      { id: "campaigns", label: "Campaigns" },
+      { id: "assets", label: "Assets" },
+    ],
+    targets: [
+      {
+        id: "campaigns.new.hunter",
+        label: "new campaign led by Hunter",
+        kind: "button",
+        does: "start an outreach campaign",
+      },
+      {
+        id: "campaigns.new.muse",
+        label: "new campaign led by Muse",
+        kind: "button",
+        does: "start a content campaign",
+      },
+      { id: "campaign.name", label: "campaign name field", kind: "field" },
+      {
+        id: "campaign.save",
+        label: "save campaign",
+        kind: "button",
+        does: "create or update the campaign draft",
+      },
+    ],
+  },
   { id: "dev", label: "Dev" },
   { id: "knowledge", label: "Knowledge" },
   { id: "warroom", label: "War room" },
