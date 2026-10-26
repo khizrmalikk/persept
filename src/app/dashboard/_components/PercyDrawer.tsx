@@ -8,7 +8,7 @@ import type { OSThreadMsg } from "../_data/threads";
 import { AGENT_HUE_VAR } from "../_data/windows";
 import { AttachButton, AttachChips } from "./ChatAttach";
 import { ChatBody } from "./ChatBody";
-import { useLive } from "./LiveView";
+import { LiveCard, useLive } from "./LiveView";
 import { MessageBody } from "./MessageBody";
 import { useOS } from "./os-store";
 import { type AgentKey, Persona } from "./Persona";
@@ -439,6 +439,7 @@ export function PercyDrawer({
                   <ChatBody text={m.text} mine={m.mine} />
                 </div>
               )}
+              {!m.mine && <LiveCard messageId={m.id} />}
               <span
                 className="os-mono"
                 style={{ fontSize: 10, color: "var(--mute)" }}

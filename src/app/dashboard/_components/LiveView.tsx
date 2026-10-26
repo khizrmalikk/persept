@@ -628,3 +628,126 @@ function LiveOverlay() {
     </>
   );
 }
+
+// ── the live card inside a thread message ───────────────────────────────────
+// Percy's steps ticking todo → doing → done, rendered under the thread message
+// whose event id equals the plan's messageEventId (PercyDrawer renders one per
+// message; it only shows for the matching one).
+const STEP_BADGE: Record<StepStatus, { bg: string; fg: string; ch: string }> = {
+  todo: { bg: "transparent", fg: "var(--mute)", ch: "" },
+  doing: { bg: "var(--accent)", fg: "var(--onacc, #0c0c0c)", ch: "" },
+  done: { bg: "oklch(0.72 0.17 150)", fg: "#0c0c0c", ch: "✓" },
+  late: { bg: "transparent", fg: "var(--mute)", ch: "·" },
+};
+
+export function LiveCard({ messageId }: { messageId: string }) {
+  const { run, takeOver } = useLive();
+  if (!run || String(run.plan.messageEventId) !== messageId) return null;
+  const n = run.plan.steps.length;
+  const doneCount = run.steps.filter((s) => s === "done").length;
+  const head =
+    run.status === "running"
+      ? "live on your screen"
+      : run.status === "stopped"
+        ? "stopped · you took over"
+        : "done on your screen";
+  return (
+    <div
+      style={{
+        marginTop: 2,
+        width: "100%",
+        maxWidth: 320,
+        borderRadius: 12,
+        border: "1px solid var(--line)",
+        background: "var(--surf2)",
+        padding: "10px 12px",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 7,
+          fontSize: 11.5,
+          fontWeight: 600,
+          color: "var(--soft)",
+          marginBottom: 8,
+        }}
+      >
+        <span
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            background:
+              run.status === "running" ? "var(--accent)" : "var(--mute)",
+          }}
+        />
+        {head}
+        <span style={{ marginLeft: "auto", color: "var(--mute)" }}>
+          {doneCount} of {n}
+        </span>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {run.plan.steps.map((st, j) => {
+          const status = run.steps[j];
+          const b = STEP_BADGE[status];
+          return (
+            <div
+              key={`${st.kind}-${st.label}`}
+              style={{ display: "flex", alignItems: "center", gap: 8 }}
+            >
+              <span
+                style={{
+                  width: 15,
+                  height: 15,
+                  flex: "none",
+                  borderRadius: "50%",
+                  border:
+                    status === "todo" || status === "late"
+                      ? "1.5px solid var(--line2, rgba(255,255,255,0.22))"
+                      : "none",
+                  background: b.bg,
+                  color: b.fg,
+                  fontSize: 9,
+                  fontWeight: 800,
+                  display: "grid",
+                  placeItems: "center",
+                }}
+              >
+                {b.ch}
+              </span>
+              <span
+                style={{
+                  fontSize: 12,
+                  color: status === "doing" ? "var(--ink)" : "var(--soft)",
+                }}
+              >
+                {st.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      {run.status === "running" && (
+        <button
+          type="button"
+          onClick={takeOver}
+          style={{
+            marginTop: 9,
+            border: "1px solid var(--line)",
+            background: "transparent",
+            color: "var(--soft)",
+            borderRadius: 999,
+            padding: "3px 10px",
+            fontSize: 11,
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+        >
+          take over · esc
+        </button>
+      )}
+    </div>
+  );
+}

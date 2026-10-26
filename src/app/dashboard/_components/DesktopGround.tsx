@@ -739,7 +739,38 @@ export function DesktopGround({
                     alignItems: "flex-start",
                   }}
                 >
-                  <Persona agent={f.agent} size={24} />
+                  {f.kind === "ops" ? (
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        width: 24,
+                        height: 24,
+                        flex: "none",
+                        borderRadius: 6,
+                        background: "var(--code, #0a0a0a)",
+                        border: "1px solid var(--line)",
+                        display: "grid",
+                        placeItems: "center",
+                        color: "var(--accent)",
+                      }}
+                    >
+                      <svg
+                        width="13"
+                        height="13"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M4 17l6-6-6-6M12 19h8" />
+                      </svg>
+                    </span>
+                  ) : (
+                    <Persona agent={f.agent} size={24} />
+                  )}
                   <div
                     style={{
                       display: "flex",
