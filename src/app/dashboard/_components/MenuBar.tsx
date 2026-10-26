@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { restartAgent } from "@/lib/workforce/actions";
 import type { OSAgent, OSVps } from "../_data/agents";
 import { useOS } from "./os-store";
 import { Persona } from "./Persona";
@@ -125,8 +126,16 @@ export function MenuBar({
             <Row
               label="restart all agents"
               onClick={() => {
-                // Phase 4: fire the real restart action; a toast stands in now.
-                os.showToast("restart queued for all agents");
+                if (
+                  window.confirm(
+                    "Restart all agents? Percy resets each runner.",
+                  )
+                ) {
+                  for (const a of agents) {
+                    if (a.id !== "percy") void restartAgent(a.id);
+                  }
+                  os.showToast("Percy is resetting the team");
+                }
                 os.setMenu(null);
               }}
             />

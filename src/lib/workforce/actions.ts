@@ -1873,9 +1873,12 @@ export async function restartAgent(agentId: string): Promise<void> {
   await guard();
   const id = agentId.trim();
   if (!id) return;
-  await supabaseAdmin()
-    .from("actions")
-    .insert({ kind: "message", agent_id: id, text: "restart" });
+  // Route through Percy as an OPS block (Percy operates the system); the bridge
+  // runs `agent reset <id>` and records the op.
+  await sendAgentCommand(
+    "percy",
+    `OPS\ndo: agent reset ${id}\nwhy: owner restarted ${id} from the dashboard`,
+  );
   revalidatePath(`/dashboard/agents/${id}`);
 }
 
