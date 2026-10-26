@@ -308,6 +308,15 @@ export function CallProvider({ children }: { children: ReactNode }) {
 
   const openStream = useCallback(() => {
     const es = new EventSource("/api/workforce/call/stream?agent=percy");
+    es.onopen = () => {
+      // channel is up — mark it and let Percy greet first (streams back like a turn)
+      setCall((c) => (c ? { ...c, bridge: true } : c));
+      void fetch("/api/workforce/call/start", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ agentId: "percy" }),
+      }).catch(() => {});
+    };
     es.onmessage = (ev) => {
       let msg: { type?: string; text?: string } | null = null;
       try {
@@ -327,7 +336,16 @@ export function CallProvider({ children }: { children: ReactNode }) {
       }
     };
     es.onerror = () => {
-      // transient; the browser auto-reconnects. nothing to do.
+      // a permanent close (bad auth / unreachable) — surface it instead of a
+      // silent dead call. CONNECTING means the browser is auto-retrying; leave it.
+      if (es.readyState === EventSource.CLOSED) {
+        es.close();
+        esRef.current = null;
+        setCall((c) => (c ? { ...c, bridge: false } : c));
+        osRef.current.showToast(
+          "couldn't reach Percy — the call channel is down",
+        );
+      }
     };
     esRef.current = es;
   }, [flushSentences]);
@@ -346,36 +364,15 @@ export function CallProvider({ children }: { children: ReactNode }) {
       });
       setPercyCall(true);
       setPercyMode("listening");
-      // probe the bridge, then go live
+      // short ring, then open the stream directly. Its onopen greets + confirms
+      // the channel; its onerror surfaces an unreachable bridge. No pre-ping — a
+      // slow/cold bridge was being misread as "unavailable", killing the call.
       void (async () => {
-        let bridge = false;
-        try {
-          const r = await fetch(
-            "/api/workforce/call/stream?agent=percy&ping=1",
-          );
-          bridge = r.status === 200;
-        } catch {
-          bridge = false;
-        }
-        // short ring, then connect
-        await new Promise((res) => setTimeout(res, 1200));
+        await new Promise((res) => setTimeout(res, 1000));
         if (!callRef.current) return; // ended during ring
-        setCall((c) => (c ? { ...c, phase: "live", bridge } : c));
-        if (bridge) {
-          openStream();
-          // Percy greets first — the greeting streams back like any turn
-          void fetch("/api/workforce/call/start", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ agentId: "percy" }),
-          }).catch(() => {});
-          startListening();
-        } else {
-          osRef.current.showToast(
-            "live voice needs the bridge — your words still reach Percy",
-          );
-          startListening(); // utterances still POST (queue for when the bridge is up)
-        }
+        setCall((c) => (c ? { ...c, phase: "live" } : c));
+        openStream();
+        startListening();
       })();
     },
     [openStream, startListening],
