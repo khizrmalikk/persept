@@ -11,7 +11,14 @@ import {
 } from "react";
 import { PercyAvatar } from "@/components/percy/PercyAvatar";
 import { setPercyLook, setPercyMode } from "@/components/percy/percy-bus";
-import type { OSPlan, OSPlanStep, OSShow } from "../_data/plans";
+import { sendAgentCommand } from "@/lib/workforce/actions";
+import type {
+  OSPlan,
+  OSPlanStep,
+  OSShow,
+  OSUi,
+  OSUiStep,
+} from "../_data/plans";
 import { useOS, type WindowKey } from "./os-store";
 import type { AgentKey } from "./Persona";
 
@@ -108,15 +115,51 @@ function findInSurface(scope: Element, needle: string): Element | null {
   return best;
 }
 
+// ── ui executor helpers ─────────────────────────────────────────────────────
+function setNativeValue(el: Element, value: string) {
+  const proto =
+    el instanceof HTMLTextAreaElement
+      ? HTMLTextAreaElement.prototype
+      : el instanceof HTMLSelectElement
+        ? HTMLSelectElement.prototype
+        : HTMLInputElement.prototype;
+  Object.getOwnPropertyDescriptor(proto, "value")?.set?.call(el, value);
+}
+
+async function typeInto(
+  el: Element,
+  text: string,
+  wait: (ms: number) => Promise<void>,
+) {
+  (el as HTMLElement).focus?.();
+  let v = "";
+  for (const ch of text) {
+    v += ch;
+    setNativeValue(el, v);
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+    await wait(50); // ~20 chars/s
+  }
+  el.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+function uiLabel(s: OSUiStep): string {
+  if (s.action === "wait") return `wait ${s.ms ?? 0}ms`;
+  if (s.action === "close") return "close";
+  if (s.action === "type") return `type ${s.target}`;
+  return `${s.action} ${s.target}`;
+}
+
 const INITIAL_CURSOR: Cursor = { x: 0, y: 0, vis: false, ms: 0, carry: null };
 
 export function LiveProvider({
   plans,
   shows,
+  uis,
   children,
 }: {
   plans: OSPlan[];
   shows: OSShow[];
+  uis: OSUi[];
   children: ReactNode;
 }) {
   const os = useOS();
@@ -134,6 +177,7 @@ export function LiveProvider({
   const ctxRef = useRef<{ dead: boolean }>({ dead: true });
   const seenRef = useRef<Set<number>>(new Set());
   const seenShowsRef = useRef<Set<number>>(new Set());
+  const seenUisRef = useRef<Set<number>>(new Set());
   const showRef = useRef(showWorking);
   showRef.current = showWorking;
 
@@ -226,6 +270,25 @@ export function LiveProvider({
     ctxRef.current = ctx;
     void replayShow(fresh, ctx);
   }, [shows]);
+
+  // watch for a fresh `ui` script (Percy driving the screen) and execute it
+  // biome-ignore lint/correctness/useExhaustiveDependencies: engine reads refs; re-run only when a new ui arrives
+  useEffect(() => {
+    if (!showRef.current) return;
+    if (!ctxRef.current.dead) return;
+    const now = Date.now();
+    const fresh = uis.find((u) => {
+      if (seenUisRef.current.has(u.eventId) || u.steps.length === 0)
+        return false;
+      const t = Date.parse(u.ts);
+      return Number.isNaN(t) || now - t < 90_000;
+    });
+    if (!fresh) return;
+    seenUisRef.current.add(fresh.eventId);
+    const ctx = { dead: false };
+    ctxRef.current = ctx;
+    void replayUi(fresh, ctx);
+  }, [uis]);
 
   async function replay(plan: OSPlan, ctx: { dead: boolean }) {
     const wait = (ms: number) =>
@@ -426,6 +489,148 @@ export function LiveProvider({
       setRun((rr) => (rr && rr.plan.eventId === show.eventId ? null : rr));
     } catch {
       ctx.dead = true;
+    }
+  }
+
+  // Execute a `ui` script: Percy driving the screen against data-pc targets.
+  // Each step opens/clicks/types/etc.; a target not found within ~5s stops the
+  // run and posts "UI result: …" back to Percy. Form submits reached this way go
+  // through the components' normal actions.ts write path (behind guard()).
+  async function replayUi(ui: OSUi, ctx: { dead: boolean }) {
+    const wait = (ms: number) =>
+      new Promise<void>((res, rej) =>
+        setTimeout(() => (ctx.dead ? rej(new Error("stopped")) : res()), ms),
+      );
+    const moveTo = async (el: Element | null) => {
+      if (!el) {
+        await wait(180);
+        return;
+      }
+      const r = el.getBoundingClientRect();
+      const tx = r.left + Math.min(r.width / 2, 40);
+      const ty = r.top + r.height / 2;
+      const c = cursorRef.current;
+      const d = Math.hypot(tx - (c.x || tx), ty - (c.y || ty));
+      const ms = Math.round(Math.min(1100, 300 + d * 0.6));
+      setCursor((p) => ({ ...p, x: tx, y: ty, vis: true, ms }));
+      setPercyLook({ x: tx, y: ty });
+      await wait(ms + 80);
+    };
+    const find = (id: string): Element | null =>
+      document.querySelector(`[data-pc="${id}"]`) ??
+      document.querySelector(`[data-pc="${id.replace(/\./g, "-")}"]`);
+    const waitFor = async (id: string): Promise<Element | null> => {
+      for (let t = 0; t < 10; t++) {
+        const el = find(id);
+        if (el) return el;
+        await wait(500); // up to ~5s
+      }
+      return null;
+    };
+    const post = (msg: string) => {
+      void sendAgentCommand("percy", `UI result: ${msg}`).catch(() => {});
+    };
+
+    let idx = 0;
+    try {
+      setPercyMode("working");
+      setRun({
+        plan: {
+          eventId: ui.eventId,
+          messageEventId: ui.messageEventId,
+          sessionKey: "",
+          say: "",
+          ts: ui.ts,
+          steps: ui.steps.map((s) => ({
+            kind: "ui" as const,
+            key: "",
+            label: uiLabel(s),
+          })),
+        },
+        steps: ui.steps.map(() => "todo"),
+        i: 0,
+        status: "running",
+      });
+      const pill0 = document.querySelector('[data-pc="pill"]');
+      if (pill0) {
+        const r = pill0.getBoundingClientRect();
+        setCursor({
+          x: r.left + r.width / 2,
+          y: r.top + r.height / 2,
+          vis: true,
+          ms: 0,
+          carry: null,
+        });
+      }
+      await wait(350);
+
+      for (let i = 0; i < ui.steps.length; i++) {
+        idx = i;
+        const step = ui.steps[i];
+        setRun((r) => (r ? { ...r, i, steps: mark(r.steps, i, "doing") } : r));
+        // the bridge refused this step (unknown action / guarded control)
+        if (step.error) {
+          setRun((r) => (r ? { ...r, steps: mark(r.steps, i, "late") } : r));
+          continue;
+        }
+
+        if (step.action === "open") {
+          const [win, tab] = step.target.split(".");
+          if (win === "system") osRef.current.openMonitor();
+          else if (win === "agent" && tab)
+            osRef.current.openAgent(tab as AgentKey);
+          else osRef.current.open(win as WindowKey, tab ? { tab } : undefined);
+          await wait(550);
+        } else if (step.action === "wait") {
+          await wait(Math.min(5000, Math.max(0, step.ms ?? 300)));
+        } else if (step.action === "close") {
+          osRef.current.close();
+          await wait(300);
+        } else {
+          const el = await waitFor(step.target);
+          if (!el) {
+            setNote(`couldn't find ${step.target}`);
+            post(`step ${i + 1} ${step.action} ${step.target} not found`);
+            await wait(1600);
+            setNote(null);
+            setRun((r) => (r ? { ...r, steps: mark(r.steps, i, "late") } : r));
+            break;
+          }
+          await moveTo(el);
+          if (step.action === "click") {
+            (el as HTMLElement).click();
+            await wait(320);
+          } else if (step.action === "highlight") {
+            const r = el.getBoundingClientRect();
+            setHighlight({ x: r.left, y: r.top, w: r.width, h: r.height });
+            await wait(1500);
+            setHighlight(null);
+          } else if (step.action === "scroll") {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            await wait(500);
+          } else if (step.action === "type") {
+            await typeInto(el, step.value ?? "", wait);
+          } else if (step.action === "select") {
+            setNativeValue(el, step.value ?? "");
+            el.dispatchEvent(new Event("change", { bubbles: true }));
+            await wait(300);
+          }
+        }
+        setRun((r) => (r ? { ...r, steps: mark(r.steps, i, "done") } : r));
+      }
+
+      setRun((r) => (r ? { ...r, status: "done" } : r));
+      await moveTo(document.querySelector('[data-pc="pill"]'));
+      setCursor((c) => ({ ...c, vis: false, carry: null }));
+      setPercyLook(null);
+      setPercyMode("idle");
+      ctx.dead = true;
+      await wait(3500);
+      setRun((rr) => (rr && rr.plan.eventId === ui.eventId ? null : rr));
+    } catch {
+      // stopped by the owner (pointer within 300px / esc / take over)
+      ctx.dead = true;
+      post(`stopped by the owner at step ${idx + 1}`);
     }
   }
 

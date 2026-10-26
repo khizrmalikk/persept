@@ -13,7 +13,7 @@ import type { OSFrontDesk } from "../_data/frontdesk";
 import type { OSKnowledge } from "../_data/knowledge-types";
 import type { OSMarketing } from "../_data/marketing-types";
 import type { OSOp } from "../_data/ops";
-import type { OSPlan, OSShow } from "../_data/plans";
+import type { OSPlan, OSShow, OSUi } from "../_data/plans";
 import type { OSThreadMsg } from "../_data/threads";
 import type { OSWarRoom } from "../_data/warroom-types";
 import { DOCK_WS, WINDOWS } from "../_data/windows";
@@ -61,6 +61,7 @@ export function Desktop({
   ops,
   plans,
   shows,
+  uis,
 }: {
   agents: OSAgent[];
   pending: number;
@@ -81,6 +82,7 @@ export function Desktop({
   ops: OSOp[];
   plans: OSPlan[];
   shows: OSShow[];
+  uis: OSUi[];
 }) {
   const os = useOS();
   const [hov, setHov] = useState<string | null>(null);
@@ -134,7 +136,7 @@ export function Desktop({
         : "desktop";
 
   return (
-    <LiveProvider plans={plans} shows={shows}>
+    <LiveProvider plans={plans} shows={shows} uis={uis}>
       <CallProvider>
         {/* live-update heartbeat: refreshes server data only when the tick changes */}
         <TickPoller />

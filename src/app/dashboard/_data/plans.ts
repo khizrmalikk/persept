@@ -13,7 +13,8 @@ export type OSPlanStepKind =
   | "fix"
   | "leads"
   | "approval"
-  | "show";
+  | "show"
+  | "ui";
 
 export type OSPlanStep = {
   kind: OSPlanStepKind;
@@ -41,6 +42,7 @@ const STEP_KINDS: OSPlanStepKind[] = [
   "leads",
   "approval",
   "show",
+  "ui",
 ];
 
 type EventRow = {
@@ -161,6 +163,87 @@ export async function loadShows(limit = 5): Promise<OSShow[]> {
         window: String(p.window ?? ""),
         resolved: p.resolved !== false,
         messageEventId: Number(p.message_event_id ?? 0),
+        ts: (r.ts ?? "").trim(),
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
+// `ui` events: Percy driving the screen (a UI block). payload = { steps:
+// [{ action, target, value?, ms?, error? }], message_event_id }. The executor
+// (LiveView) resolves each target as [data-pc="<target>"] and performs the
+// action. Steps carrying `error` were refused by the bridge and are skipped.
+export type OSUiAction =
+  | "open"
+  | "click"
+  | "type"
+  | "select"
+  | "scroll"
+  | "highlight"
+  | "wait"
+  | "close";
+
+export type OSUiStep = {
+  action: OSUiAction;
+  target: string;
+  value?: string;
+  ms?: number;
+  error?: string;
+};
+
+export type OSUi = {
+  eventId: number;
+  messageEventId: number;
+  steps: OSUiStep[];
+  ts: string;
+};
+
+const UI_ACTIONS: OSUiAction[] = [
+  "open",
+  "click",
+  "type",
+  "select",
+  "scroll",
+  "highlight",
+  "wait",
+  "close",
+];
+
+function normalizeUiStep(raw: unknown): OSUiStep | null {
+  if (!raw || typeof raw !== "object") return null;
+  const s = raw as Record<string, unknown>;
+  const action = String(s.action ?? "");
+  if (!UI_ACTIONS.includes(action as OSUiAction)) return null;
+  return {
+    action: action as OSUiAction,
+    target: String(s.target ?? ""),
+    value: s.value != null ? String(s.value) : undefined,
+    ms: typeof s.ms === "number" ? s.ms : undefined,
+    error: s.error ? String(s.error) : undefined,
+  };
+}
+
+export async function loadUis(limit = 5): Promise<OSUi[]> {
+  try {
+    const db = supabaseAdmin();
+    const { data } = await db
+      .from("events")
+      .select("id, ts, payload")
+      .eq("kind", "ui")
+      .eq("agent", "percy")
+      .order("id", { ascending: false })
+      .limit(limit);
+    return ((data as EventRow[] | null) ?? []).map((r) => {
+      const p = (r.payload ?? {}) as Record<string, unknown>;
+      const steps = Array.isArray(p.steps)
+        ? (p.steps.map(normalizeUiStep).filter(Boolean) as OSUiStep[])
+        : [];
+      return {
+        eventId: r.id,
+        messageEventId: Number(p.message_event_id ?? 0),
+        steps,
         ts: (r.ts ?? "").trim(),
       };
     });
