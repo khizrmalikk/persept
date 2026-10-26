@@ -18,6 +18,10 @@ const AGENTS = new Set<AgentKey>([
 const asAgent = (v: unknown): AgentKey =>
   AGENTS.has(v as AgentKey) ? (v as AgentKey) : "percy";
 
+// today's date in Dubai (the bridge's clock) as YYYY-MM-DD, for the runs filter.
+const todayDubai = () =>
+  new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Dubai" });
+
 const safe = async <T>(
   p: PromiseLike<{ data: T | null }>,
 ): Promise<T | null> => {
@@ -46,8 +50,9 @@ export async function loadDesktop(): Promise<OSDesktop> {
     ),
     safe(
       db
-        .from("runs_schedule")
-        .select("time, agent, name, status")
+        .from("runs")
+        .select("time, agent, name, status, why, reply, error")
+        .eq("date", todayDubai())
         .order("time", { ascending: true }),
     ),
   ]);
@@ -93,15 +98,28 @@ export async function loadDesktop(): Promise<OSDesktop> {
   };
   const runs: OSRun[] = (
     (runRows as
-      | { time: string; agent: string; name: string; status: string }[]
+      | {
+          time: string;
+          agent: string;
+          name: string;
+          status: string;
+          why: string | null;
+          reply: string | null;
+          error: string | null;
+        }[]
       | null) ?? []
   ).map((r) => ({
     minutes: toMinutes(r.time ?? "0:00"),
     agent: asAgent(r.agent),
     name: r.name ?? "run",
-    status: (["planned", "done", "missed", "rerun"].includes(r.status)
+    status: (["planned", "running", "done", "failed", "missed"].includes(
+      r.status,
+    )
       ? r.status
       : "planned") as OSRun["status"],
+    why: r.why ?? "",
+    reply: r.reply ?? "",
+    error: r.error ?? "",
   }));
 
   return { goals, feed, runs };

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { sendAgentCommand } from "@/lib/workforce/actions";
 import type { OSAgent, OSVps } from "../_data/agents";
 import type { OSApproval } from "../_data/approvals";
 import type { OSDesktop } from "../_data/desktop-types";
@@ -921,6 +922,8 @@ function RunsTimeline({
   now: Date;
   byId: Map<AgentKey, OSAgent>;
 }) {
+  const os = useOS();
+  const [open, setOpen] = useState<OSDesktop["runs"][number] | null>(null);
   const mins = now.getHours() * 60 + now.getMinutes();
   const nowPct = (mins / 1440) * 100;
   return (
@@ -947,12 +950,17 @@ function RunsTimeline({
       />
       {runs.map((r, i) => {
         const col = `var(${AGENT_HUE_VAR[r.agent]})`;
-        const rerun = r.status === "rerun";
-        const done = r.status === "done" || rerun;
+        const bad = "var(--bad, oklch(0.63 0.2 25))";
+        const running = r.status === "running";
+        const done = r.status === "done";
+        const failed = r.status === "failed";
         const missed = r.status === "missed";
         return (
-          <div
+          <button
+            type="button"
             key={`${r.name}-${i}`}
+            title={r.why || undefined}
+            onClick={() => setOpen(open?.name === r.name ? null : r)}
             style={{
               position: "absolute",
               left: `${(r.minutes / 1440) * 100}%`,
@@ -962,15 +970,25 @@ function RunsTimeline({
               flexDirection: "column",
               alignItems: "center",
               gap: 4,
+              background: "transparent",
+              border: "none",
+              padding: 0,
+              cursor: "pointer",
+              color: "var(--ink)",
             }}
           >
             <span
+              className={running ? "os-ring-pulse" : undefined}
               style={{
                 width: 14,
                 height: 14,
                 borderRadius: "50%",
-                border: `2px solid ${missed ? "var(--bad)" : col}`,
-                background: done ? col : "var(--surf)",
+                border: `2px solid ${failed ? bad : missed ? "var(--mute)" : col}`,
+                background: failed
+                  ? bad
+                  : done || running
+                    ? col
+                    : "var(--surf)",
               }}
             />
             <span
@@ -981,28 +999,24 @@ function RunsTimeline({
                 whiteSpace: "nowrap",
               }}
             >
-              {String(Math.floor(r.minutes / 60)).padStart(2, "0")}:00
+              {String(Math.floor(r.minutes / 60)).padStart(2, "0")}:
+              {String(r.minutes % 60).padStart(2, "0")}
             </span>
             <span
-              style={{ fontSize: 10.5, whiteSpace: "nowrap", marginTop: -3 }}
+              style={{
+                fontSize: 10.5,
+                whiteSpace: "nowrap",
+                marginTop: -3,
+                maxWidth: 92,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                textDecoration: missed ? "line-through" : "none",
+                color: missed ? "var(--mute)" : "var(--ink)",
+              }}
             >
-              {byId.get(r.agent)?.name ?? cap(r.agent)}
+              {r.name.replace(/-/g, " ")}
             </span>
-            {rerun && (
-              <span
-                style={{
-                  fontSize: 8.5,
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.04em",
-                  color: col,
-                  marginTop: -2,
-                }}
-              >
-                re-run
-              </span>
-            )}
-          </div>
+          </button>
         );
       })}
       <div
@@ -1016,6 +1030,99 @@ function RunsTimeline({
           boxShadow: "0 0 10px var(--accent)",
         }}
       />
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            left: `${Math.min(82, Math.max(18, (open.minutes / 1440) * 100))}%`,
+            top: 52,
+            transform: "translateX(-50%)",
+            zIndex: 6,
+            width: 280,
+            maxWidth: "80vw",
+            padding: "10px 12px",
+            borderRadius: 12,
+            background: "var(--surf)",
+            border: "1px solid var(--line)",
+            boxShadow: "var(--shadow)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: 6,
+            }}
+          >
+            <span style={{ fontSize: 12, fontWeight: 700 }}>
+              {open.name.replace(/-/g, " ")}
+            </span>
+            <span
+              style={{ fontSize: 11, color: "var(--mute)", marginLeft: "auto" }}
+            >
+              {byId.get(open.agent)?.name ?? cap(open.agent)} · {open.status}
+            </span>
+          </div>
+          {(open.error || open.reply) && (
+            <pre
+              className="os-mono"
+              style={{
+                margin: 0,
+                fontSize: 11,
+                lineHeight: 1.45,
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+                maxHeight: 160,
+                overflow: "auto",
+                color: open.error
+                  ? "var(--bad, oklch(0.63 0.2 25))"
+                  : "var(--soft)",
+              }}
+            >
+              {open.error || open.reply}
+            </pre>
+          )}
+          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+            <button
+              type="button"
+              onClick={() => {
+                void sendAgentCommand(open.agent, `run ${open.name}`);
+                os.showToast(`running ${open.name.replace(/-/g, " ")}`);
+                setOpen(null);
+              }}
+              style={{
+                border: "none",
+                background: "var(--accent)",
+                color: "var(--onacc, #0c0c0c)",
+                borderRadius: 999,
+                padding: "4px 12px",
+                fontSize: 11.5,
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              run again
+            </button>
+            <button
+              type="button"
+              onClick={() => setOpen(null)}
+              style={{
+                border: "1px solid var(--line)",
+                background: "transparent",
+                color: "var(--soft)",
+                borderRadius: 999,
+                padding: "4px 12px",
+                fontSize: 11.5,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
