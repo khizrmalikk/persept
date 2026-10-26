@@ -193,14 +193,14 @@ export function Desktop({
             onClick={() => os.toggleDrawer("percy")}
             style={{
               position: "absolute",
-              right: 18,
-              bottom: 18,
+              right: 14,
+              bottom: 10,
               zIndex: 26,
               display: "flex",
               alignItems: "center",
-              gap: 11,
-              padding: "6px 16px 6px 6px",
-              borderRadius: 999,
+              gap: 8,
+              padding: 5,
+              borderRadius: 14,
               background: "var(--dock)",
               backdropFilter: "blur(20px)",
               border: "1px solid var(--line)",
@@ -211,7 +211,7 @@ export function Desktop({
           >
             <Persona
               agent="percy"
-              size={46}
+              size={36}
               ring
               status={agents.find((a) => a.id === "percy")?.status ?? ""}
             />
@@ -221,18 +221,22 @@ export function Desktop({
                 flexDirection: "column",
                 gap: 1,
                 textAlign: "left",
+                width: 140,
               }}
             >
-              <span style={{ fontSize: 14, fontWeight: 700 }}>Percy</span>
+              <span style={{ fontSize: 12.5, fontWeight: 700 }}>Percy</span>
               <span
                 style={{
-                  fontSize: 11.5,
+                  fontSize: 11,
                   color: "var(--soft)",
                   whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
                 }}
               >
-                leading {agents.filter((a) => a.id !== "percy").length} agents
-                {pending > 0 ? ` · ${pending} for you` : ""}
+                {pending > 0
+                  ? `${pending} waiting for you`
+                  : "hold ⌘⌥ to talk · ⌘J"}
               </span>
             </span>
           </button>
@@ -243,14 +247,14 @@ export function Desktop({
           style={{
             position: "absolute",
             left: "50%",
-            bottom: 14,
+            bottom: 10,
             transform: "translateX(-50%)",
             zIndex: 20,
             display: "flex",
             alignItems: "flex-end",
-            gap: 8,
-            padding: "8px 10px",
-            borderRadius: 22,
+            gap: 6,
+            padding: "6px 8px",
+            borderRadius: 17,
             background: "var(--dock)",
             backdropFilter: "blur(20px)",
             border: "1px solid var(--line)",
@@ -325,7 +329,7 @@ export function Desktop({
                 <div
                   style={{
                     position: "absolute",
-                    bottom: 66,
+                    bottom: 54,
                     display: "flex",
                     flexDirection: "column",
                     gap: 2,
@@ -359,14 +363,14 @@ export function Desktop({
                   padding: 0,
                 }}
               >
-                <Persona agent={a.id} size={50} status={a.status} />
+                <Persona agent={a.id} size={40} status={a.status} />
               </button>
               <span
                 style={{
                   width: 4,
                   height: 4,
                   borderRadius: "50%",
-                  marginTop: 4,
+                  marginTop: 3,
                   background: DOT[a.status],
                 }}
               />
@@ -450,20 +454,50 @@ export function Desktop({
             style={{
               position: "absolute",
               left: "50%",
-              bottom: 96,
+              bottom: 77,
               transform: "translateX(-50%)",
               zIndex: 60,
-              padding: "11px 18px",
-              borderRadius: 12,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "4px 4px 4px 11px",
+              borderRadius: 8,
               background: "var(--ink)",
               color: "var(--bg)",
-              fontSize: 13.5,
+              fontSize: 12,
               fontWeight: 600,
               boxShadow: "var(--shadow)",
               whiteSpace: "nowrap",
             }}
           >
             {os.toast}
+            <button
+              type="button"
+              aria-label="dismiss"
+              onClick={os.dismissToast}
+              className="os-toast-x"
+              style={{
+                width: 20,
+                height: 20,
+                borderRadius: 5,
+                border: "none",
+                background: "transparent",
+                color: "var(--bg)",
+                cursor: "pointer",
+                display: "grid",
+                placeItems: "center",
+                opacity: 0.6,
+              }}
+            >
+              <svg width="9" height="9" viewBox="0 0 9 9" aria-hidden="true">
+                <path
+                  d="M1 1 L8 8 M8 1 L1 8"
+                  stroke="currentColor"
+                  strokeWidth="3.2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
           </div>
         )}
 
@@ -494,9 +528,9 @@ function Divider() {
     <div
       style={{
         width: 1,
-        height: 44,
+        height: 34,
         background: "var(--line)",
-        margin: "0 4px 10px",
+        margin: "0 3px 7px",
         alignSelf: "flex-end",
       }}
     />
@@ -549,7 +583,7 @@ function DockTile({
         <div
           style={{
             position: "absolute",
-            bottom: 66,
+            bottom: 56,
             padding: "5px 10px",
             borderRadius: 8,
             background: "var(--ink)",
@@ -570,9 +604,9 @@ function DockTile({
         onMouseLeave={() => setHov(null)}
         aria-label={label}
         style={{
-          width: 50,
-          height: 50,
-          borderRadius: 14,
+          width: 40,
+          height: 40,
+          borderRadius: 11,
           background: solid ? "var(--ink)" : undefined,
           border: solid ? "none" : undefined,
           display: "flex",
@@ -582,8 +616,8 @@ function DockTile({
         }}
       >
         <svg
-          width="23"
-          height="23"
+          width="18"
+          height="18"
           viewBox="0 0 24 24"
           fill="none"
           stroke={fg}
@@ -599,10 +633,10 @@ function DockTile({
         <span
           style={{
             position: "absolute",
-            top: -5,
-            right: -5,
-            minWidth: 19,
-            height: 19,
+            top: -4,
+            right: -4,
+            minWidth: 17,
+            height: 17,
             padding: "0 5px",
             borderRadius: 10,
             background: accentBadge ? "var(--accent)" : "var(--ink)",
@@ -623,7 +657,7 @@ function DockTile({
           width: 4,
           height: 4,
           borderRadius: "50%",
-          marginTop: 4,
+          marginTop: 3,
           background: active
             ? minimized
               ? "var(--mute)"

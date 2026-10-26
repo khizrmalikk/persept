@@ -141,7 +141,7 @@ export function WindowFrame({
         left: 14,
         right: drawerOpen ? 468 : 14,
         top: 46,
-        bottom: 90,
+        bottom: 77,
         borderRadius: 20,
         zIndex: 16,
       };

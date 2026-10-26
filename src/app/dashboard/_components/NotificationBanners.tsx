@@ -168,7 +168,7 @@ export function NotificationBanners({
       className={`os-banner${leaving ? " is-leaving" : ""}`}
       style={{ color: "var(--ink)" }}
     >
-      <Persona agent={current.agent} size={38} working status="working" />
+      <Persona agent={current.agent} size={24} working status="working" />
       <span className="os-banner-body">
         <span className="os-banner-top">
           <span className="os-banner-name">{cap(current.agent)}</span>

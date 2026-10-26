@@ -93,6 +93,7 @@ type OSApi = OSState & {
   toggleNotif: () => void;
   closeOverlays: () => void;
   showToast: (msg: string) => void;
+  dismissToast: () => void;
   // soft-refresh the current window's server data (⌘R / header button) — re-runs
   // the loaders without a full browser reload.
   refresh: () => void;
@@ -288,6 +289,7 @@ export function OSProvider({ children }: { children: ReactNode }) {
       toggleNotif: () => patch({ notif: !s.notif, pal: false }),
       closeOverlays: () => patch({ pal: false, notif: false }),
       showToast: toast,
+      dismissToast: () => patch({ toast: null }),
       refresh: () => refreshRef.current(),
       toggleTheme: () => {
         const next: Theme = s.theme === "dark" ? "light" : "dark";

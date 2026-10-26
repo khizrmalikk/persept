@@ -180,7 +180,7 @@ export function PercyDrawer({
         position: "absolute",
         right: 14,
         top: 46,
-        bottom: 90,
+        bottom: 66,
         width: 440,
         zIndex: 25,
         background: "var(--surf)",

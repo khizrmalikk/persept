@@ -793,7 +793,7 @@ export function DesktopGround({
           style={{
             position: "absolute",
             left: "50%",
-            bottom: 96,
+            bottom: 77,
             transform: "translateX(-50%)",
             zIndex: 4,
             display: "flex",
