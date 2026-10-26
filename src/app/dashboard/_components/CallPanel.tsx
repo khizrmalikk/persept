@@ -41,6 +41,7 @@ type Call = {
 type CallApi = {
   call: Call;
   holding: boolean;
+  micNotice: boolean;
   start: (opts?: { bar?: boolean }) => void;
   end: () => void;
   toggleMute: () => void;
@@ -88,6 +89,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const [call, setCall] = useState<Call>(null);
   const [, setNow] = useState(0); // 1s tick so the timer re-renders
   const [holding, setHolding] = useState(false);
+  const [micNotice, setMicNotice] = useState(false);
 
   const osRef = useRef(os);
   osRef.current = os;
@@ -96,6 +98,16 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const recRef = useRef<SpeechRec | null>(null);
   const callRef = useRef<Call>(call);
   callRef.current = call;
+  // Percy's voice: the bridge /tts audio queue, spoken sentence by sentence.
+  const ttsQueueRef = useRef<string[]>([]);
+  const ttsBusyRef = useRef(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const prefetchRef = useRef<Promise<string | null> | null>(null);
+  const sentenceBufRef = useRef("");
+  const voiceRef = useRef<string | undefined>(undefined);
+  // browser speech-recognition health (Chrome-only in practice)
+  const micStartRef = useRef(0);
+  const micFastRef = useRef(0);
 
   const teardown = useCallback(() => {
     esRef.current?.close();
@@ -106,6 +118,16 @@ export function CallProvider({ children }: { children: ReactNode }) {
       /* already stopped */
     }
     recRef.current = null;
+    try {
+      audioRef.current?.pause();
+    } catch {
+      /* ignore */
+    }
+    audioRef.current = null;
+    ttsQueueRef.current = [];
+    ttsBusyRef.current = false;
+    prefetchRef.current = null;
+    sentenceBufRef.current = "";
     setPercyCall(false);
     setPercyMode("idle");
   }, []);
@@ -134,9 +156,108 @@ export function CallProvider({ children }: { children: ReactNode }) {
     }).catch(() => {});
   }, []);
 
+  // ── Percy's voice (bridge /tts, spoken sentence by sentence) ──────────────
+  const ttsFetch = useCallback(async (text: string): Promise<string | null> => {
+    try {
+      const res = await fetch("/api/workforce/call/tts", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ text, voice: voiceRef.current }),
+      });
+      if (!res.ok) return null;
+      const blob = await res.blob();
+      return URL.createObjectURL(blob);
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const pumpTts = useCallback(async () => {
+    if (ttsBusyRef.current) return;
+    ttsBusyRef.current = true;
+    try {
+      recRef.current?.stop(); // speaking pauses listening
+    } catch {
+      /* ignore */
+    }
+    setPercyMode("speaking");
+    while (ttsQueueRef.current.length > 0) {
+      const text = ttsQueueRef.current.shift();
+      if (!text) break;
+      const url = prefetchRef.current
+        ? await prefetchRef.current
+        : await ttsFetch(text);
+      prefetchRef.current = null;
+      const next = ttsQueueRef.current[0];
+      if (next) prefetchRef.current = ttsFetch(next); // prefetch while we play
+      if (!url) continue;
+      await new Promise<void>((resolve) => {
+        const audio = new Audio(url);
+        audioRef.current = audio;
+        const done = () => {
+          URL.revokeObjectURL(url);
+          resolve();
+        };
+        audio.onended = done;
+        audio.onerror = done;
+        audio.play().catch(done);
+      });
+    }
+    ttsBusyRef.current = false;
+    const c = callRef.current;
+    if (c && c.phase === "live") {
+      setPercyMode("listening");
+      if (!c.muted) {
+        try {
+          micStartRef.current = Date.now();
+          recRef.current?.start();
+        } catch {
+          /* ignore */
+        }
+      }
+    } else {
+      setPercyMode("idle");
+    }
+  }, [ttsFetch]);
+
+  const enqueueSentence = useCallback(
+    (text: string) => {
+      const t = text.trim();
+      if (!t) return;
+      ttsQueueRef.current.push(t);
+      void pumpTts();
+    },
+    [pumpTts],
+  );
+
+  // split streamed text into complete sentences; keep the tail buffered
+  const flushSentences = useCallback(
+    (chunk: string, final = false) => {
+      let buf = sentenceBufRef.current + chunk;
+      const re = /(.+?[.!?]+)(\s+|$)/g;
+      let lastEnd = 0;
+      let m = re.exec(buf);
+      while (m !== null) {
+        enqueueSentence(m[1]);
+        lastEnd = re.lastIndex;
+        m = re.exec(buf);
+      }
+      buf = buf.slice(lastEnd);
+      if (final && buf.trim()) {
+        enqueueSentence(buf);
+        buf = "";
+      }
+      sentenceBufRef.current = buf;
+    },
+    [enqueueSentence],
+  );
+
   const startListening = useCallback(() => {
     const Ctor = getSpeechRec();
-    if (!Ctor) return; // no mic recognition — captions still work
+    if (!Ctor) {
+      setMicNotice(true); // Safari/Arc: no webkitSpeechRecognition
+      return;
+    }
     const rec = new Ctor();
     rec.lang = "en-GB";
     rec.continuous = true;
@@ -154,10 +275,21 @@ export function CallProvider({ children }: { children: ReactNode }) {
       if (final.trim()) sendUtterance(final);
     };
     rec.onend = () => {
+      // Arc/Safari end immediately; three fast ends → show the Chrome notice
+      if (Date.now() - micStartRef.current < 500) {
+        micFastRef.current += 1;
+        if (micFastRef.current >= 3) {
+          setMicNotice(true);
+          return;
+        }
+      } else {
+        micFastRef.current = 0;
+      }
       // keep listening while the call is live and not muted
       const c = callRef.current;
       if (c && c.phase === "live" && !c.muted) {
         try {
+          micStartRef.current = Date.now();
           rec.start();
         } catch {
           /* race on restart */
@@ -166,6 +298,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
     };
     rec.onerror = () => {};
     try {
+      micStartRef.current = Date.now();
       rec.start();
     } catch {
       /* already started */
@@ -184,11 +317,11 @@ export function CallProvider({ children }: { children: ReactNode }) {
       }
       if (!msg) return;
       if (msg.type === "delta" && msg.text) {
-        setPercyMode("speaking");
         const text = msg.text;
         setCall((c) => (c ? { ...c, lines: appendPercy(c.lines, text) } : c));
+        flushSentences(text); // speak as sentences complete
       } else if (msg.type === "final") {
-        setPercyMode("listening");
+        flushSentences("", true); // speak any trailing partial sentence
       } else if (msg.type === "error") {
         osRef.current.showToast("the call dropped — try again");
       }
@@ -197,7 +330,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
       // transient; the browser auto-reconnects. nothing to do.
     };
     esRef.current = es;
-  }, []);
+  }, [flushSentences]);
 
   const start = useCallback(
     (opts?: { bar?: boolean }) => {
@@ -230,6 +363,12 @@ export function CallProvider({ children }: { children: ReactNode }) {
         setCall((c) => (c ? { ...c, phase: "live", bridge } : c));
         if (bridge) {
           openStream();
+          // Percy greets first — the greeting streams back like any turn
+          void fetch("/api/workforce/call/start", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ agentId: "percy" }),
+          }).catch(() => {});
           startListening();
         } else {
           osRef.current.showToast(
@@ -261,6 +400,12 @@ export function CallProvider({ children }: { children: ReactNode }) {
       }
       return { ...c, muted };
     });
+  }, []);
+
+  // load the saved voice choice (sent as `voice` on every /tts request)
+  useEffect(() => {
+    const v = window.localStorage.getItem("os-call-voice");
+    if (v) voiceRef.current = v;
   }, []);
 
   // ⌥P toggles the full call card
@@ -328,7 +473,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
 
   return (
     <CallCtx.Provider
-      value={{ call, holding, start, end, toggleMute, showCall }}
+      value={{ call, holding, micNotice, start, end, toggleMute, showCall }}
     >
       {children}
       <CallPanel />
@@ -355,7 +500,7 @@ function fmtDur(ms: number): string {
 
 // ── the panel (full + mini) ─────────────────────────────────────────────────
 function CallPanel() {
-  const { call, end, toggleMute } = useCall();
+  const { call, end, toggleMute, micNotice } = useCall();
   const { run } = useLive();
   if (!call) return null;
 
@@ -458,6 +603,18 @@ function CallPanel() {
           </div>
         )}
       </div>
+
+      {micNotice && (
+        <div
+          style={{
+            padding: "0 16px 10px",
+            fontSize: 11.5,
+            color: "#85847d",
+          }}
+        >
+          voice input needs Chrome
+        </div>
+      )}
 
       {/* controls */}
       <div
