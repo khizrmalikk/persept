@@ -12,7 +12,8 @@ export type OSPlanStepKind =
   | "backlog"
   | "fix"
   | "leads"
-  | "approval";
+  | "approval"
+  | "show";
 
 export type OSPlanStep = {
   kind: OSPlanStepKind;
@@ -39,6 +40,7 @@ const STEP_KINDS: OSPlanStepKind[] = [
   "fix",
   "leads",
   "approval",
+  "show",
 ];
 
 type EventRow = {
@@ -88,6 +90,77 @@ export async function loadPlans(limit = 5): Promise<OSPlan[]> {
         sessionKey: String(p.sessionKey ?? ""),
         say: String(p.say ?? ""),
         steps,
+        ts: (r.ts ?? "").trim(),
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
+// `show` events: Percy opening a specific row on the owner's screen (a SHOW
+// block — "open the Halden deal"). payload = { what, ref, id, window, resolved,
+// message_event_id }. The live view opens `window` and lands on the row with
+// data-pc="<what>-<id>". Also surfaces as a `show` step inside the reply's plan.
+export type OSShowWhat =
+  | "prospect"
+  | "campaign"
+  | "approval"
+  | "backlog"
+  | "lead"
+  | "proposal"
+  | "fix"
+  | "goal"
+  | "agent"
+  | "window";
+
+export type OSShow = {
+  eventId: number;
+  what: OSShowWhat;
+  ref: string;
+  id: string | null;
+  window: string; // dock window to open (frontdesk | marketing | … | system)
+  resolved: boolean;
+  messageEventId: number;
+  ts: string;
+};
+
+const SHOW_WHATS: OSShowWhat[] = [
+  "prospect",
+  "campaign",
+  "approval",
+  "backlog",
+  "lead",
+  "proposal",
+  "fix",
+  "goal",
+  "agent",
+  "window",
+];
+
+export async function loadShows(limit = 5): Promise<OSShow[]> {
+  try {
+    const db = supabaseAdmin();
+    const { data } = await db
+      .from("events")
+      .select("id, ts, payload")
+      .eq("kind", "show")
+      .eq("agent", "percy")
+      .order("id", { ascending: false })
+      .limit(limit);
+    return ((data as EventRow[] | null) ?? []).map((r) => {
+      const p = (r.payload ?? {}) as Record<string, unknown>;
+      const what = String(p.what ?? "");
+      return {
+        eventId: r.id,
+        what: (SHOW_WHATS.includes(what as OSShowWhat)
+          ? what
+          : "window") as OSShowWhat,
+        ref: String(p.ref ?? ""),
+        id: p.id != null ? String(p.id) : null,
+        window: String(p.window ?? ""),
+        resolved: p.resolved !== false,
+        messageEventId: Number(p.message_event_id ?? 0),
         ts: (r.ts ?? "").trim(),
       };
     });

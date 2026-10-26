@@ -1000,6 +1000,7 @@ function Campaigns({ data }: { data: OSMarketing }) {
           return (
             <button
               key={c.id}
+              data-pc={`campaign-${c.id}`}
               type="button"
               onClick={() => setSel(c)}
               style={{

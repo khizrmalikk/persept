@@ -213,6 +213,7 @@ export function AgentPage({
           {AGENT_KEYS.filter((k) => k !== agent.id).map((k) => (
             <button
               key={k}
+              data-pc={`agent-${k}`}
               type="button"
               title={agents.find((a) => a.id === k)?.name ?? k}
               onClick={() => os.openAgent(k)}

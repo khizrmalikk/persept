@@ -11,8 +11,9 @@ import {
 } from "react";
 import { PercyAvatar } from "@/components/percy/PercyAvatar";
 import { setPercyLook, setPercyMode } from "@/components/percy/percy-bus";
-import type { OSPlan, OSPlanStep } from "../_data/plans";
+import type { OSPlan, OSPlanStep, OSShow } from "../_data/plans";
 import { useOS, type WindowKey } from "./os-store";
+import type { AgentKey } from "./Persona";
 
 // ── live view ──────────────────────────────────────────────────────────────
 // Replays a Percy `plan` event as on-screen choreography: Percy's cursor opens
@@ -41,6 +42,7 @@ type LiveApi = {
   run: LiveRun | null;
   cursor: Cursor;
   highlight: Highlight;
+  note: string | null;
   showWorking: boolean;
   setShowWorking: (v: boolean) => void;
   takeOver: () => void;
@@ -110,15 +112,18 @@ const INITIAL_CURSOR: Cursor = { x: 0, y: 0, vis: false, ms: 0, carry: null };
 
 export function LiveProvider({
   plans,
+  shows,
   children,
 }: {
   plans: OSPlan[];
+  shows: OSShow[];
   children: ReactNode;
 }) {
   const os = useOS();
   const [run, setRun] = useState<LiveRun | null>(null);
   const [cursor, setCursor] = useState<Cursor>(INITIAL_CURSOR);
   const [highlight, setHighlight] = useState<Highlight>(null);
+  const [note, setNote] = useState<string | null>(null);
   const [showWorking, setShowWorkingState] = useState(true);
 
   // os api in a ref so the engine (started once per plan) always calls the latest
@@ -128,6 +133,7 @@ export function LiveProvider({
   cursorRef.current = cursor;
   const ctxRef = useRef<{ dead: boolean }>({ dead: true });
   const seenRef = useRef<Set<number>>(new Set());
+  const seenShowsRef = useRef<Set<number>>(new Set());
   const showRef = useRef(showWorking);
   showRef.current = showWorking;
 
@@ -149,6 +155,7 @@ export function LiveProvider({
     ctxRef.current.dead = true;
     setCursor((c) => ({ ...c, vis: false, carry: null }));
     setHighlight(null);
+    setNote(null);
     setPercyLook(null);
     setPercyMode("idle");
     setRun((r) => (r ? { ...r, status: "stopped" } : r));
@@ -202,6 +209,24 @@ export function LiveProvider({
     void replay(fresh, ctx);
   }, [plans]);
 
+  // watch for a fresh `show` (Percy opening a specific row) and replay it
+  // biome-ignore lint/correctness/useExhaustiveDependencies: engine reads refs; re-run only when a new show arrives
+  useEffect(() => {
+    if (!showRef.current) return;
+    if (!ctxRef.current.dead) return;
+    const now = Date.now();
+    const fresh = shows.find((s) => {
+      if (seenShowsRef.current.has(s.eventId)) return false;
+      const t = Date.parse(s.ts);
+      return Number.isNaN(t) || now - t < 90_000;
+    });
+    if (!fresh) return;
+    seenShowsRef.current.add(fresh.eventId);
+    const ctx = { dead: false };
+    ctxRef.current = ctx;
+    void replayShow(fresh, ctx);
+  }, [shows]);
+
   async function replay(plan: OSPlan, ctx: { dead: boolean }) {
     const wait = (ms: number) =>
       new Promise<void>((res, rej) =>
@@ -249,6 +274,13 @@ export function LiveProvider({
       for (let i = 0; i < plan.steps.length; i++) {
         const step = plan.steps[i];
         setRun((r) => (r ? { ...r, i, steps: mark(r.steps, i, "doing") } : r));
+        // `show` steps navigate via the paired bare `show` event; here we just
+        // dwell and resolve so the live card ticks without the 20s row-hunt.
+        if (step.kind === "show") {
+          await wait(700);
+          setRun((r) => (r ? { ...r, steps: mark(r.steps, i, "done") } : r));
+          continue;
+        }
         const { win, needle } = surfaceFor(step);
 
         // open the surface
@@ -302,9 +334,112 @@ export function LiveProvider({
     }
   }
 
+  // Replay a bare `show` event: open the window, land the cursor on the row
+  // (data-pc="<what>-<id>"), highlight it. On an unresolved ref, open the window
+  // only and surface a "couldn't find …" note on the strip.
+  async function replayShow(show: OSShow, ctx: { dead: boolean }) {
+    const wait = (ms: number) =>
+      new Promise<void>((res, rej) =>
+        setTimeout(() => (ctx.dead ? rej(new Error("stopped")) : res()), ms),
+      );
+    const moveTo = async (el: Element | null) => {
+      if (!el) {
+        await wait(180);
+        return;
+      }
+      const r = el.getBoundingClientRect();
+      const tx = r.left + Math.min(r.width / 2, 40);
+      const ty = r.top + r.height / 2;
+      const c = cursorRef.current;
+      const d = Math.hypot(tx - (c.x || tx), ty - (c.y || ty));
+      const ms = Math.round(Math.min(1100, 300 + d * 0.6));
+      setCursor((p) => ({ ...p, x: tx, y: ty, vis: true, ms }));
+      setPercyLook({ x: tx, y: ty });
+      await wait(ms + 80);
+    };
+
+    try {
+      setPercyMode("working");
+      setRun({
+        plan: {
+          eventId: show.eventId,
+          messageEventId: show.messageEventId,
+          sessionKey: "",
+          say: "",
+          ts: show.ts,
+          steps: [
+            { kind: "show", key: "", label: `open ${show.ref || show.what}` },
+          ],
+        },
+        steps: ["doing"],
+        i: 0,
+        status: "running",
+      });
+      const pill = document.querySelector('[data-pc="pill"]');
+      if (pill) {
+        const r = pill.getBoundingClientRect();
+        setCursor({
+          x: r.left + r.width / 2,
+          y: r.top + r.height / 2,
+          vis: true,
+          ms: 0,
+          carry: null,
+        });
+      }
+      await wait(350);
+
+      // open the surface Percy is pointing at
+      if (show.window === "system") osRef.current.openMonitor();
+      else if (show.what === "agent" && show.id)
+        osRef.current.openAgent(show.id as AgentKey);
+      else if (show.window) osRef.current.open(show.window as WindowKey);
+      await wait(520);
+
+      if (!show.resolved) {
+        setNote(`couldn't find ${show.ref || "it"}`);
+        await wait(2000);
+        setNote(null);
+      } else if (show.id && show.what !== "window" && show.what !== "agent") {
+        const sel = `[data-pc="${show.what}-${show.id}"]`;
+        let el: Element | null = null;
+        for (let t = 0; t < 12 && !el; t++) {
+          el = document.querySelector(sel);
+          if (el) break;
+          await wait(400);
+        }
+        if (el) {
+          await moveTo(el);
+          const r = el.getBoundingClientRect();
+          setHighlight({ x: r.left, y: r.top, w: r.width, h: r.height });
+          await wait(1500);
+          setHighlight(null);
+        }
+      }
+
+      setRun((rr) => (rr ? { ...rr, steps: ["done"], status: "done" } : rr));
+      await moveTo(document.querySelector('[data-pc="pill"]'));
+      setCursor((c) => ({ ...c, vis: false, carry: null }));
+      setPercyLook(null);
+      setPercyMode("idle");
+      ctx.dead = true;
+      await wait(3000);
+      setRun((rr) => (rr && rr.plan.eventId === show.eventId ? null : rr));
+    } catch {
+      ctx.dead = true;
+    }
+  }
+
   return (
     <LiveCtx.Provider
-      value={{ run, cursor, highlight, showWorking, setShowWorking, takeOver }}
+      value={{
+        run,
+        cursor,
+        highlight,
+        note,
+        showWorking,
+        setShowWorking,
+        takeOver,
+      }}
     >
       {children}
       <LiveOverlay />
@@ -320,7 +455,7 @@ function mark(steps: StepStatus[], i: number, st: StepStatus): StepStatus[] {
 
 // ── the on-screen overlay: frame, cursor, carry card, highlight ─────────────
 function LiveOverlay() {
-  const { run, cursor, highlight, takeOver } = useLive();
+  const { run, cursor, highlight, note, takeOver } = useLive();
   const active = run?.status === "running";
   const step = run ? run.plan.steps[run.i] : null;
 
@@ -373,7 +508,7 @@ function LiveOverlay() {
             />
             <span>
               Percy is working on your screen
-              {step ? ` · ${step.label}` : ""}
+              {note ? ` · ${note}` : step ? ` · ${step.label}` : ""}
             </span>
             <button
               type="button"

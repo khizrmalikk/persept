@@ -813,6 +813,7 @@ function Group({
           return (
             <div
               key={a.id}
+              data-pc={`approval-${a.id}`}
               style={{
                 display: "flex",
                 gap: 10,

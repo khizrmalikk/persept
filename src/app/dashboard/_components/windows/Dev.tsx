@@ -522,6 +522,7 @@ function Changes({
             return (
               <div
                 key={f.id}
+                data-pc={`fix-${f.id}`}
                 style={{
                   display: "flex",
                   gap: 11,

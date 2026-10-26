@@ -533,6 +533,7 @@ function Pipeline({
                   return (
                     <button
                       key={d.key}
+                      data-pc={`prospect-${d.key}`}
                       type="button"
                       onClick={() => onOpen(d.key)}
                       style={{
@@ -748,6 +749,7 @@ function ResearchDesk({
           data.forYou.map((l) => (
             <div
               key={l.id}
+              data-pc={`lead-${l.id}`}
               style={{
                 display: "flex",
                 gap: 14,
@@ -1544,6 +1546,7 @@ function Proposals({
           {data.proposals.map((p) => (
             <button
               key={p.id}
+              data-pc={`proposal-${p.id}`}
               type="button"
               onClick={() => onOpenProposal(p.id)}
               title="open the draft"

@@ -1082,6 +1082,7 @@ function BacklogCard({
 
   return (
     <div
+      data-pc={`backlog-${b.id}`}
       style={{
         padding: 13,
         borderRadius: 13,

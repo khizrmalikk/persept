@@ -807,6 +807,7 @@ export function WarRoom({
               return (
                 <button
                   key={g.id}
+                  data-pc={`goal-${g.id}`}
                   type="button"
                   onClick={() => {
                     setSel(g.id);
