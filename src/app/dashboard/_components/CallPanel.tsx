@@ -223,7 +223,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const enqueueSentence = useCallback(
     (text: string) => {
       const t = text.trim();
-      if (!t) return;
+      if (!t || t.startsWith("(call:")) return; // Percy's own note, don't speak it
       ttsQueueRef.current.push(t);
       void pumpTts();
     },
@@ -493,6 +493,16 @@ function appendPercy(lines: Caption[], text: string): Caption[] {
   return [...lines, { who: "percy", text }];
 }
 
+// the bridge appends a one-line "(call: …)" note for Percy, not the owner —
+// drop any line beginning with it from the captions and from TTS.
+function stripCall(s: string): string {
+  return s
+    .split("\n")
+    .filter((l) => !l.trimStart().startsWith("(call:"))
+    .join("\n")
+    .trim();
+}
+
 function fmtDur(ms: number): string {
   const s = Math.max(0, Math.floor(ms / 1000));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
@@ -592,7 +602,7 @@ function CallPanel() {
                 color: l.who === "percy" ? "#ff5a1f" : "#c9c8c2",
               }}
             >
-              {l.text}
+              {l.who === "percy" ? stripCall(l.text) : l.text}
             </div>
           ))
         )}
