@@ -19,6 +19,7 @@ import type { OSWarRoom } from "../_data/warroom-types";
 import { DOCK_WS, WINDOWS } from "../_data/windows";
 import { AboutSheet } from "./AboutSheet";
 import { BootScreen } from "./BootScreen";
+import { CallProvider } from "./CallPanel";
 import { DesktopContextMenu } from "./DesktopContextMenu";
 import { DesktopGround, type OSPipeline } from "./DesktopGround";
 import { LiveProvider } from "./LiveView";
@@ -132,352 +133,358 @@ export function Desktop({
 
   return (
     <LiveProvider plans={plans}>
-      {/* live-update heartbeat: refreshes server data only when the tick changes */}
-      <TickPoller />
-      {/* single writer of the shared Percy avatar's mode (window.PercyBus) */}
-      <PercyBusDriver
-        percyWorking={agents.some(
-          (a) => a.id === "percy" && a.status === "working",
-        )}
-      />
-
-      {/* ── desktop ground: the vps map + widgets ──────────────────────────── */}
-      <DesktopGround
-        agents={agents}
-        vps={vps}
-        approvals={approvals}
-        desktop={desktop}
-        warroom={warroom}
-        pipeline={pipeline}
-      />
-
-      {/* ── menu bar (v3 §4) ───────────────────────────────────────────────── */}
-      <MenuBar
-        agents={agents}
-        pending={pending}
-        working={working}
-        vps={vps}
-        clock={clock}
-        ctxLabel={ctxLabel}
-      />
-
-      {/* ── system monitor (v3 §5) ─────────────────────────────────────────── */}
-      <SystemMonitor agents={agents} vps={vps} ops={ops} />
-
-      {/* ── window ─────────────────────────────────────────────────────────── */}
-      <WindowFrame
-        agents={agents}
-        pending={pending}
-        approvals={approvals}
-        manual={manual}
-        inFlight={inFlight}
-        frontdesk={frontdesk}
-        marketing={marketing}
-        dev={dev}
-        knowledge={knowledge}
-        command={command}
-        warroom={warroom}
-        agentExtras={agentExtras}
-      />
-
-      {/* ── percy drawer ───────────────────────────────────────────────────── */}
-      <PercyDrawer agents={agents} threads={threads} />
-
-      {/* ── percy button (hidden while a window is zoomed, §6) ─────────────── */}
-      {!os.drawer && !os.zoomed && (
-        <button
-          type="button"
-          data-pc="pill"
-          onClick={() => os.toggleDrawer("percy")}
-          style={{
-            position: "absolute",
-            right: 18,
-            bottom: 18,
-            zIndex: 26,
-            display: "flex",
-            alignItems: "center",
-            gap: 11,
-            padding: "6px 16px 6px 6px",
-            borderRadius: 999,
-            background: "var(--dock)",
-            backdropFilter: "blur(20px)",
-            border: "1px solid var(--line)",
-            boxShadow: "var(--shadow)",
-            cursor: "pointer",
-            color: "var(--ink)",
-          }}
-        >
-          <Persona
-            agent="percy"
-            size={46}
-            ring
-            status={agents.find((a) => a.id === "percy")?.status ?? ""}
-          />
-          <span
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 1,
-              textAlign: "left",
-            }}
-          >
-            <span style={{ fontSize: 14, fontWeight: 700 }}>Percy</span>
-            <span
-              style={{
-                fontSize: 11.5,
-                color: "var(--soft)",
-                whiteSpace: "nowrap",
-              }}
-            >
-              leading {agents.filter((a) => a.id !== "percy").length} agents
-              {pending > 0 ? ` · ${pending} for you` : ""}
-            </span>
-          </span>
-        </button>
-      )}
-
-      {/* ── dock ───────────────────────────────────────────────────────────── */}
-      <div
-        style={{
-          position: "absolute",
-          left: "50%",
-          bottom: 14,
-          transform: "translateX(-50%)",
-          zIndex: 20,
-          display: "flex",
-          alignItems: "flex-end",
-          gap: 8,
-          padding: "8px 10px",
-          borderRadius: 22,
-          background: "var(--dock)",
-          backdropFilter: "blur(20px)",
-          border: "1px solid var(--line)",
-          boxShadow: "var(--shadow)",
-        }}
-      >
-        <DockTile
-          label="desktop"
-          active={!os.win}
-          minimized={false}
-          hov={hov}
-          setHov={setHov}
-          onClick={os.close}
-          variant="solid"
-          fg="var(--bg)"
-          glyph="M4 6h16M4 12h16M4 18h10"
+      <CallProvider>
+        {/* live-update heartbeat: refreshes server data only when the tick changes */}
+        <TickPoller />
+        {/* single writer of the shared Percy avatar's mode (window.PercyBus) */}
+        <PercyBusDriver
+          percyWorking={agents.some(
+            (a) => a.id === "percy" && a.status === "working",
+          )}
         />
-        {DOCK_WS.map((k) => {
-          const w = WINDOWS[k];
-          return (
-            <DockTile
-              key={k}
-              label={w.name}
-              active={os.win === k}
-              minimized={os.win === k && os.minimized}
-              hov={hov}
-              setHov={setHov}
-              onClick={() => os.open(k)}
-              variant="mono"
-              fg="var(--ink)"
-              glyph={w.glyph}
-            />
-          );
-        })}
-        <Divider />
-        <DockTile
-          label="war room"
-          active={os.win === "warroom"}
-          minimized={os.win === "warroom" && os.minimized}
-          hov={hov}
-          setHov={setHov}
-          onClick={() => os.open("warroom")}
-          variant="mono"
-          fg="var(--ink)"
-          glyph={WINDOWS.warroom.glyph}
+
+        {/* ── desktop ground: the vps map + widgets ──────────────────────────── */}
+        <DesktopGround
+          agents={agents}
+          vps={vps}
+          approvals={approvals}
+          desktop={desktop}
+          warroom={warroom}
+          pipeline={pipeline}
         />
-        <DockTile
-          label="approvals"
-          active={os.win === "approvals"}
-          minimized={os.win === "approvals" && os.minimized}
-          hov={hov}
-          setHov={setHov}
-          onClick={() => os.open("approvals")}
-          variant="mono"
-          fg="var(--accent)"
-          glyph={WINDOWS.approvals.glyph}
-          badge={pending || undefined}
-          accentBadge
+
+        {/* ── menu bar (v3 §4) ───────────────────────────────────────────────── */}
+        <MenuBar
+          agents={agents}
+          pending={pending}
+          working={working}
+          vps={vps}
+          clock={clock}
+          ctxLabel={ctxLabel}
         />
-        <Divider />
-        {agents.map((a) => (
-          <div
-            key={a.id}
-            style={{
-              position: "relative",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-            }}
-          >
-            {hov === `ag-${a.id}` && (
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 66,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 2,
-                  padding: "7px 11px",
-                  borderRadius: 10,
-                  background: "var(--ink)",
-                  color: "var(--bg)",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                <span style={{ fontSize: 12.5, fontWeight: 700 }}>
-                  {a.name} · {a.status}
-                </span>
-                <span style={{ fontSize: 11.5, opacity: 0.75 }}>
-                  {a.task || "nothing running"}
-                </span>
-              </div>
-            )}
-            <button
-              type="button"
-              className="os-dock-tile"
-              onClick={() => os.openAgent(a.id)}
-              onMouseEnter={() => setHov(`ag-${a.id}`)}
-              onMouseLeave={() => setHov(null)}
-              aria-label={`open ${a.name}`}
-              style={{
-                cursor: "pointer",
-                borderRadius: "50%",
-                border: "none",
-                background: "transparent",
-                padding: 0,
-              }}
-            >
-              <Persona agent={a.id} size={50} status={a.status} />
-            </button>
-            <span
-              style={{
-                width: 4,
-                height: 4,
-                borderRadius: "50%",
-                marginTop: 4,
-                background: DOT[a.status],
-              }}
-            />
-          </div>
-        ))}
-        <Divider />
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-          }}
-        >
+
+        {/* ── system monitor (v3 §5) ─────────────────────────────────────────── */}
+        <SystemMonitor agents={agents} vps={vps} ops={ops} />
+
+        {/* ── window ─────────────────────────────────────────────────────────── */}
+        <WindowFrame
+          agents={agents}
+          pending={pending}
+          approvals={approvals}
+          manual={manual}
+          inFlight={inFlight}
+          frontdesk={frontdesk}
+          marketing={marketing}
+          dev={dev}
+          knowledge={knowledge}
+          command={command}
+          warroom={warroom}
+          agentExtras={agentExtras}
+        />
+
+        {/* ── percy drawer ───────────────────────────────────────────────────── */}
+        <PercyDrawer agents={agents} threads={threads} />
+
+        {/* ── percy button (hidden while a window is zoomed, §6) ─────────────── */}
+        {!os.drawer && !os.zoomed && (
           <button
             type="button"
-            className="os-dock-tile os-tile-mono"
-            onClick={os.openPal}
-            title="search ⌘K"
+            data-pc="pill"
+            onClick={() => os.toggleDrawer("percy")}
             style={{
-              width: 50,
-              height: 50,
-              borderRadius: 14,
+              position: "absolute",
+              right: 18,
+              bottom: 18,
+              zIndex: 26,
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
+              gap: 11,
+              padding: "6px 16px 6px 6px",
+              borderRadius: 999,
+              background: "var(--dock)",
+              backdropFilter: "blur(20px)",
+              border: "1px solid var(--line)",
+              boxShadow: "var(--shadow)",
               cursor: "pointer",
               color: "var(--ink)",
             }}
           >
-            <svg
-              width="21"
-              height="21"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              aria-hidden="true"
+            <Persona
+              agent="percy"
+              size={46}
+              ring
+              status={agents.find((a) => a.id === "percy")?.status ?? ""}
+            />
+            <span
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 1,
+                textAlign: "left",
+              }}
             >
-              <circle cx="11" cy="11" r="7" />
-              <path d="M20 20l-3.5-3.5" />
-            </svg>
+              <span style={{ fontSize: 14, fontWeight: 700 }}>Percy</span>
+              <span
+                style={{
+                  fontSize: 11.5,
+                  color: "var(--soft)",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                leading {agents.filter((a) => a.id !== "percy").length} agents
+                {pending > 0 ? ` · ${pending} for you` : ""}
+              </span>
+            </span>
           </button>
-          <span style={{ width: 4, height: 4, marginTop: 4 }} />
-        </div>
-      </div>
+        )}
 
-      {/* ── notification banners (v3 §8) ───────────────────────────────────── */}
-      <NotificationBanners
-        feed={desktop.feed}
-        suppressed={
-          !os.view.banners ||
-          os.locked ||
-          os.booting ||
-          os.notif ||
-          os.pal ||
-          os.monitorOpen
-        }
-      />
-
-      {/* ── notifications ──────────────────────────────────────────────────── */}
-      {os.notif && <Notifications agents={agents} pending={pending} />}
-
-      {/* ── command palette ────────────────────────────────────────────────── */}
-      {os.pal && (
-        <Palette
-          agents={agents}
-          deals={frontdesk.deals.map((d) => ({
-            key: d.key,
-            company: d.company,
-            stage: d.stage,
-          }))}
-          projects={dev.repos.map((r) => ({ id: r.id, name: r.name }))}
-        />
-      )}
-
-      {/* ── toast ──────────────────────────────────────────────────────────── */}
-      {os.toast && (
+        {/* ── dock ───────────────────────────────────────────────────────────── */}
         <div
-          className="os-popin-cx"
           style={{
             position: "absolute",
             left: "50%",
-            bottom: 96,
+            bottom: 14,
             transform: "translateX(-50%)",
-            zIndex: 60,
-            padding: "11px 18px",
-            borderRadius: 12,
-            background: "var(--ink)",
-            color: "var(--bg)",
-            fontSize: 13.5,
-            fontWeight: 600,
+            zIndex: 20,
+            display: "flex",
+            alignItems: "flex-end",
+            gap: 8,
+            padding: "8px 10px",
+            borderRadius: 22,
+            background: "var(--dock)",
+            backdropFilter: "blur(20px)",
+            border: "1px solid var(--line)",
             boxShadow: "var(--shadow)",
-            whiteSpace: "nowrap",
           }}
         >
-          {os.toast}
+          <DockTile
+            label="desktop"
+            active={!os.win}
+            minimized={false}
+            hov={hov}
+            setHov={setHov}
+            onClick={os.close}
+            variant="solid"
+            fg="var(--bg)"
+            glyph="M4 6h16M4 12h16M4 18h10"
+          />
+          {DOCK_WS.map((k) => {
+            const w = WINDOWS[k];
+            return (
+              <DockTile
+                key={k}
+                label={w.name}
+                active={os.win === k}
+                minimized={os.win === k && os.minimized}
+                hov={hov}
+                setHov={setHov}
+                onClick={() => os.open(k)}
+                variant="mono"
+                fg="var(--ink)"
+                glyph={w.glyph}
+              />
+            );
+          })}
+          <Divider />
+          <DockTile
+            label="war room"
+            active={os.win === "warroom"}
+            minimized={os.win === "warroom" && os.minimized}
+            hov={hov}
+            setHov={setHov}
+            onClick={() => os.open("warroom")}
+            variant="mono"
+            fg="var(--ink)"
+            glyph={WINDOWS.warroom.glyph}
+          />
+          <DockTile
+            label="approvals"
+            active={os.win === "approvals"}
+            minimized={os.win === "approvals" && os.minimized}
+            hov={hov}
+            setHov={setHov}
+            onClick={() => os.open("approvals")}
+            variant="mono"
+            fg="var(--accent)"
+            glyph={WINDOWS.approvals.glyph}
+            badge={pending || undefined}
+            accentBadge
+          />
+          <Divider />
+          {agents.map((a) => (
+            <div
+              key={a.id}
+              style={{
+                position: "relative",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              {hov === `ag-${a.id}` && (
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: 66,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 2,
+                    padding: "7px 11px",
+                    borderRadius: 10,
+                    background: "var(--ink)",
+                    color: "var(--bg)",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  <span style={{ fontSize: 12.5, fontWeight: 700 }}>
+                    {a.name} · {a.status}
+                  </span>
+                  <span style={{ fontSize: 11.5, opacity: 0.75 }}>
+                    {a.task || "nothing running"}
+                  </span>
+                </div>
+              )}
+              <button
+                type="button"
+                className="os-dock-tile"
+                onClick={() => os.openAgent(a.id)}
+                onMouseEnter={() => setHov(`ag-${a.id}`)}
+                onMouseLeave={() => setHov(null)}
+                aria-label={`open ${a.name}`}
+                style={{
+                  cursor: "pointer",
+                  borderRadius: "50%",
+                  border: "none",
+                  background: "transparent",
+                  padding: 0,
+                }}
+              >
+                <Persona agent={a.id} size={50} status={a.status} />
+              </button>
+              <span
+                style={{
+                  width: 4,
+                  height: 4,
+                  borderRadius: "50%",
+                  marginTop: 4,
+                  background: DOT[a.status],
+                }}
+              />
+            </div>
+          ))}
+          <Divider />
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <button
+              type="button"
+              className="os-dock-tile os-tile-mono"
+              onClick={os.openPal}
+              title="search ⌘K"
+              style={{
+                width: 50,
+                height: 50,
+                borderRadius: 14,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                color: "var(--ink)",
+              }}
+            >
+              <svg
+                width="21"
+                height="21"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="M20 20l-3.5-3.5" />
+              </svg>
+            </button>
+            <span style={{ width: 4, height: 4, marginTop: 4 }} />
+          </div>
         </div>
-      )}
 
-      {/* ── desktop context menu (v3 §7) ───────────────────────────────────── */}
-      {os.ctxMenu && <DesktopContextMenu />}
+        {/* ── notification banners (v3 §8) ───────────────────────────────────── */}
+        <NotificationBanners
+          feed={desktop.feed}
+          suppressed={
+            !os.view.banners ||
+            os.locked ||
+            os.booting ||
+            os.notif ||
+            os.pal ||
+            os.monitorOpen
+          }
+        />
 
-      {/* ── about sheet (v3 §10) ───────────────────────────────────────────── */}
-      {os.aboutOpen && <AboutSheet vps={vps} working={working} />}
+        {/* ── notifications ──────────────────────────────────────────────────── */}
+        {os.notif && <Notifications agents={agents} pending={pending} />}
 
-      {/* ── lock screen (v3 §9) ────────────────────────────────────────────── */}
-      {os.locked && (
-        <LockScreen approvals={approvals} working={working} pending={pending} />
-      )}
+        {/* ── command palette ────────────────────────────────────────────────── */}
+        {os.pal && (
+          <Palette
+            agents={agents}
+            deals={frontdesk.deals.map((d) => ({
+              key: d.key,
+              company: d.company,
+              stage: d.stage,
+            }))}
+            projects={dev.repos.map((r) => ({ id: r.id, name: r.name }))}
+          />
+        )}
 
-      {/* ── boot screen (v3 §3) — on top of everything, first-load only ────── */}
-      {os.booting && <BootScreen />}
+        {/* ── toast ──────────────────────────────────────────────────────────── */}
+        {os.toast && (
+          <div
+            className="os-popin-cx"
+            style={{
+              position: "absolute",
+              left: "50%",
+              bottom: 96,
+              transform: "translateX(-50%)",
+              zIndex: 60,
+              padding: "11px 18px",
+              borderRadius: 12,
+              background: "var(--ink)",
+              color: "var(--bg)",
+              fontSize: 13.5,
+              fontWeight: 600,
+              boxShadow: "var(--shadow)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {os.toast}
+          </div>
+        )}
+
+        {/* ── desktop context menu (v3 §7) ───────────────────────────────────── */}
+        {os.ctxMenu && <DesktopContextMenu />}
+
+        {/* ── about sheet (v3 §10) ───────────────────────────────────────────── */}
+        {os.aboutOpen && <AboutSheet vps={vps} working={working} />}
+
+        {/* ── lock screen (v3 §9) ────────────────────────────────────────────── */}
+        {os.locked && (
+          <LockScreen
+            approvals={approvals}
+            working={working}
+            pending={pending}
+          />
+        )}
+
+        {/* ── boot screen (v3 §3) — on top of everything, first-load only ────── */}
+        {os.booting && <BootScreen />}
+      </CallProvider>
     </LiveProvider>
   );
 }
