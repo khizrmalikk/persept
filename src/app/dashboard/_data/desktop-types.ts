@@ -22,7 +22,7 @@ export type OSRun = {
   minutes: number; // minutes since midnight (Dubai)
   agent: AgentKey;
   name: string;
-  status: "planned" | "done" | "missed";
+  status: "planned" | "done" | "missed" | "rerun";
 };
 
 export type OSDesktop = {

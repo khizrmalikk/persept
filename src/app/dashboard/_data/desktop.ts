@@ -99,7 +99,7 @@ export async function loadDesktop(): Promise<OSDesktop> {
     minutes: toMinutes(r.time ?? "0:00"),
     agent: asAgent(r.agent),
     name: r.name ?? "run",
-    status: (["planned", "done", "missed"].includes(r.status)
+    status: (["planned", "done", "missed", "rerun"].includes(r.status)
       ? r.status
       : "planned") as OSRun["status"],
   }));

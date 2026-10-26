@@ -916,7 +916,8 @@ function RunsTimeline({
       />
       {runs.map((r, i) => {
         const col = `var(${AGENT_HUE_VAR[r.agent]})`;
-        const done = r.status === "done";
+        const rerun = r.status === "rerun";
+        const done = r.status === "done" || rerun;
         const missed = r.status === "missed";
         return (
           <div
@@ -956,6 +957,20 @@ function RunsTimeline({
             >
               {byId.get(r.agent)?.name ?? cap(r.agent)}
             </span>
+            {rerun && (
+              <span
+                style={{
+                  fontSize: 8.5,
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                  color: col,
+                  marginTop: -2,
+                }}
+              >
+                re-run
+              </span>
+            )}
           </div>
         );
       })}
