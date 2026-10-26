@@ -397,8 +397,11 @@ export function Desktop({
 
         {/* ── toast ──────────────────────────────────────────────────────────── */}
         {os.toast && (
-          <div
-            className="os-popin-cx"
+          <button
+            type="button"
+            aria-label={`dismiss: ${os.toast}`}
+            onClick={os.dismissToast}
+            className="os-popin-cx os-toast"
             style={{
               position: "absolute",
               left: "50%",
@@ -416,22 +419,19 @@ export function Desktop({
               fontWeight: 600,
               boxShadow: "var(--shadow)",
               whiteSpace: "nowrap",
+              border: "none",
+              cursor: "pointer",
             }}
           >
-            {os.toast}
-            <button
-              type="button"
-              aria-label="dismiss"
-              onClick={os.dismissToast}
+            <span>{os.toast}</span>
+            <span
               className="os-toast-x"
+              aria-hidden="true"
               style={{
                 width: 20,
                 height: 20,
                 borderRadius: 5,
-                border: "none",
-                background: "transparent",
                 color: "var(--bg)",
-                cursor: "pointer",
                 display: "grid",
                 placeItems: "center",
                 opacity: 0.6,
@@ -445,8 +445,8 @@ export function Desktop({
                   strokeLinecap="round"
                 />
               </svg>
-            </button>
-          </div>
+            </span>
+          </button>
         )}
 
         {/* ── desktop context menu (v3 §7) ───────────────────────────────────── */}
