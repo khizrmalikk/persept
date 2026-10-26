@@ -13,6 +13,7 @@ import type { OSFrontDesk } from "../_data/frontdesk";
 import type { OSKnowledge } from "../_data/knowledge-types";
 import type { OSMarketing } from "../_data/marketing-types";
 import type { OSOp } from "../_data/ops";
+import type { OSPlan } from "../_data/plans";
 import type { OSThreadMsg } from "../_data/threads";
 import type { OSWarRoom } from "../_data/warroom-types";
 import { DOCK_WS, WINDOWS } from "../_data/windows";
@@ -20,6 +21,7 @@ import { AboutSheet } from "./AboutSheet";
 import { BootScreen } from "./BootScreen";
 import { DesktopContextMenu } from "./DesktopContextMenu";
 import { DesktopGround, type OSPipeline } from "./DesktopGround";
+import { LiveProvider } from "./LiveView";
 import { LockScreen } from "./LockScreen";
 import { MenuBar } from "./MenuBar";
 import { NotificationBanners } from "./NotificationBanners";
@@ -56,6 +58,7 @@ export function Desktop({
   agentExtras,
   threads,
   ops,
+  plans,
 }: {
   agents: OSAgent[];
   pending: number;
@@ -74,6 +77,7 @@ export function Desktop({
   agentExtras: Record<string, OSAgentExtras>;
   threads: Record<string, OSThreadMsg[]>;
   ops: OSOp[];
+  plans: OSPlan[];
 }) {
   const os = useOS();
   const [hov, setHov] = useState<string | null>(null);
@@ -127,7 +131,7 @@ export function Desktop({
         : "desktop";
 
   return (
-    <>
+    <LiveProvider plans={plans}>
       {/* live-update heartbeat: refreshes server data only when the tick changes */}
       <TickPoller />
       {/* single writer of the shared Percy avatar's mode (window.PercyBus) */}
@@ -183,6 +187,7 @@ export function Desktop({
       {!os.drawer && !os.zoomed && (
         <button
           type="button"
+          data-pc="pill"
           onClick={() => os.toggleDrawer("percy")}
           style={{
             position: "absolute",
@@ -473,7 +478,7 @@ export function Desktop({
 
       {/* ── boot screen (v3 §3) — on top of everything, first-load only ────── */}
       {os.booting && <BootScreen />}
-    </>
+    </LiveProvider>
   );
 }
 

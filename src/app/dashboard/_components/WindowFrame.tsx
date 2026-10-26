@@ -171,6 +171,7 @@ export function WindowFrame({
       />
       <section
         className={winClass}
+        data-pc="win"
         style={{
           position: "absolute",
           ...geom,

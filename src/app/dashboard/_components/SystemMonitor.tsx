@@ -76,7 +76,11 @@ export function SystemMonitor({
           cursor: "default",
         }}
       />
-      <section className="os-monitor" aria-label="system monitor">
+      <section
+        className="os-monitor"
+        aria-label="system monitor"
+        data-pc="sysmon"
+      >
         {/* title */}
         <div
           style={{
