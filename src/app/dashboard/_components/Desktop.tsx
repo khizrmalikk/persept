@@ -19,7 +19,7 @@ import type { OSWarRoom } from "../_data/warroom-types";
 import { DOCK_WS, WINDOWS } from "../_data/windows";
 import { AboutSheet } from "./AboutSheet";
 import { BootScreen } from "./BootScreen";
-import { CallProvider } from "./CallPanel";
+import { CallProvider, PercyPill } from "./CallPanel";
 import { DesktopContextMenu } from "./DesktopContextMenu";
 import { DesktopGround, type OSPipeline } from "./DesktopGround";
 import { LiveProvider } from "./LiveView";
@@ -185,61 +185,9 @@ export function Desktop({
         {/* ── percy drawer ───────────────────────────────────────────────────── */}
         <PercyDrawer agents={agents} threads={threads} />
 
-        {/* ── percy button (hidden while a window is zoomed, §6) ─────────────── */}
+        {/* ── percy pill (hidden while a window is zoomed or the drawer is open) ── */}
         {!os.drawer && !os.zoomed && (
-          <button
-            type="button"
-            data-pc="pill"
-            onClick={() => os.toggleDrawer("percy")}
-            style={{
-              position: "absolute",
-              right: 14,
-              bottom: 10,
-              zIndex: 26,
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: 5,
-              borderRadius: 14,
-              background: "var(--dock)",
-              backdropFilter: "blur(20px)",
-              border: "1px solid var(--line)",
-              boxShadow: "var(--shadow)",
-              cursor: "pointer",
-              color: "var(--ink)",
-            }}
-          >
-            <Persona
-              agent="percy"
-              size={36}
-              ring
-              status={agents.find((a) => a.id === "percy")?.status ?? ""}
-            />
-            <span
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 1,
-                textAlign: "left",
-                width: 140,
-              }}
-            >
-              <span style={{ fontSize: 12.5, fontWeight: 700 }}>Percy</span>
-              <span
-                style={{
-                  fontSize: 11,
-                  color: "var(--soft)",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                {pending > 0
-                  ? `${pending} waiting for you`
-                  : "hold ⌘⌥ to talk · ⌘J"}
-              </span>
-            </span>
-          </button>
+          <PercyPill agents={agents} pending={pending} />
         )}
 
         {/* ── dock ───────────────────────────────────────────────────────────── */}
@@ -390,9 +338,9 @@ export function Desktop({
               onClick={os.openPal}
               title="search ⌘K"
               style={{
-                width: 50,
-                height: 50,
-                borderRadius: 14,
+                width: 40,
+                height: 40,
+                borderRadius: 11,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -401,8 +349,8 @@ export function Desktop({
               }}
             >
               <svg
-                width="21"
-                height="21"
+                width="17"
+                height="17"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -414,7 +362,7 @@ export function Desktop({
                 <path d="M20 20l-3.5-3.5" />
               </svg>
             </button>
-            <span style={{ width: 4, height: 4, marginTop: 4 }} />
+            <span style={{ width: 4, height: 4, marginTop: 3 }} />
           </div>
         </div>
 

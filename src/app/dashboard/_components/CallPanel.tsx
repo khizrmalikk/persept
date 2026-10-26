@@ -13,8 +13,10 @@ import {
 import { PercyAvatar } from "@/components/percy/PercyAvatar";
 import { setPercyCall, setPercyMode } from "@/components/percy/percy-bus";
 import { endCall as endCallAction } from "@/lib/workforce/actions";
+import type { OSAgent } from "../_data/agents";
 import { useLive } from "./LiveView";
 import { useOS } from "./os-store";
+import { Persona } from "./Persona";
 
 // ── call panel ──────────────────────────────────────────────────────────────
 // A voice call with Percy over the existing bridge plumbing: browser speech in →
@@ -703,5 +705,111 @@ function SessBtn({
     >
       {children}
     </button>
+  );
+}
+
+// ── Percy pill (bottom-right chat bar) ──────────────────────────────────────
+// Avatar + text open the conversations drawer; the phone button starts/ends a
+// call (full card). Lives here so it can reach the call context.
+export function PercyPill({
+  agents,
+  pending,
+}: {
+  agents: OSAgent[];
+  pending: number;
+}) {
+  const os = useOS();
+  const { call, start, end } = useCall();
+  const status = agents.find((a) => a.id === "percy")?.status ?? "";
+  const onCall = !!call;
+  return (
+    <div
+      data-pc="pill"
+      style={{
+        position: "absolute",
+        right: 14,
+        bottom: 10,
+        zIndex: 26,
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        padding: 5,
+        borderRadius: 14,
+        background: "var(--dock)",
+        backdropFilter: "blur(20px)",
+        border: "1px solid var(--line)",
+        boxShadow: "var(--shadow)",
+        color: "var(--ink)",
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => os.toggleDrawer("percy")}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          border: "none",
+          background: "transparent",
+          color: "var(--ink)",
+          cursor: "pointer",
+          padding: 0,
+        }}
+      >
+        <Persona agent="percy" size={36} ring status={status} />
+        <span
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 1,
+            textAlign: "left",
+            width: 140,
+          }}
+        >
+          <span style={{ fontSize: 12.5, fontWeight: 700 }}>Percy</span>
+          <span
+            style={{
+              fontSize: 11,
+              color: "var(--soft)",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {pending > 0
+              ? `${pending} waiting for you`
+              : "hold ⌘⌥ to talk · ⌘J"}
+          </span>
+        </span>
+      </button>
+      <button
+        type="button"
+        aria-label={onCall ? "end call" : "call Percy"}
+        onClick={() => (onCall ? end() : start({ bar: false }))}
+        style={{
+          width: 32,
+          height: 32,
+          borderRadius: "50%",
+          border: "none",
+          cursor: "pointer",
+          flex: "none",
+          background: onCall ? "oklch(0.6 0.2 27)" : "var(--accent)",
+          color: "var(--onacc, #0c0c0c)",
+          display: "grid",
+          placeItems: "center",
+        }}
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden="true"
+          style={{ transform: onCall ? "rotate(135deg)" : "none" }}
+        >
+          <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .8-.3 1l-2.2 2.2z" />
+        </svg>
+      </button>
+    </div>
   );
 }
