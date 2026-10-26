@@ -32,6 +32,7 @@ export function WindowFrame({
   agents,
   pending,
   approvals,
+  recentDecisions,
   manual,
   inFlight,
   frontdesk,
@@ -45,6 +46,7 @@ export function WindowFrame({
   agents: OSAgent[];
   pending: number;
   approvals: OSApproval[];
+  recentDecisions: OSApproval[];
   manual: OSManualPost[];
   inFlight: OSFlightRow[];
   frontdesk: OSFrontDesk;
@@ -447,6 +449,7 @@ export function WindowFrame({
           <WindowBody
             agents={agents}
             approvals={approvals}
+            recentDecisions={recentDecisions}
             manual={manual}
             inFlight={inFlight}
             frontdesk={frontdesk}
@@ -466,6 +469,7 @@ export function WindowFrame({
 function WindowBody({
   agents,
   approvals,
+  recentDecisions,
   manual,
   inFlight,
   frontdesk,
@@ -478,6 +482,7 @@ function WindowBody({
 }: {
   agents: OSAgent[];
   approvals: OSApproval[];
+  recentDecisions: OSApproval[];
   manual: OSManualPost[];
   inFlight: OSFlightRow[];
   frontdesk: OSFrontDesk;
@@ -492,7 +497,12 @@ function WindowBody({
   switch (os.win) {
     case "approvals":
       return (
-        <Approvals approvals={approvals} manual={manual} inFlight={inFlight} />
+        <Approvals
+          approvals={approvals}
+          recentDecisions={recentDecisions}
+          manual={manual}
+          inFlight={inFlight}
+        />
       );
     case "frontdesk":
       return <FrontDesk data={frontdesk} approvals={approvals} />;

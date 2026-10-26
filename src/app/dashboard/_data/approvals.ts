@@ -42,6 +42,11 @@ export type OSApproval = {
   held: boolean;
   body: string;
   editable: boolean;
+  // day51: set when Percy decided this approval for you (via a spoken/typed
+  // "approve 14"). `decided` is the outcome; `decidedVia` is the raw note so the
+  // card can read "decided through Percy". Null for anything still waiting.
+  decided: "approved" | "rejected" | null;
+  decidedVia: string | null;
   // email / message
   to?: string;
   subject?: string;
@@ -126,6 +131,7 @@ function amountVendor(action: string | null, why: string | null) {
 
 export async function loadApprovals(): Promise<{
   approvals: OSApproval[];
+  recentDecisions: OSApproval[];
   manual: OSManualPost[];
   pending: number;
   inFlight: OSFlightRow[];
@@ -133,21 +139,35 @@ export async function loadApprovals(): Promise<{
   const db = supabaseAdmin();
   const inFlight = await getInFlightCopy().catch(() => [] as OSFlightRow[]);
   let rows: Approval[] = [];
+  let recentRows: Approval[] = [];
   let manual: OSManualPost[] = [];
+  // day51: approvals Percy decided for you in the last two minutes show as a
+  // "decided through Percy" card before they drop off the next refresh.
+  const sinceVia = new Date(Date.now() - 120_000).toISOString();
   try {
-    const [{ data: ap }, { data: posts }] = await Promise.all([
-      db
-        .from("approvals")
-        .select("*")
-        .in("status", ["pending", "held"])
-        .order("ts", { ascending: false }),
-      db
-        .from("posts")
-        .select("id, text, slug, status")
-        .eq("status", "approved_manual")
-        .limit(12),
-    ]);
+    const [{ data: ap }, { data: viaPercy }, { data: posts }] =
+      await Promise.all([
+        db
+          .from("approvals")
+          .select("*")
+          .in("status", ["pending", "held"])
+          .order("ts", { ascending: false }),
+        db
+          .from("approvals")
+          .select("*")
+          .in("status", ["approved", "rejected"])
+          .ilike("decision_note", "via percy%")
+          .gte("decided_at", sinceVia)
+          .order("decided_at", { ascending: false })
+          .limit(5),
+        db
+          .from("posts")
+          .select("id, text, slug, status")
+          .eq("status", "approved_manual")
+          .limit(12),
+      ]);
     rows = (ap as Approval[] | null) ?? [];
+    recentRows = (viaPercy as Approval[] | null) ?? [];
     manual = (
       (posts as
         | { id: string; text: string | null; slug: string | null }[]
@@ -158,20 +178,29 @@ export async function loadApprovals(): Promise<{
       title: (p.text ?? "").split("\n")[0]?.slice(0, 80) || "instagram post",
     }));
   } catch {
-    return { approvals: [], manual: [], pending: 0, inFlight };
+    return {
+      approvals: [],
+      recentDecisions: [],
+      manual: [],
+      pending: 0,
+      inFlight,
+    };
   }
 
-  // the trail (drafted by / checked / being revised) for every row at once
+  // the trail (drafted by / checked / being revised) for every row at once —
+  // both the live queue and the recent via-Percy decisions.
   let metaByApproval: Awaited<
     ReturnType<typeof getApprovalChains>
   >["metaByApproval"] = {};
   try {
-    ({ metaByApproval } = await getApprovalChains(rows.map((r) => r.id)));
+    ({ metaByApproval } = await getApprovalChains(
+      [...rows, ...recentRows].map((r) => r.id),
+    ));
   } catch {
     metaByApproval = {};
   }
 
-  const approvals: OSApproval[] = rows.map((ap) => {
+  const toOS = (ap: Approval): OSApproval => {
     const agent: AgentKey = AGENTS.has(ap.agent_id as AgentKey)
       ? (ap.agent_id as AgentKey)
       : "percy";
@@ -221,6 +250,9 @@ export async function loadApprovals(): Promise<{
         kind === "linkedin" ||
         kind === "whatsapp" ||
         kind === "linkedin-message",
+      decided:
+        ap.status === "approved" || ap.status === "rejected" ? ap.status : null,
+      decidedVia: ap.decision_note ?? null,
       to: outbound?.to || undefined,
       subject: outbound?.subject || undefined,
       channel: outbound?.channel || undefined,
@@ -233,10 +265,14 @@ export async function loadApprovals(): Promise<{
       vendor: pay?.vendor || undefined,
       trail,
     };
-  });
+  };
+
+  const approvals = rows.map(toOS);
+  const recentDecisions = recentRows.map(toOS);
 
   return {
     approvals,
+    recentDecisions,
     manual,
     pending: approvals.filter((a) => !a.held).length,
     inFlight,

@@ -26,6 +26,8 @@ type Bubble = {
   text: string;
   ts: string;
   parts?: Part[];
+  // day51: a decision made through Percy — a small centred line, not a bubble.
+  decision?: boolean;
 };
 const ORDER: AgentKey[] = [
   "percy",
@@ -93,10 +95,18 @@ export function PercyDrawer({
   }, []);
 
   // fold the draft + any staged attachments into one message body, send, reset.
+  // day51 — Percy is the only conversation: a message from another agent's thread
+  // goes to Percy prefixed "about <agent>: …", and the drawer switches to Percy
+  // so the reply is visible. Those threads are otherwise read-only transcripts.
   const doSend = () => {
     const body = att.compose(draft);
     if (!body.trim()) return;
-    send(body, thread);
+    if (thread === "percy") {
+      send(body, "percy");
+    } else {
+      send(`about ${thread}: ${body}`, "percy");
+      os.setThread("percy");
+    }
     att.clear();
     setDraft("");
     // collapse the grown textarea back to one line after sending
@@ -397,49 +407,44 @@ export function PercyDrawer({
           >
             {thread === "percy"
               ? "say what you need. Percy turns it into tasks for the right agent and anything outbound comes to approvals."
-              : `message ${name} directly. Percy still sees this thread.`}
+              : `${name}'s thread is read-only. Anything you type goes to Percy, about ${name}.`}
           </div>
         )}
-        {list.map((m) => (
-          <div
-            key={m.id}
-            style={{
-              display: "flex",
-              gap: 9,
-              alignItems: "flex-end",
-              justifyContent: m.mine ? "flex-end" : "flex-start",
-            }}
-          >
-            {!m.mine && <Persona agent={thread} size={26} />}
+        {list.map((m) =>
+          m.decision ? (
             <div
+              key={m.id}
               style={{
-                maxWidth: 320,
                 display: "flex",
-                flexDirection: "column",
-                gap: 4,
-                alignItems: m.mine ? "flex-end" : "flex-start",
-                minWidth: 0,
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 7,
+                padding: "2px 0",
               }}
             >
-              {!m.mine && m.parts?.some((p) => p.kind !== "text") ? (
-                <MessageBody parts={m.parts} thread={thread} />
-              ) : (
-                <div
-                  style={{
-                    padding: "10px 14px",
-                    borderRadius: m.mine
-                      ? "16px 16px 4px 16px"
-                      : "16px 16px 16px 4px",
-                    background: m.mine ? "var(--ink)" : "var(--surf2)",
-                    color: m.mine ? "var(--bg)" : "var(--ink)",
-                    fontSize: 13.5,
-                    lineHeight: 1.45,
-                  }}
-                >
-                  <ChatBody text={m.text} mine={m.mine} />
-                </div>
-              )}
-              {!m.mine && <LiveCard messageId={m.id} />}
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--mute)"
+                strokeWidth="2.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M5 12l5 5 9-10" />
+              </svg>
+              <span
+                style={{
+                  fontSize: 11.5,
+                  color: "var(--mute)",
+                  lineHeight: 1.4,
+                  textAlign: "center",
+                }}
+              >
+                {m.text}
+              </span>
               <span
                 className="os-mono"
                 style={{ fontSize: 10, color: "var(--mute)" }}
@@ -447,8 +452,56 @@ export function PercyDrawer({
                 {m.ts}
               </span>
             </div>
-          </div>
-        ))}
+          ) : (
+            <div
+              key={m.id}
+              style={{
+                display: "flex",
+                gap: 9,
+                alignItems: "flex-end",
+                justifyContent: m.mine ? "flex-end" : "flex-start",
+              }}
+            >
+              {!m.mine && <Persona agent={thread} size={26} />}
+              <div
+                style={{
+                  maxWidth: 320,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 4,
+                  alignItems: m.mine ? "flex-end" : "flex-start",
+                  minWidth: 0,
+                }}
+              >
+                {!m.mine && m.parts?.some((p) => p.kind !== "text") ? (
+                  <MessageBody parts={m.parts} thread={thread} />
+                ) : (
+                  <div
+                    style={{
+                      padding: "10px 14px",
+                      borderRadius: m.mine
+                        ? "16px 16px 4px 16px"
+                        : "16px 16px 16px 4px",
+                      background: m.mine ? "var(--ink)" : "var(--surf2)",
+                      color: m.mine ? "var(--bg)" : "var(--ink)",
+                      fontSize: 13.5,
+                      lineHeight: 1.45,
+                    }}
+                  >
+                    <ChatBody text={m.text} mine={m.mine} />
+                  </div>
+                )}
+                {!m.mine && <LiveCard messageId={m.id} />}
+                <span
+                  className="os-mono"
+                  style={{ fontSize: 10, color: "var(--mute)" }}
+                >
+                  {m.ts}
+                </span>
+              </div>
+            </div>
+          ),
+        )}
         {showWorking ? (
           <div style={{ display: "flex", gap: 9, alignItems: "flex-end" }}>
             <Persona agent={thread} size={26} status="working" />
@@ -556,7 +609,7 @@ export function PercyDrawer({
             placeholder={
               thread === "percy"
                 ? "tell percy what you need…"
-                : `message ${name}…`
+                : `ask Percy about ${name}…`
             }
             style={{
               flex: 1,

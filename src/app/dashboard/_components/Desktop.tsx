@@ -47,6 +47,7 @@ export function Desktop({
   working,
   vps,
   approvals,
+  recentDecisions,
   manual,
   inFlight,
   frontdesk,
@@ -68,6 +69,7 @@ export function Desktop({
   working: number;
   vps: OSVps | null;
   approvals: OSApproval[];
+  recentDecisions: OSApproval[];
   manual: OSManualPost[];
   inFlight: OSFlightRow[];
   frontdesk: OSFrontDesk;
@@ -175,6 +177,7 @@ export function Desktop({
           agents={agents}
           pending={pending}
           approvals={approvals}
+          recentDecisions={recentDecisions}
           manual={manual}
           inFlight={inFlight}
           frontdesk={frontdesk}

@@ -102,10 +102,12 @@ function fd(entries: Record<string, string | string[]>): FormData {
 
 export function Approvals({
   approvals,
+  recentDecisions,
   manual,
   inFlight,
 }: {
   approvals: OSApproval[];
+  recentDecisions: OSApproval[];
   manual: OSManualPost[];
   inFlight: OSFlightRow[];
 }) {
@@ -142,7 +144,12 @@ export function Approvals({
   const list = visible.filter(pass);
   const live = list.filter((a) => !a.held);
   const held = list.filter((a) => a.held);
-  const cur = visible.find((a) => a.id === sel) ?? live[0] ?? held[0] ?? null;
+  const cur =
+    visible.find((a) => a.id === sel) ??
+    recentDecisions.find((a) => a.id === sel) ??
+    live[0] ??
+    held[0] ??
+    null;
 
   const selIds = Object.keys(checked)
     .filter((k) => checked[Number(k)])
@@ -541,6 +548,76 @@ export function Approvals({
         )}
 
         <div style={{ flex: 1, overflow: "auto", padding: "8px 10px 14px" }}>
+          {recentDecisions.length > 0 && (
+            <div style={{ marginBottom: 6 }}>
+              <div
+                className="os-mono"
+                style={{
+                  fontSize: 10.5,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  color: "var(--soft)",
+                  padding: "8px 8px 6px",
+                }}
+              >
+                decided through percy
+              </div>
+              {recentDecisions.map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => {
+                    setSel(a.id);
+                    setEditing(false);
+                    setBack(false);
+                  }}
+                  style={{
+                    display: "flex",
+                    gap: 10,
+                    alignItems: "center",
+                    width: "100%",
+                    padding: "9px 10px",
+                    borderRadius: 12,
+                    background:
+                      cur?.id === a.id ? "var(--surf2)" : "transparent",
+                    border: "1px solid transparent",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    color: "var(--ink)",
+                    marginBottom: 2,
+                  }}
+                >
+                  <Persona agent={a.agent} size={26} />
+                  <span
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      fontSize: 12.5,
+                      color: "var(--soft)",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {a.title}
+                  </span>
+                  <span
+                    className="os-mono"
+                    style={{
+                      fontSize: 9.5,
+                      letterSpacing: "0.06em",
+                      textTransform: "uppercase",
+                      color:
+                        a.decided === "rejected" ? "var(--bad)" : "var(--mute)",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {a.decided === "rejected" ? "rejected" : "approved"}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
           <InFlightStrip
             rows={inFlight}
             onOpenApproval={(id) => {
@@ -972,6 +1049,10 @@ function Detail({
   sendBack: (a: OSApproval, to: AgentKey) => void;
 }) {
   const hue = `var(${AGENT_HUE_VAR[cur.agent]})`;
+  // day51: Percy already decided this one for you — show it as decided, no buttons.
+  const decidedViaPercy =
+    cur.decided != null &&
+    (cur.decidedVia ?? "").toLowerCase().startsWith("via percy");
   return (
     <div
       style={{
@@ -1062,11 +1143,29 @@ function Detail({
             held by you
           </span>
         )}
+        {decidedViaPercy && (
+          <span
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "4px 11px",
+              borderRadius: 999,
+              background: "var(--surf2)",
+              fontSize: 12,
+              fontWeight: 600,
+              color: "var(--soft)",
+            }}
+          >
+            <Persona agent="percy" size={18} />
+            decided through Percy
+          </span>
+        )}
       </div>
 
       <KindBody cur={cur} editing={editing} draft={draft} setDraft={setDraft} />
 
-      {cur.kind === "question" && (
+      {cur.kind === "question" && !cur.decided && (
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
@@ -1086,26 +1185,35 @@ function Detail({
         />
       )}
 
-      {/* actions */}
-      <Actions
-        cur={cur}
-        editing={editing}
-        back={back}
-        busy={busy}
-        note={note}
-        setNote={setNote}
-        setEditing={setEditing}
-        setBack={setBack}
-        setDraft={setDraft}
-        approve={approve}
-        reject={reject}
-        hold={hold}
-        release={release}
-        sendBack={sendBack}
-      />
-      <span style={{ fontSize: 12, color: "var(--mute)" }}>
-        {footnote(cur.kind)}
-      </span>
+      {/* actions — or, if Percy already decided it, a read-only line */}
+      {cur.decided ? (
+        <span style={{ fontSize: 13, color: "var(--soft)", paddingTop: 4 }}>
+          {cur.decided === "rejected" ? "rejected" : "approved"}
+          {decidedViaPercy ? " through Percy" : ""}. nothing more for you here.
+        </span>
+      ) : (
+        <>
+          <Actions
+            cur={cur}
+            editing={editing}
+            back={back}
+            busy={busy}
+            note={note}
+            setNote={setNote}
+            setEditing={setEditing}
+            setBack={setBack}
+            setDraft={setDraft}
+            approve={approve}
+            reject={reject}
+            hold={hold}
+            release={release}
+            sendBack={sendBack}
+          />
+          <span style={{ fontSize: 12, color: "var(--mute)" }}>
+            {footnote(cur.kind)}
+          </span>
+        </>
+      )}
     </div>
   );
 }
