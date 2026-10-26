@@ -40,6 +40,8 @@ export async function GET() {
     stripeRow,
     paymentsRow,
     vpsRow,
+    ops_running,
+    opsRow,
   ] = await Promise.all([
     num(
       db
@@ -110,6 +112,22 @@ export async function GET() {
         .maybeSingle(),
     ),
     scalar(db.from("vps_metrics").select("ts").eq("id", 1).maybeSingle()),
+    // the system monitor / live view poll these: a new op bumps ops_last, and a
+    // status transition (queued/awaiting→running→done) changes the running count.
+    num(
+      db
+        .from("ops")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "running"),
+    ),
+    scalar(
+      db
+        .from("ops")
+        .select("ts")
+        .order("ts", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ),
   ]);
 
   return NextResponse.json(
@@ -131,6 +149,8 @@ export async function GET() {
       // a second request (also at /api/os/config).
       stripe_fx_to_aed: fxToAed(),
       vps_ts: (vpsRow as { ts?: string } | null)?.ts ?? null,
+      ops_running,
+      ops_last: (opsRow as { ts?: string } | null)?.ts ?? null,
     },
     { headers: { "cache-control": "no-store" } },
   );

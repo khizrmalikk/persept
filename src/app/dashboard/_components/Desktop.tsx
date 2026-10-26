@@ -12,6 +12,7 @@ import type { OSDev } from "../_data/dev-types";
 import type { OSFrontDesk } from "../_data/frontdesk";
 import type { OSKnowledge } from "../_data/knowledge-types";
 import type { OSMarketing } from "../_data/marketing-types";
+import type { OSOp } from "../_data/ops";
 import type { OSThreadMsg } from "../_data/threads";
 import type { OSWarRoom } from "../_data/warroom-types";
 import { DOCK_WS, WINDOWS } from "../_data/windows";
@@ -54,6 +55,7 @@ export function Desktop({
   warroom,
   agentExtras,
   threads,
+  ops,
 }: {
   agents: OSAgent[];
   pending: number;
@@ -71,6 +73,7 @@ export function Desktop({
   warroom: OSWarRoom;
   agentExtras: Record<string, OSAgentExtras>;
   threads: Record<string, OSThreadMsg[]>;
+  ops: OSOp[];
 }) {
   const os = useOS();
   const [hov, setHov] = useState<string | null>(null);
@@ -155,7 +158,7 @@ export function Desktop({
       />
 
       {/* ── system monitor (v3 §5) ─────────────────────────────────────────── */}
-      <SystemMonitor agents={agents} vps={vps} />
+      <SystemMonitor agents={agents} vps={vps} ops={ops} />
 
       {/* ── window ─────────────────────────────────────────────────────────── */}
       <WindowFrame

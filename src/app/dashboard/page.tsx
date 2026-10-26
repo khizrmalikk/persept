@@ -9,6 +9,7 @@ import { loadDev } from "./_data/dev";
 import { loadFrontDesk } from "./_data/frontdesk";
 import { loadKnowledge } from "./_data/knowledge";
 import { loadMarketing } from "./_data/marketing";
+import { loadOps } from "./_data/ops";
 import { loadThreads } from "./_data/threads";
 import { loadWarRoom } from "./_data/warroom";
 
@@ -38,6 +39,7 @@ export default async function OSPage() {
     warroom,
     agentExtras,
     threads,
+    ops,
   ] = await Promise.all([
     loadAgents(),
     loadVps(),
@@ -51,6 +53,7 @@ export default async function OSPage() {
     loadWarRoom(),
     loadAgentExtras(),
     loadThreads(),
+    loadOps(),
   ]);
   return (
     <>
@@ -73,6 +76,7 @@ export default async function OSPage() {
           warroom={warroom}
           agentExtras={agentExtras}
           threads={threads}
+          ops={ops}
         />
       </div>
       {/* < 1280px: the mobile app (chat with Percy + approvals) */}
