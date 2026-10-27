@@ -274,6 +274,8 @@ export function Approvals({
                 <button
                   key={k}
                   type="button"
+                  data-pc={`approvals.filter.${k}`}
+                  data-pc-label={`show ${n} approvals`}
                   onClick={() => setKf(k)}
                   style={{
                     fontSize: 12,

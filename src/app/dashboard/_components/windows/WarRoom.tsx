@@ -749,6 +749,8 @@ export function WarRoom({
             </span>
             <button
               type="button"
+              data-pc="goal.new"
+              data-pc-label="new goal"
               onClick={() => {
                 const d = new Date(now);
                 setMode("new");

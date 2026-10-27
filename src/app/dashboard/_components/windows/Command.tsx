@@ -879,6 +879,8 @@ function Backlog({
           }}
         >
           <input
+            data-pc="backlog.new"
+            data-pc-label="new backlog item field"
             value={newT}
             onChange={(e) => setNewT(e.target.value)}
             onKeyDown={(e) => {

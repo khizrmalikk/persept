@@ -31,9 +31,72 @@ export type UiWindow = {
 export const UI_MANIFEST_VERSION = "1";
 
 export const UI_WINDOWS: UiWindow[] = [
-  { id: "command", label: "Command" },
-  { id: "approvals", label: "Approvals" },
-  { id: "frontdesk", label: "Front desk" },
+  {
+    id: "command",
+    label: "Command",
+    tabs: [
+      { id: "today", label: "Today" },
+      { id: "backlog", label: "Backlog" },
+      { id: "ideas", label: "Ideas" },
+      { id: "review", label: "Review" },
+      { id: "schedule", label: "Schedule" },
+    ],
+    targets: [
+      {
+        id: "backlog.new",
+        label: "new backlog item field",
+        kind: "field",
+        does: "type a backlog item, then pick the owner",
+      },
+    ],
+  },
+  {
+    id: "approvals",
+    label: "Approvals",
+    // the kind filters — navigation only; approve/reject/send are never listed.
+    targets: [
+      {
+        id: "approvals.filter.all",
+        label: "show all approvals",
+        kind: "button",
+      },
+      {
+        id: "approvals.filter.out",
+        label: "show outbound approvals",
+        kind: "button",
+      },
+      {
+        id: "approvals.filter.posts",
+        label: "show post approvals",
+        kind: "button",
+      },
+      {
+        id: "approvals.filter.proposal",
+        label: "show proposal approvals",
+        kind: "button",
+      },
+      {
+        id: "approvals.filter.merge",
+        label: "show code approvals",
+        kind: "button",
+      },
+      {
+        id: "approvals.filter.money",
+        label: "show money approvals",
+        kind: "button",
+      },
+    ],
+  },
+  {
+    id: "frontdesk",
+    label: "Front desk",
+    tabs: [
+      { id: "pipeline", label: "Pipeline" },
+      { id: "leads", label: "Research desk" },
+      { id: "conversations", label: "Conversations" },
+      { id: "proposals", label: "Proposals" },
+    ],
+  },
   {
     id: "marketing",
     label: "Marketing",
@@ -65,9 +128,53 @@ export const UI_WINDOWS: UiWindow[] = [
       },
     ],
   },
-  { id: "dev", label: "Dev" },
-  { id: "knowledge", label: "Knowledge" },
-  { id: "warroom", label: "War room" },
+  {
+    id: "dev",
+    label: "Dev",
+    tabs: [
+      { id: "changes", label: "Changes" },
+      { id: "prs", label: "PRs" },
+      { id: "deploys", label: "Deploys" },
+      { id: "errors", label: "Errors" },
+      { id: "terminal", label: "Terminal" },
+      { id: "knowledge", label: "Files" },
+    ],
+    targets: [
+      {
+        id: "project.new",
+        label: "new project",
+        kind: "button",
+        does: "add a repo for Fixer to work on",
+      },
+    ],
+  },
+  {
+    id: "knowledge",
+    label: "Knowledge",
+    tabs: [
+      { id: "files", label: "Files" },
+      { id: "graph", label: "Graph" },
+    ],
+    targets: [
+      { id: "knowledge.search", label: "search files field", kind: "field" },
+    ],
+  },
+  {
+    id: "warroom",
+    label: "War room",
+    tabs: [
+      { id: "goals", label: "Goals" },
+      { id: "money", label: "Money" },
+    ],
+    targets: [
+      {
+        id: "goal.new",
+        label: "new goal",
+        kind: "button",
+        does: "start a war-room goal",
+      },
+    ],
+  },
   { id: "system", label: "System monitor" },
 ];
 

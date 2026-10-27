@@ -153,6 +153,8 @@ export function Dev({ data }: { data: OSDev }) {
           </span>
           <button
             type="button"
+            data-pc="project.new"
+            data-pc-label="new project"
             onClick={() => setEditing("new")}
             title="new project"
             style={{
