@@ -399,10 +399,17 @@ export function CallProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  // load the saved voice choice (sent as `voice` on every /tts request)
+  // load the saved voice choice (sent as `voice` on every /tts request), and
+  // follow live changes from the drawer's voice picker so a mid-call switch sticks.
   useEffect(() => {
     const v = window.localStorage.getItem("os-call-voice");
     if (v) voiceRef.current = v;
+    const onVoice = (e: Event) => {
+      const next = (e as CustomEvent<string>).detail;
+      voiceRef.current = next || undefined;
+    };
+    window.addEventListener("os-voice-change", onVoice);
+    return () => window.removeEventListener("os-voice-change", onVoice);
   }, []);
 
   // ⌥P toggles the full call card

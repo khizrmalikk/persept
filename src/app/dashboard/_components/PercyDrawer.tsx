@@ -13,6 +13,7 @@ import { MessageBody } from "./MessageBody";
 import { useOS } from "./os-store";
 import { type AgentKey, Persona } from "./Persona";
 import { useChatAttachments } from "./useChatAttachments";
+import { VoicePicker } from "./VoicePicker";
 
 // The conversations drawer: one panel, six threads. Percy is pinned first (you
 // tell Percy what you need), then a `direct` label and the five other agents.
@@ -237,6 +238,7 @@ export function PercyDrawer({
             {sub}
           </span>
         </div>
+        <VoicePicker />
         <button
           type="button"
           onClick={() => live.setShowWorking(!live.showWorking)}

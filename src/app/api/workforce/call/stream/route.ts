@@ -4,8 +4,8 @@ import { currentUser } from "@/lib/supabase/server";
 // GET /api/workforce/call/stream?agent=<id> — opens the VPS bridge's SSE call
 // channel with the server-side token and pipes it through unchanged. Events:
 // {type:"ready"}, {type:"delta",text,runId}…, {type:"final",text,runId} |
-// {type:"error",text}; `: hb` keepalives every 15s. 501 when unconfigured →
-// client uses the Supabase path. Aborts upstream when the client disconnects.
+// {type:"error",text}; `: hb` keepalives every 15s. 501 when unconfigured (the
+// call is bridge-only). Aborts upstream when the client disconnects.
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export const maxDuration = 300;
