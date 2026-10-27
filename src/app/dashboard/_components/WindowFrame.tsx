@@ -210,6 +210,7 @@ export function WindowFrame({
           >
             <button
               type="button"
+              data-pc="win-close"
               className="os-traffic is-close"
               onClick={beginClose}
               aria-label="close window"

@@ -334,7 +334,24 @@ export function LiveProvider({
       }
       await wait(350);
 
+      // the whole plan ends when every step is resolved or 60s pass, whichever
+      // comes first; any steps still unresolved at the cap are marked late.
+      const deadline = Date.now() + 60_000;
+
       for (let i = 0; i < plan.steps.length; i++) {
+        if (Date.now() > deadline) {
+          setRun((r) =>
+            r
+              ? {
+                  ...r,
+                  steps: r.steps.map((s, j) =>
+                    j >= i && s !== "done" ? "late" : s,
+                  ),
+                }
+              : r,
+          );
+          break;
+        }
         const step = plan.steps[i];
         setRun((r) => (r ? { ...r, i, steps: mark(r.steps, i, "doing") } : r));
         // `show` steps navigate via the paired bare `show` event; here we just
@@ -359,11 +376,15 @@ export function LiveProvider({
         await moveTo(surfaceEl);
 
         let found: Element | null = null;
-        for (let tries = 0; tries < 40 && !found; tries++) {
+        for (
+          let tries = 0;
+          tries < 40 && !found && Date.now() < deadline;
+          tries++
+        ) {
           const scope = surfaceSel ? document.querySelector(surfaceSel) : null;
           found = scope ? findInSurface(scope, needle) : null;
           if (found) break;
-          await wait(500); // ~20s total; a tick refresh brings the row into DOM
+          await wait(500); // up to ~20s/step, bounded by the 60s plan cap
         }
         if (found) {
           await moveTo(found);

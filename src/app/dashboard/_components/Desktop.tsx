@@ -226,6 +226,7 @@ export function Desktop({
             variant="solid"
             fg="var(--bg)"
             glyph="M4 6h16M4 12h16M4 18h10"
+            pc="hub"
           />
           {DOCK_WS.map((k) => {
             const w = WINDOWS[k];
@@ -241,6 +242,7 @@ export function Desktop({
                 variant="mono"
                 fg="var(--ink)"
                 glyph={w.glyph}
+                pc={`dock-${k}`}
               />
             );
           })}
@@ -255,6 +257,7 @@ export function Desktop({
             variant="mono"
             fg="var(--ink)"
             glyph={WINDOWS.warroom.glyph}
+            pc="dock-warroom"
           />
           <DockTile
             label="approvals"
@@ -268,6 +271,7 @@ export function Desktop({
             glyph={WINDOWS.approvals.glyph}
             badge={pending || undefined}
             accentBadge
+            pc="dock-approvals"
           />
           <Divider />
           {agents.map((a) => (
@@ -504,6 +508,7 @@ function DockTile({
   glyph,
   badge,
   accentBadge,
+  pc,
 }: {
   label: string;
   active: boolean;
@@ -522,6 +527,8 @@ function DockTile({
   badge?: number;
   // approvals badge is accent-on-onacc; every other badge is --ink on --bg.
   accentBadge?: boolean;
+  // data-pc id so Percy's executor / show replays can target this dock icon.
+  pc?: string;
 }) {
   const id = `ws-${label}`;
   const solid = variant === "solid";
@@ -553,6 +560,7 @@ function DockTile({
       )}
       <button
         type="button"
+        data-pc={pc}
         className={solid ? "os-dock-tile" : "os-dock-tile os-tile-mono"}
         onClick={onClick}
         onMouseEnter={() => setHov(id)}

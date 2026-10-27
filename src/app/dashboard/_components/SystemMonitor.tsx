@@ -695,7 +695,11 @@ function OpsSection({ ops }: { ops: OSOp[] }) {
             const isOpen = open === o.id;
             const hasDetail = !!o.result || o.before != null || o.after != null;
             return (
-              <div key={o.id} style={{ borderBottom: "1px solid var(--line)" }}>
+              <div
+                key={o.id}
+                data-pc={`ops-row-${o.id}`}
+                style={{ borderBottom: "1px solid var(--line)" }}
+              >
                 <button
                   type="button"
                   onClick={() => {
