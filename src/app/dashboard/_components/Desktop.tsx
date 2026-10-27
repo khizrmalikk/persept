@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { PercyBusDriver } from "@/components/percy/PercyBusDriver";
 import type { OSAgentExtras } from "../_data/agentpage-types";
-import type { OSAgent, OSVps } from "../_data/agents";
+import type { OSAgent, OSVps, OSWorker } from "../_data/agents";
 import type { OSApproval, OSManualPost } from "../_data/approvals";
 import type { OSCommand } from "../_data/command-types";
 import type { OSFlightRow } from "../_data/copy-types";
@@ -63,6 +63,7 @@ export function Desktop({
   plans,
   shows,
   uis,
+  workers,
 }: {
   agents: OSAgent[];
   pending: number;
@@ -85,6 +86,7 @@ export function Desktop({
   plans: OSPlan[];
   shows: OSShow[];
   uis: OSUi[];
+  workers: OSWorker[];
 }) {
   const os = useOS();
   const [hov, setHov] = useState<string | null>(null);
@@ -138,7 +140,7 @@ export function Desktop({
         : "desktop";
 
   return (
-    <LiveProvider plans={plans} shows={shows} uis={uis}>
+    <LiveProvider plans={plans} shows={shows} uis={uis} workers={workers}>
       <CallProvider>
         {/* live-update heartbeat: refreshes server data only when the tick changes */}
         <TickPoller />
@@ -157,6 +159,7 @@ export function Desktop({
           desktop={desktop}
           warroom={warroom}
           pipeline={pipeline}
+          workers={workers}
         />
 
         {/* ── menu bar (v3 §4) ───────────────────────────────────────────────── */}

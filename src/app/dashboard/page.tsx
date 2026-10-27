@@ -1,7 +1,7 @@
 import { Desktop } from "./_components/Desktop";
 import { OSMobile } from "./_components/OSMobile";
 import { loadAgentExtras } from "./_data/agentpage";
-import { loadAgents, loadVps } from "./_data/agents";
+import { loadAgents, loadVps, loadWorkers } from "./_data/agents";
 import { loadApprovals } from "./_data/approvals";
 import { loadCommand } from "./_data/command";
 import { loadDesktop } from "./_data/desktop";
@@ -44,6 +44,7 @@ export default async function OSPage() {
     plans,
     shows,
     uis,
+    workers,
   ] = await Promise.all([
     loadAgents(),
     loadVps(),
@@ -61,6 +62,7 @@ export default async function OSPage() {
     loadPlans(),
     loadShows(),
     loadUis(),
+    loadWorkers(),
   ]);
   return (
     <>
@@ -88,6 +90,7 @@ export default async function OSPage() {
           plans={plans}
           shows={shows}
           uis={uis}
+          workers={workers}
         />
       </div>
       {/* < 1280px: the mobile app (chat with Percy + approvals) */}

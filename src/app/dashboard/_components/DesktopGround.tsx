@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { sendAgentCommand } from "@/lib/workforce/actions";
-import type { OSAgent, OSVps } from "../_data/agents";
+import type { OSAgent, OSVps, OSWorker } from "../_data/agents";
 import type { OSApproval } from "../_data/approvals";
 import type { OSDesktop } from "../_data/desktop-types";
 import {
@@ -76,6 +76,7 @@ export function DesktopGround({
   desktop,
   warroom,
   pipeline,
+  workers,
 }: {
   agents: OSAgent[];
   vps: OSVps | null;
@@ -83,6 +84,7 @@ export function DesktopGround({
   desktop: OSDesktop;
   warroom: OSWarRoom;
   pipeline: OSPipeline;
+  workers: OSWorker[];
 }) {
   const os = useOS();
   const [vp, setVp] = useState<{ w: number; h: number } | null>(null);
@@ -121,6 +123,12 @@ export function DesktopGround({
   };
 
   const showWidgets = os.view.widgets;
+
+  // agents with a running worker — their node carries a "fresh" badge while Percy's
+  // handoff is still being worked.
+  const busyAgents = new Set(
+    workers.filter((w) => w.status === "running").map((w) => w.agent),
+  );
 
   // an ops event is "live" (spinner) while its op is running and no done/failed
   // twin for the same op_id has landed in the feed yet.
@@ -171,6 +179,7 @@ export function DesktopGround({
             >
               <button
                 type="button"
+                data-live-node={a.id}
                 onClick={() => os.openAgent(a.id)}
                 aria-label={`open ${a.name}`}
                 style={{
@@ -185,6 +194,26 @@ export function DesktopGround({
                 }}
               >
                 <Persona agent={a.id} size={68} status={a.status} />
+                {busyAgents.has(a.id) && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: -2,
+                      right: -2,
+                      padding: "1px 6px",
+                      borderRadius: 999,
+                      background: "var(--accent)",
+                      color: "var(--onacc, #0c0c0c)",
+                      fontSize: 8.5,
+                      fontWeight: 800,
+                      letterSpacing: "0.06em",
+                      textTransform: "uppercase",
+                      border: "1.5px solid var(--map)",
+                    }}
+                  >
+                    fresh
+                  </span>
+                )}
               </button>
               <button
                 type="button"

@@ -12,6 +12,7 @@ import {
 import { PercyAvatar } from "@/components/percy/PercyAvatar";
 import { setPercyLook, setPercyMode } from "@/components/percy/percy-bus";
 import { sendAgentCommand } from "@/lib/workforce/actions";
+import type { OSWorker } from "../_data/agents";
 import type {
   OSPlan,
   OSPlanStep,
@@ -50,6 +51,9 @@ type LiveApi = {
   cursor: Cursor;
   highlight: Highlight;
   note: string | null;
+  // true while Percy is carrying a task to another agent's node (no plan run) —
+  // the overlay shows the cursor + carry card without the working frame.
+  carrying: boolean;
   showWorking: boolean;
   setShowWorking: (v: boolean) => void;
   takeOver: () => void;
@@ -155,11 +159,13 @@ export function LiveProvider({
   plans,
   shows,
   uis,
+  workers,
   children,
 }: {
   plans: OSPlan[];
   shows: OSShow[];
   uis: OSUi[];
+  workers: OSWorker[];
   children: ReactNode;
 }) {
   const os = useOS();
@@ -167,6 +173,7 @@ export function LiveProvider({
   const [cursor, setCursor] = useState<Cursor>(INITIAL_CURSOR);
   const [highlight, setHighlight] = useState<Highlight>(null);
   const [note, setNote] = useState<string | null>(null);
+  const [carrying, setCarrying] = useState(false);
   const [showWorking, setShowWorkingState] = useState(true);
 
   // os api in a ref so the engine (started once per plan) always calls the latest
@@ -178,6 +185,8 @@ export function LiveProvider({
   const seenRef = useRef<Set<number>>(new Set());
   const seenShowsRef = useRef<Set<number>>(new Set());
   const seenUisRef = useRef<Set<number>>(new Set());
+  const seenWorkersRef = useRef<Set<string>>(new Set());
+  const workersPrimedRef = useRef(false);
   const showRef = useRef(showWorking);
   showRef.current = showWorking;
 
@@ -200,6 +209,7 @@ export function LiveProvider({
     setCursor((c) => ({ ...c, vis: false, carry: null }));
     setHighlight(null);
     setNote(null);
+    setCarrying(false);
     setPercyLook(null);
     setPercyMode("idle");
     setRun((r) => (r ? { ...r, status: "stopped" } : r));
@@ -289,6 +299,35 @@ export function LiveProvider({
     ctxRef.current = ctx;
     void replayUi(fresh, ctx);
   }, [uis]);
+
+  // a sessions_send is not a block and produces no step; instead, when a worker
+  // for another agent appears right after a plan, Percy's cursor carries the task
+  // to that agent's node (the prototype's "task → agent" carry card). Pre-existing
+  // workers are primed on first load so they don't replay.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: engine reads refs; re-run only when workers change
+  useEffect(() => {
+    if (!workersPrimedRef.current) {
+      workersPrimedRef.current = true;
+      for (const w of workers) seenWorkersRef.current.add(w.id);
+      return;
+    }
+    if (!showRef.current || !ctxRef.current.dead) return;
+    // don't yank the owner out of an open window — carry only plays on the
+    // desktop. Left unseen so it can still play if they return within 30s.
+    if (osRef.current.win) return;
+    const now = Date.now();
+    const fresh = workers.find((w) => {
+      if (seenWorkersRef.current.has(w.id)) return false;
+      if (w.agent === "percy" || w.status !== "running") return false;
+      const t = Date.parse(w.startedAt);
+      return !Number.isNaN(t) && now - t < 30_000;
+    });
+    if (!fresh) return;
+    seenWorkersRef.current.add(fresh.id);
+    const ctx = { dead: false };
+    ctxRef.current = ctx;
+    void carry(fresh, ctx);
+  }, [workers]);
 
   async function replay(plan: OSPlan, ctx: { dead: boolean }) {
     const wait = (ms: number) =>
@@ -655,6 +694,60 @@ export function LiveProvider({
     }
   }
 
+  // carry a task to another agent's node: show the desktop, move the cursor onto
+  // the agent's building with a "handed to <agent>" card, dwell, fade.
+  async function carry(worker: OSWorker, ctx: { dead: boolean }) {
+    const wait = (ms: number) =>
+      new Promise<void>((res, rej) =>
+        setTimeout(() => (ctx.dead ? rej(new Error("stopped")) : res()), ms),
+      );
+    const name = worker.agent.charAt(0).toUpperCase() + worker.agent.slice(1);
+    try {
+      setCarrying(true);
+      setPercyMode("working");
+      osRef.current.close(); // show the desktop so the agent node is visible
+      await wait(520);
+      const pill = document.querySelector('[data-pc="pill"]');
+      if (pill) {
+        const r = pill.getBoundingClientRect();
+        setCursor({
+          x: r.left + r.width / 2,
+          y: r.top + r.height / 2,
+          vis: true,
+          ms: 0,
+          carry: null,
+        });
+      }
+      await wait(300);
+      const node = document.querySelector(`[data-live-node="${worker.agent}"]`);
+      if (node) {
+        const r = node.getBoundingClientRect();
+        const tx = r.left + r.width / 2;
+        const ty = r.top + r.height / 2;
+        const c = cursorRef.current;
+        const d = Math.hypot(tx - (c.x || tx), ty - (c.y || ty));
+        const ms = Math.round(Math.min(1100, 300 + d * 0.6));
+        setCursor((p) => ({
+          ...p,
+          x: tx,
+          y: ty,
+          vis: true,
+          ms,
+          carry: `handed to ${name}${worker.label ? ` · ${worker.label}` : ""}`,
+        }));
+        setPercyLook({ x: tx, y: ty });
+        await wait(ms + 2600);
+      }
+      setCursor((c) => ({ ...c, vis: false, carry: null }));
+      setCarrying(false);
+      setPercyLook(null);
+      setPercyMode("idle");
+      ctx.dead = true;
+    } catch {
+      ctx.dead = true;
+    }
+  }
+
   return (
     <LiveCtx.Provider
       value={{
@@ -662,6 +755,7 @@ export function LiveProvider({
         cursor,
         highlight,
         note,
+        carrying,
         showWorking,
         setShowWorking,
         takeOver,
@@ -681,8 +775,11 @@ function mark(steps: StepStatus[], i: number, st: StepStatus): StepStatus[] {
 
 // ── the on-screen overlay: frame, cursor, carry card, highlight ─────────────
 function LiveOverlay() {
-  const { run, cursor, highlight, note, takeOver } = useLive();
+  const { run, cursor, highlight, note, carrying, takeOver } = useLive();
   const active = run?.status === "running";
+  // the cursor also shows during a carry (handing a task to another agent), when
+  // there is no plan run and so no working frame.
+  const cursorOn = active || carrying;
   const step = run ? run.plan.steps[run.i] : null;
 
   return (
@@ -778,8 +875,8 @@ function LiveOverlay() {
         />
       )}
 
-      {/* the cursor + Percy tag */}
-      {active && cursor.vis && (
+      {/* the cursor + Percy tag — also shown during a carry */}
+      {cursorOn && cursor.vis && (
         <div
           aria-hidden="true"
           style={{
