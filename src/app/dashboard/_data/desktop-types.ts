@@ -16,6 +16,10 @@ export type OSEvent = {
   kind: string;
   text: string;
   when: string;
+  // ops events carry the op they belong to + its status, so the feed can show a
+  // spinner on a `running` op until its done/failed twin (same opId) arrives.
+  opId?: string;
+  opStatus?: string;
 };
 
 export type OSRun = {

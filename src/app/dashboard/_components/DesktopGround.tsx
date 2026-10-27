@@ -122,6 +122,19 @@ export function DesktopGround({
 
   const showWidgets = os.view.widgets;
 
+  // an ops event is "live" (spinner) while its op is running and no done/failed
+  // twin for the same op_id has landed in the feed yet.
+  const opTerminal = new Set(
+    desktop.feed
+      .filter(
+        (f) =>
+          f.kind === "ops" &&
+          (f.opStatus === "done" || f.opStatus === "failed"),
+      )
+      .map((f) => f.opId)
+      .filter(Boolean),
+  );
+
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: the wallpaper's only interaction is a right-click context menu, which has no keyboard equivalent; all of its commands are reachable from the menu bar
     <div
@@ -729,89 +742,110 @@ export function DesktopGround({
                   what your AI just did
                 </span>
               </div>
-              {desktop.feed.map((f) => (
-                <div
-                  key={f.id}
-                  style={{
-                    display: "flex",
-                    gap: 10,
-                    padding: "9px 0",
-                    borderTop: "1px solid var(--line)",
-                    alignItems: "flex-start",
-                  }}
-                >
-                  {f.kind === "ops" ? (
-                    <span
-                      aria-hidden="true"
-                      style={{
-                        width: 24,
-                        height: 24,
-                        flex: "none",
-                        borderRadius: 6,
-                        background: "var(--code, #0a0a0a)",
-                        border: "1px solid var(--line)",
-                        display: "grid",
-                        placeItems: "center",
-                        color: "var(--accent)",
-                      }}
-                    >
-                      <svg
-                        width="13"
-                        height="13"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                      >
-                        <path d="M4 17l6-6-6-6M12 19h8" />
-                      </svg>
-                    </span>
-                  ) : (
-                    <Persona agent={f.agent} size={24} />
-                  )}
+              {desktop.feed.map((f) => {
+                const spinning =
+                  f.kind === "ops" &&
+                  f.opStatus === "running" &&
+                  (!f.opId || !opTerminal.has(f.opId));
+                return (
                   <div
+                    key={f.id}
                     style={{
                       display: "flex",
-                      flexDirection: "column",
-                      gap: 3,
-                      minWidth: 0,
-                      flex: 1,
+                      gap: 10,
+                      padding: "9px 0",
+                      borderTop: "1px solid var(--line)",
+                      alignItems: "flex-start",
                     }}
                   >
-                    <span style={{ fontSize: 12.5, lineHeight: 1.35 }}>
-                      {f.text}
-                    </span>
-                    <span
-                      style={{
-                        display: "flex",
-                        gap: 8,
-                        alignItems: "center",
-                        fontSize: 11,
-                        color: "var(--mute)",
-                      }}
-                    >
+                    {f.kind === "ops" ? (
                       <span
-                        className="os-mono"
+                        aria-hidden="true"
                         style={{
-                          fontSize: 9.5,
-                          letterSpacing: "0.06em",
-                          textTransform: "uppercase",
-                          padding: "1px 6px",
-                          borderRadius: 4,
-                          background: "var(--surf2)",
-                          color: "var(--soft)",
+                          width: 24,
+                          height: 24,
+                          flex: "none",
+                          borderRadius: 6,
+                          background: "var(--code, #0a0a0a)",
+                          border: "1px solid var(--line)",
+                          display: "grid",
+                          placeItems: "center",
+                          color: "var(--accent)",
                         }}
                       >
-                        {f.kind}
+                        <svg
+                          width="13"
+                          height="13"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <path d="M4 17l6-6-6-6M12 19h8" />
+                        </svg>
                       </span>
-                      {cap(f.agent)} · {f.when}
-                    </span>
+                    ) : (
+                      <Persona agent={f.agent} size={24} />
+                    )}
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 3,
+                        minWidth: 0,
+                        flex: 1,
+                      }}
+                    >
+                      <span style={{ fontSize: 12.5, lineHeight: 1.35 }}>
+                        {f.text}
+                      </span>
+                      <span
+                        style={{
+                          display: "flex",
+                          gap: 8,
+                          alignItems: "center",
+                          fontSize: 11,
+                          color: "var(--mute)",
+                        }}
+                      >
+                        <span
+                          className="os-mono"
+                          style={{
+                            fontSize: 9.5,
+                            letterSpacing: "0.06em",
+                            textTransform: "uppercase",
+                            padding: "1px 6px",
+                            borderRadius: 4,
+                            background: "var(--surf2)",
+                            color: "var(--soft)",
+                          }}
+                        >
+                          {f.kind}
+                        </span>
+                        {spinning && (
+                          <svg
+                            className="os-spin"
+                            width="11"
+                            height="11"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="var(--accent)"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            aria-hidden="true"
+                          >
+                            <path d="M12 3a9 9 0 1 0 9 9" />
+                          </svg>
+                        )}
+                        {cap(f.agent)} · {f.when}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </Card>
           )}
         </div>

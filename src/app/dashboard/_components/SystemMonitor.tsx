@@ -386,6 +386,10 @@ const OP_CHIP: Record<OSOpStatus, { label: string; color: string }> = {
   rejected: { label: "rejected", color: "oklch(0.63 0.2 25)" },
 };
 
+// the services the bridge can show logs for / restart. Free-form is still
+// available through the "run an op" composer.
+const OP_SERVICES = ["bridge", "gateway", "runner", "postgres"];
+
 const opInput: CSSProperties = {
   width: "100%",
   padding: "7px 9px",
@@ -486,6 +490,10 @@ function OpsSection({ ops }: { ops: OSOp[] }) {
   const [composer, setComposer] = useState(false);
   const [doText, setDoText] = useState("");
   const [why, setWhy] = useState("");
+  // the logs / restart controls each reveal a service picker (+ minutes for logs).
+  const [panel, setPanel] = useState<null | "logs" | "restart">(null);
+  const [svc, setSvc] = useState("bridge");
+  const [mins, setMins] = useState("15");
 
   const run = async (verbArgs: string, reason: string) => {
     if (!verbArgs.trim()) return;
@@ -547,12 +555,11 @@ function OpsSection({ ops }: { ops: OSOp[] }) {
         >
           jobs
         </OpBtn>
-        <OpBtn
-          onClick={() =>
-            run("logs bridge 15", "owner asked from the dashboard")
-          }
-        >
+        <OpBtn onClick={() => setPanel(panel === "logs" ? null : "logs")}>
           logs
+        </OpBtn>
+        <OpBtn onClick={() => setPanel(panel === "restart" ? null : "restart")}>
+          restart
         </OpBtn>
         <OpBtn
           onClick={() => {
@@ -564,6 +571,74 @@ function OpsSection({ ops }: { ops: OSOp[] }) {
           redeploy
         </OpBtn>
       </div>
+
+      {panel && (
+        <div
+          style={{
+            marginTop: 8,
+            display: "flex",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 6,
+          }}
+        >
+          <span style={{ fontSize: 11.5, color: "var(--soft)" }}>
+            {panel === "logs" ? "logs for" : "restart"}
+          </span>
+          <select
+            value={svc}
+            onChange={(e) => setSvc(e.target.value)}
+            style={{ ...opInput, width: "auto", cursor: "pointer" }}
+          >
+            {OP_SERVICES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+          {panel === "logs" && (
+            <>
+              <input
+                value={mins}
+                onChange={(e) =>
+                  setMins(e.target.value.replace(/[^0-9]/g, "").slice(0, 4))
+                }
+                inputMode="numeric"
+                aria-label="minutes"
+                style={{ ...opInput, width: 56 }}
+              />
+              <span style={{ fontSize: 11.5, color: "var(--mute)" }}>min</span>
+            </>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              if (panel === "logs") {
+                run(
+                  `logs ${svc} ${Number(mins) || 15}`,
+                  "owner asked from the dashboard",
+                );
+              } else if (
+                window.confirm(`Restart ${svc}? Percy will run it now.`)
+              ) {
+                run(`restart ${svc}`, "owner asked from the dashboard");
+              }
+              setPanel(null);
+            }}
+            style={{
+              ...opInput,
+              width: "auto",
+              cursor: "pointer",
+              fontWeight: 700,
+              background: "var(--accent)",
+              color: "var(--onacc)",
+              border: "none",
+            }}
+          >
+            {panel === "logs" ? "get logs" : "restart"}
+          </button>
+        </div>
+      )}
 
       {composer && (
         <div
@@ -682,6 +757,7 @@ function OpsSection({ ops }: { ops: OSOp[] }) {
                     </span>
                   )}
                   <span
+                    className={o.status === "running" ? "os-pulse" : undefined}
                     style={{
                       fontSize: 10.5,
                       fontWeight: 700,

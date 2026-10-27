@@ -82,13 +82,21 @@ export async function loadDesktop(): Promise<OSDesktop> {
   )
     .slice(0, 5)
     .map((e) => {
-      const payloadText = (e.payload as { text?: string } | null)?.text ?? "";
+      const p =
+        (e.payload as {
+          text?: string;
+          op_id?: string;
+          status?: string;
+        } | null) ?? null;
+      const payloadText = p?.text ?? "";
       return {
         id: String(e.id),
         agent: asAgent(e.agent_id),
         kind: (e.kind ?? "run").toLowerCase(),
         text: (e.summary || payloadText || "").slice(0, 120),
         when: ago(e.ts),
+        opId: p?.op_id ? String(p.op_id) : undefined,
+        opStatus: p?.status ? String(p.status) : undefined,
       };
     });
 
