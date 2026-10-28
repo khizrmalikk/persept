@@ -161,6 +161,43 @@ export type OSVps = {
   budgetUsd: number | null;
 };
 
+// A background worker (OpenClaw sub-agent) for the live-view carry card: when a
+// worker for a NON-Percy agent appears right after a plan, Percy's cursor carries
+// the task to that agent's node. Client-safe type (imported with `import type`).
+export type OSWorker = {
+  id: string; // session_key
+  agent: AgentKey;
+  label: string;
+  status: string; // 'running' | 'done'
+  startedAt: string; // ISO, "" when unknown
+};
+
+const WORKER_AGENTS = new Set<AgentKey>([
+  "percy",
+  "scout",
+  "hunter",
+  "scribe",
+  "muse",
+  "fixer",
+]);
+
+export async function loadWorkers(): Promise<OSWorker[]> {
+  try {
+    const rows = await getActiveSubagents();
+    return rows.map((w) => ({
+      id: w.session_key,
+      agent: WORKER_AGENTS.has(w.agent_id as AgentKey)
+        ? (w.agent_id as AgentKey)
+        : "percy",
+      label: w.label ?? "",
+      status: w.status ?? "",
+      startedAt: w.started_at ?? "",
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export async function loadVps(): Promise<OSVps | null> {
   try {
     const db = supabaseAdmin();

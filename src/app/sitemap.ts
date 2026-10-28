@@ -1,9 +1,25 @@
 import type { MetadataRoute } from "next";
+import { publishedGuides } from "@/lib/guides";
 
 const SITE_URL = "https://persept.ai";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
+
+  const guideEntries: MetadataRoute.Sitemap = [
+    {
+      url: `${SITE_URL}/guides`,
+      lastModified,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    ...publishedGuides().map((g) => ({
+      url: `${SITE_URL}/guides/${g.slug}`,
+      lastModified,
+      changeFrequency: "monthly" as const,
+      priority: g.priority,
+    })),
+  ];
 
   return [
     {
@@ -54,5 +70,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.6,
     },
+    ...guideEntries,
   ];
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   updateKnowledgeFile,
   uploadKnowledgeFile,
@@ -22,7 +22,7 @@ import { GraphView } from "./GraphView";
 
 const GRID = "60px minmax(0,1.6fr) 80px 80px minmax(0,1.4fr)";
 const NAMES: Record<string, string> = {
-  chief: "Chief",
+  percy: "Percy",
   scout: "Scout",
   hunter: "Hunter",
   scribe: "Scribe",
@@ -40,6 +40,10 @@ export function Knowledge({ data }: { data: OSKnowledge }) {
   const [tab, setTab] = useState<"files" | "graph">(
     os.sub.tab === "graph" ? "graph" : "files",
   );
+  // react to a deep link / Percy `open knowledge.<tab>` on an already-open window.
+  useEffect(() => {
+    if (os.sub.tab === "graph" || os.sub.tab === "files") setTab(os.sub.tab);
+  }, [os.sub.tab]);
 
   const query = q.trim().toLowerCase();
   const files = data.files.filter(
@@ -170,6 +174,8 @@ export function Knowledge({ data }: { data: OSKnowledge }) {
                     <path d="M20 20l-3.5-3.5" />
                   </svg>
                   <input
+                    data-pc="knowledge.search"
+                    data-pc-label="search files field"
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
                     placeholder="search files"

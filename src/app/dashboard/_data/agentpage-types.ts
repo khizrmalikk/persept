@@ -94,17 +94,17 @@ export type OSAgentExtras = {
   files: OSAgentFile[];
 };
 
-// Model tiers the owner can pick on the permissions tab (CONFIG block to Chief).
+// Model tiers the owner can pick on the permissions tab (CONFIG block to Percy).
 export const MODEL_TIERS = ["cheap", "routine", "judgment"] as const;
 export type ModelTier = (typeof MODEL_TIERS)[number];
 
 // Static capability list per agent. Reversible/internal → toggle; anything that
 // sends, merges, publishes or pays → locked "always asks you".
 export const CAPABILITIES: Record<AgentKey, OSCapability[]> = {
-  chief: [
+  percy: [
     {
       label: "add backlog items for any agent",
-      detail: "how Chief delegates",
+      detail: "how Percy delegates",
       locked: false,
       defaultOn: true,
     },
@@ -242,7 +242,7 @@ export const CAPABILITIES: Record<AgentKey, OSCapability[]> = {
 // Which integration ids belong to each agent's "connected accounts" (per the
 // day-30 contract's integrations mapping).
 export const AGENT_INTEGRATIONS: Record<AgentKey, string[]> = {
-  chief: ["telegram", "ledger"],
+  percy: ["telegram", "ledger"],
   scout: ["places"],
   hunter: ["gmail", "places"],
   scribe: [],

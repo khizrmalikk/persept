@@ -19,13 +19,14 @@ export type RosterAgent = {
 
 export const ROSTER: RosterAgent[] = [
   {
-    id: "chief",
-    name: "Chief",
+    id: "percy",
+    name: "Percy",
     emoji: "🗂️",
     hue: 70,
-    room: "chief of staff",
-    role: "chief of staff",
-    mandate: "sees everything. triage, backlog, weekly review and health.",
+    room: "operator",
+    role: "operator",
+    mandate:
+      "your main agent. talks with you, hands work to the team and works on your screen.",
     from: ["all agents"],
     to: ["all agents"],
   },
@@ -37,7 +38,7 @@ export const ROSTER: RosterAgent[] = [
     room: "research",
     role: "research",
     mandate: "finds prospects and signal. hands leads to Hunter.",
-    from: ["Chief"],
+    from: ["Percy"],
     to: ["Hunter"],
   },
   {
@@ -81,7 +82,7 @@ export const ROSTER: RosterAgent[] = [
     room: "dev & debugging",
     role: "dev & debugging",
     mandate: "runs code projects, ships fixes, does research passes.",
-    from: ["Chief"],
+    from: ["Percy"],
     to: ["you"],
   },
 ];

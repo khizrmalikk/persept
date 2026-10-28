@@ -9,7 +9,7 @@
 // Same string union as AgentKey, declared locally so this module pulls no imports
 // (keeps it testable). Assignable to AgentKey wherever the client needs it.
 export type BlockAgent =
-  | "chief"
+  | "percy"
   | "scout"
   | "hunter"
   | "scribe"
@@ -58,7 +58,7 @@ export type Part = TextPart | BlockPart | SystemPart;
 export type ParseResult = { parts: Part[] };
 
 const ROSTER: BlockAgent[] = [
-  "chief",
+  "percy",
   "scout",
   "hunter",
   "scribe",
@@ -413,7 +413,7 @@ export function blockMeta(p: BlockPart): {
       };
     case "IDEA":
       return {
-        target: "chief",
+        target: "percy",
         title: firstLine(f.idea) || (p.op ? `idea ${p.op}` : "idea"),
       };
     case "CAMPAIGN":
@@ -429,12 +429,12 @@ export function blockMeta(p: BlockPart): {
         title: f.agent ? `config · ${f.agent}` : "config",
       };
     case "GOAL":
-      return { target: "chief", title: f.label || "goal" };
+      return { target: "percy", title: f.label || "goal" };
     case "PLAN":
-      return { target: "chief", title: f.goal ? `plan · ${f.goal}` : "plan" };
+      return { target: "percy", title: f.goal ? `plan · ${f.goal}` : "plan" };
     case "MOVER":
       return {
-        target: asAgent(f.agent) ?? "chief",
+        target: asAgent(f.agent) ?? "percy",
         title: firstLine(f.text) || "mover",
       };
     case "TASK":

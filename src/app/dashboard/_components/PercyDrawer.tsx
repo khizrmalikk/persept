@@ -8,13 +8,15 @@ import type { OSThreadMsg } from "../_data/threads";
 import { AGENT_HUE_VAR } from "../_data/windows";
 import { AttachButton, AttachChips } from "./ChatAttach";
 import { ChatBody } from "./ChatBody";
+import { LiveCard, useLive } from "./LiveView";
 import { MessageBody } from "./MessageBody";
 import { useOS } from "./os-store";
 import { type AgentKey, Persona } from "./Persona";
 import { useChatAttachments } from "./useChatAttachments";
+import { VoicePicker } from "./VoicePicker";
 
-// The conversations drawer: one panel, six threads. Chief is pinned first (you
-// tell Chief what you need), then a `direct` label and the five other agents.
+// The conversations drawer: one panel, six threads. Percy is pinned first (you
+// tell Percy what you need), then a `direct` label and the five other agents.
 // Sending routes through the real `sendMessageFromForm` action (an `actions` row
 // the bridge relays); replies and task cards arrive from the bridge as events —
 // history loading is wired with the agent page. Optimistic bubbles show sends now.
@@ -25,9 +27,11 @@ type Bubble = {
   text: string;
   ts: string;
   parts?: Part[];
+  // day51: a decision made through Percy — a small centred line, not a bubble.
+  decision?: boolean;
 };
 const ORDER: AgentKey[] = [
-  "chief",
+  "percy",
   "scout",
   "hunter",
   "scribe",
@@ -35,7 +39,7 @@ const ORDER: AgentKey[] = [
   "fixer",
 ];
 
-export function ChiefDrawer({
+export function PercyDrawer({
   agents,
   threads,
 }: {
@@ -43,6 +47,7 @@ export function ChiefDrawer({
   threads: Record<string, OSThreadMsg[]>;
 }) {
   const os = useOS();
+  const live = useLive();
   // optimistic sends not yet echoed back as a `user` event, per thread
   const [pending, setPending] = useState<Record<string, Bubble[]>>({});
   const [typing, setTyping] = useState<Record<string, boolean>>({});
@@ -55,7 +60,7 @@ export function ChiefDrawer({
 
   const thread = os.thread;
   const agent = agents.find((a) => a.id === thread);
-  const name = thread === "chief" ? "Chief" : (agent?.name ?? thread);
+  const name = thread === "percy" ? "Percy" : (agent?.name ?? thread);
 
   // drop any staged attachments when switching threads — they belong to the
   // message you were composing for the thread you left.
@@ -91,10 +96,18 @@ export function ChiefDrawer({
   }, []);
 
   // fold the draft + any staged attachments into one message body, send, reset.
+  // day51 — Percy is the only conversation: a message from another agent's thread
+  // goes to Percy prefixed "about <agent>: …", and the drawer switches to Percy
+  // so the reply is visible. Those threads are otherwise read-only transcripts.
   const doSend = () => {
     const body = att.compose(draft);
     if (!body.trim()) return;
-    send(body, thread);
+    if (thread === "percy") {
+      send(body, "percy");
+    } else {
+      send(`about ${thread}: ${body}`, "percy");
+      os.setThread("percy");
+    }
     att.clear();
     setDraft("");
     // collapse the grown textarea back to one line after sending
@@ -125,17 +138,17 @@ export function ChiefDrawer({
     });
   }, [threads]);
 
-  // palette "ask chief: …" handoff
+  // palette "ask percy: …" handoff
   useEffect(() => {
     const onAsk = () => {
-      const q = window.sessionStorage.getItem("os-ask-chief");
+      const q = window.sessionStorage.getItem("os-ask-percy");
       if (q) {
-        window.sessionStorage.removeItem("os-ask-chief");
-        send(q, "chief");
+        window.sessionStorage.removeItem("os-ask-percy");
+        send(q, "percy");
       }
     };
-    window.addEventListener("os-ask-chief", onAsk);
-    return () => window.removeEventListener("os-ask-chief", onAsk);
+    window.addEventListener("os-ask-percy", onAsk);
+    return () => window.removeEventListener("os-ask-percy", onAsk);
   }, [send]);
 
   // server thread + unmatched optimistic bubbles, oldest→newest
@@ -170,8 +183,8 @@ export function ChiefDrawer({
   if (!os.drawer) return null;
 
   const sub =
-    thread === "chief"
-      ? "tell Chief what you need. Chief hands it to the right agent."
+    thread === "percy"
+      ? "tell Percy what you need. Percy hands it to the right agent."
       : `direct line · ${agent?.room ?? ""}`;
 
   return (
@@ -180,7 +193,7 @@ export function ChiefDrawer({
         position: "absolute",
         right: 14,
         top: 46,
-        bottom: 90,
+        bottom: 66,
         width: 440,
         zIndex: 25,
         background: "var(--surf)",
@@ -225,6 +238,47 @@ export function ChiefDrawer({
             {sub}
           </span>
         </div>
+        <VoicePicker />
+        <button
+          type="button"
+          onClick={() => live.setShowWorking(!live.showWorking)}
+          aria-label={
+            live.showWorking
+              ? "hide Percy working on your screen"
+              : "show Percy working on your screen"
+          }
+          title={
+            live.showWorking ? "Percy working: shown" : "Percy working: hidden"
+          }
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 9,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            color: live.showWorking ? "var(--accent)" : "var(--soft)",
+            background: "transparent",
+            border: "none",
+          }}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+            <circle cx="12" cy="12" r="3" />
+            {!live.showWorking && <path d="M4 4l16 16" />}
+          </svg>
+        </button>
         <button
           type="button"
           onClick={os.closeDrawer}
@@ -270,7 +324,7 @@ export function ChiefDrawer({
         {ORDER.map((k) => {
           const active = k === thread;
           const st = agents.find((a) => a.id === k)?.status ?? "";
-          const isChief = k === "chief";
+          const isPercy = k === "percy";
           return (
             <div
               key={k}
@@ -280,8 +334,8 @@ export function ChiefDrawer({
                 type="button"
                 onClick={() => os.setThread(k)}
                 title={
-                  k === "chief"
-                    ? "Chief"
+                  k === "percy"
+                    ? "Percy"
                     : (agents.find((a) => a.id === k)?.name ?? k)
                 }
                 style={{
@@ -289,7 +343,7 @@ export function ChiefDrawer({
                   alignItems: "center",
                   gap: 7,
                   padding: 3,
-                  paddingRight: isChief ? 10 : 3,
+                  paddingRight: isPercy ? 10 : 3,
                   borderRadius: 999,
                   background: active ? "var(--surf2)" : "transparent",
                   cursor: "pointer",
@@ -297,7 +351,7 @@ export function ChiefDrawer({
                 }}
               >
                 <Persona agent={k} size={26} status={st} />
-                {isChief && (
+                {isPercy && (
                   <span
                     style={{
                       fontSize: 12,
@@ -306,11 +360,11 @@ export function ChiefDrawer({
                       color: "var(--ink)",
                     }}
                   >
-                    chief
+                    percy
                   </span>
                 )}
               </button>
-              {isChief && (
+              {isPercy && (
                 <span
                   className="os-mono"
                   style={{
@@ -353,50 +407,46 @@ export function ChiefDrawer({
               maxWidth: 280,
             }}
           >
-            {thread === "chief"
-              ? "say what you need. Chief turns it into tasks for the right agent and anything outbound comes to approvals."
-              : `message ${name} directly. Chief still sees this thread.`}
+            {thread === "percy"
+              ? "say what you need. Percy turns it into tasks for the right agent and anything outbound comes to approvals."
+              : `${name}'s thread is read-only. Anything you type goes to Percy, about ${name}.`}
           </div>
         )}
-        {list.map((m) => (
-          <div
-            key={m.id}
-            style={{
-              display: "flex",
-              gap: 9,
-              alignItems: "flex-end",
-              justifyContent: m.mine ? "flex-end" : "flex-start",
-            }}
-          >
-            {!m.mine && <Persona agent={thread} size={26} />}
+        {list.map((m) =>
+          m.decision ? (
             <div
+              key={m.id}
               style={{
-                maxWidth: 320,
                 display: "flex",
-                flexDirection: "column",
-                gap: 4,
-                alignItems: m.mine ? "flex-end" : "flex-start",
-                minWidth: 0,
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 7,
+                padding: "2px 0",
               }}
             >
-              {!m.mine && m.parts?.some((p) => p.kind !== "text") ? (
-                <MessageBody parts={m.parts} thread={thread} />
-              ) : (
-                <div
-                  style={{
-                    padding: "10px 14px",
-                    borderRadius: m.mine
-                      ? "16px 16px 4px 16px"
-                      : "16px 16px 16px 4px",
-                    background: m.mine ? "var(--ink)" : "var(--surf2)",
-                    color: m.mine ? "var(--bg)" : "var(--ink)",
-                    fontSize: 13.5,
-                    lineHeight: 1.45,
-                  }}
-                >
-                  <ChatBody text={m.text} mine={m.mine} />
-                </div>
-              )}
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--mute)"
+                strokeWidth="2.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M5 12l5 5 9-10" />
+              </svg>
+              <span
+                style={{
+                  fontSize: 11.5,
+                  color: "var(--mute)",
+                  lineHeight: 1.4,
+                  textAlign: "center",
+                }}
+              >
+                {m.text}
+              </span>
               <span
                 className="os-mono"
                 style={{ fontSize: 10, color: "var(--mute)" }}
@@ -404,8 +454,56 @@ export function ChiefDrawer({
                 {m.ts}
               </span>
             </div>
-          </div>
-        ))}
+          ) : (
+            <div
+              key={m.id}
+              style={{
+                display: "flex",
+                gap: 9,
+                alignItems: "flex-end",
+                justifyContent: m.mine ? "flex-end" : "flex-start",
+              }}
+            >
+              {!m.mine && <Persona agent={thread} size={26} />}
+              <div
+                style={{
+                  maxWidth: 320,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 4,
+                  alignItems: m.mine ? "flex-end" : "flex-start",
+                  minWidth: 0,
+                }}
+              >
+                {!m.mine && m.parts?.some((p) => p.kind !== "text") ? (
+                  <MessageBody parts={m.parts} thread={thread} />
+                ) : (
+                  <div
+                    style={{
+                      padding: "10px 14px",
+                      borderRadius: m.mine
+                        ? "16px 16px 4px 16px"
+                        : "16px 16px 16px 4px",
+                      background: m.mine ? "var(--ink)" : "var(--surf2)",
+                      color: m.mine ? "var(--bg)" : "var(--ink)",
+                      fontSize: 13.5,
+                      lineHeight: 1.45,
+                    }}
+                  >
+                    <ChatBody text={m.text} mine={m.mine} />
+                  </div>
+                )}
+                {!m.mine && <LiveCard messageId={m.id} />}
+                <span
+                  className="os-mono"
+                  style={{ fontSize: 10, color: "var(--mute)" }}
+                >
+                  {m.ts}
+                </span>
+              </div>
+            </div>
+          ),
+        )}
         {showWorking ? (
           <div style={{ display: "flex", gap: 9, alignItems: "flex-end" }}>
             <Persona agent={thread} size={26} status="working" />
@@ -511,9 +609,9 @@ export function ChiefDrawer({
               }
             }}
             placeholder={
-              thread === "chief"
-                ? "tell chief what you need…"
-                : `message ${name}…`
+              thread === "percy"
+                ? "tell percy what you need…"
+                : `ask Percy about ${name}…`
             }
             style={{
               flex: 1,

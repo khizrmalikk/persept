@@ -93,6 +93,7 @@ type OSApi = OSState & {
   toggleNotif: () => void;
   closeOverlays: () => void;
   showToast: (msg: string) => void;
+  dismissToast: () => void;
   // soft-refresh the current window's server data (⌘R / header button) — re-runs
   // the loaders without a full browser reload.
   refresh: () => void;
@@ -129,7 +130,7 @@ export function OSProvider({ children }: { children: ReactNode }) {
     win: null,
     sub: {},
     drawer: false,
-    thread: "chief",
+    thread: "percy",
     pal: false,
     notif: false,
     toast: null,
@@ -288,6 +289,7 @@ export function OSProvider({ children }: { children: ReactNode }) {
       toggleNotif: () => patch({ notif: !s.notif, pal: false }),
       closeOverlays: () => patch({ pal: false, notif: false }),
       showToast: toast,
+      dismissToast: () => patch({ toast: null }),
       refresh: () => refreshRef.current(),
       toggleTheme: () => {
         const next: Theme = s.theme === "dark" ? "light" : "dark";
@@ -319,7 +321,7 @@ export function OSProvider({ children }: { children: ReactNode }) {
     [s, patch, toast],
   );
 
-  // keyboard: ⌘K palette, ⌘J Chief drawer, ⌥0–⌥7 windows + ⌥L lock (§11 — use
+  // keyboard: ⌘K palette, ⌘J Percy drawer, ⌥0–⌥7 windows + ⌥L lock (§11 — use
   // e.code because ⌥ rewrites e.key on macOS), Esc closes the top-most thing:
   // menu/monitor/about → palette/notifications → drawer → window.
   useEffect(() => {
@@ -350,7 +352,7 @@ export function OSProvider({ children }: { children: ReactNode }) {
         setS((p) => ({
           ...p,
           drawer: !p.drawer,
-          thread: "chief",
+          thread: "percy",
           pal: false,
           notif: false,
           menu: null,

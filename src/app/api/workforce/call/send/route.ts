@@ -3,8 +3,9 @@ import { currentUser } from "@/lib/supabase/server";
 
 // POST /api/workforce/call/send { agentId, text } — forwards a spoken utterance
 // to the VPS bridge's live call channel (the bridge prefixes [voice call] itself)
-// and returns its JSON + status. 501 when the live channel isn't configured, so
-// the client falls back to the Supabase path. Allowlist-gated; token stays server-side.
+// and returns its JSON + status. 501 when the live channel isn't configured; the
+// call is bridge-only and surfaces that as an error. Allowlist-gated; token stays
+// server-side.
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 

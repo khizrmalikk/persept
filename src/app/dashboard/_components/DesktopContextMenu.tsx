@@ -61,11 +61,11 @@ export function DesktopContextMenu() {
   };
 
   const rows: Row[] = [
-    { label: "ask chief…", kb: "⌘K", onClick: os.openPal },
+    { label: "ask percy…", kb: "⌘K", onClick: os.openPal },
     {
-      label: "new task for chief",
+      label: "new task for percy",
       kb: "⌘J",
-      onClick: () => os.openDrawer("chief"),
+      onClick: () => os.openDrawer("percy"),
     },
     { sep: true },
     {

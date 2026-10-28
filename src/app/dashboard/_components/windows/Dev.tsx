@@ -153,6 +153,8 @@ export function Dev({ data }: { data: OSDev }) {
           </span>
           <button
             type="button"
+            data-pc="project.new"
+            data-pc-label="new project"
             onClick={() => setEditing("new")}
             title="new project"
             style={{
@@ -512,7 +514,7 @@ function Changes({
               color: "var(--soft)",
             }}
           >
-            no fixes on this project yet. ask Fixer, or Chief will add one when
+            no fixes on this project yet. ask Fixer, or Percy will add one when
             something breaks.
           </div>
         ) : (
@@ -522,6 +524,7 @@ function Changes({
             return (
               <div
                 key={f.id}
+                data-pc={`fix-${f.id}`}
                 style={{
                   display: "flex",
                   gap: 11,

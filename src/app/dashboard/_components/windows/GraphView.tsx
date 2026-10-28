@@ -37,7 +37,7 @@ const KGraph = dynamic(() => import("./KGraph").then((m) => m.KGraph), {
 });
 
 const ROSTER: AgentKey[] = [
-  "chief",
+  "percy",
   "scout",
   "hunter",
   "scribe",
@@ -74,13 +74,13 @@ function buildColors(root: Element): GColors {
     dim: norm("rgba(128,128,128,0.22)"),
     type: {
       entity: v("--ink"),
-      concept: v("--c-chief"),
+      concept: v("--c-percy"),
       synthesis: v("--accent"),
       source: v("--mute"),
       report: norm("#4a4640"),
     },
     owner: {
-      chief: v("--c-chief"),
+      percy: v("--c-percy"),
       scout: v("--c-scout"),
       hunter: v("--c-hunter"),
       scribe: v("--c-scribe"),

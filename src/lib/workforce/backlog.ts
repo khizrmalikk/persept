@@ -1,10 +1,10 @@
-// Server-only reads + pure helpers for Chief's backlog and live-state view.
+// Server-only reads + pure helpers for Percy's backlog and live-state view.
 //
 // Tables / files (see docs/workforce-dashboard.md):
 //   backlog     — DASHBOARD-WRITABLE. The dashboard creates/edits/completes/drops
 //                 rows directly; agents change rows through the bridge (BACKLOG
 //                 blocks), so rows can appear/change without the dashboard — poll.
-//   agent_files — BRIDGE-owned. The bridge mirrors Chief's STATE.md and BACKLOG.md
+//   agent_files — BRIDGE-owned. The bridge mirrors Percy's STATE.md and BACKLOG.md
 //                 into agent_files (read-only here).
 //
 // Every read uses supabaseAdmin() (service key, server-side only) and is DEFENSIVE:
@@ -15,7 +15,7 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-export type BacklogOwner = string; // 'owner' | 'chief' | 'hunter' | 'scout' | …
+export type BacklogOwner = string; // 'owner' | 'percy' | 'hunter' | 'scout' | …
 export type BacklogPriority = "high" | "normal" | "low";
 export type BacklogStatus = "open" | "done" | "dropped";
 
@@ -27,7 +27,7 @@ export type BacklogItem = {
   due: string | null; // YYYY-MM-DD
   priority: BacklogPriority;
   status: BacklogStatus;
-  source: string; // 'dashboard' | 'chief' | 'you' | …
+  source: string; // 'dashboard' | 'percy' | 'you' | …
   created_at: string | null;
   updated_at: string | null;
   done_at: string | null;

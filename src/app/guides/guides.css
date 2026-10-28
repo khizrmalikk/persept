@@ -1,0 +1,156 @@
+/* Guides — article + index styling. Leans on the shared `.pl` light theme and
+ * the global design tokens (--paper, --ink, --ink-soft, --line, --accent); only
+ * adds the few article-specific pieces the legal pages don't already have.
+ * Scoped under `.pl` so it never leaks into the dark surfaces. */
+
+/* ── Article ────────────────────────────────────────────────────────────── */
+.pl .g-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  align-items: center;
+  margin-top: 20px;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft, #6b6457);
+}
+.pl .g-meta span::before {
+  content: "·";
+  margin-right: 18px;
+  color: var(--line, #e3dccf);
+}
+.pl .g-meta span:first-child::before {
+  content: none;
+  margin: 0;
+}
+
+/* intro paragraph — a touch larger, sets the lede */
+.pl .g-lede {
+  font-size: clamp(1.12rem, 1.4vw, 1.3rem);
+  line-height: 1.55;
+  color: var(--ink, #1c1a17);
+  max-width: 44ch;
+}
+
+/* the brand-thesis callout: "agents draft; a person presses send" */
+.pl .g-callout {
+  margin: 40px 0;
+  padding: 24px 28px;
+  border-left: 3px solid var(--accent, #d4572a);
+  background: color-mix(in srgb, var(--accent, #d4572a) 6%, transparent);
+  border-radius: 0 var(--radius-md, 10px) var(--radius-md, 10px) 0;
+}
+.pl .g-callout p {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.5;
+  color: var(--ink, #1c1a17);
+}
+
+/* comparison table (cost / vs-hiring articles) */
+.pl .g-table-wrap {
+  margin: 32px 0;
+  overflow-x: auto;
+}
+.pl .g-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+.pl .g-table th,
+.pl .g-table td {
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line, #e3dccf);
+  vertical-align: top;
+}
+.pl .g-table th {
+  font-weight: 600;
+  color: var(--ink, #1c1a17);
+  border-bottom-width: 2px;
+}
+.pl .g-table td:first-child {
+  font-weight: 500;
+}
+
+/* in-article CTA band */
+.pl .g-cta {
+  margin: 48px 0 8px;
+  padding: 28px 32px;
+  border: 1px solid var(--line, #e3dccf);
+  border-radius: var(--radius-lg, 14px);
+  background: var(--paper-2, #faf6ee);
+}
+.pl .g-cta h2 {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+}
+.pl .g-cta p {
+  margin: 0 0 18px;
+  color: var(--ink-soft, #6b6457);
+}
+.pl .g-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* related guides at the foot of an article */
+.pl .g-related {
+  margin-top: 56px;
+  padding-top: 32px;
+  border-top: 1px solid var(--line, #e3dccf);
+}
+.pl .g-related-h {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft, #6b6457);
+  margin-bottom: 18px;
+}
+
+/* ── Index grid (shared by index + related) ─────────────────────────────── */
+.pl .g-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+}
+.pl .g-card {
+  display: block;
+  padding: 24px 26px;
+  border: 1px solid var(--line, #e3dccf);
+  border-radius: var(--radius-lg, 14px);
+  background: var(--paper, #f7f2ea);
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+.pl .g-card:hover {
+  border-color: var(--accent, #d4572a);
+  transform: translateY(-2px);
+}
+.pl .g-card-eyebrow {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent, #d4572a);
+}
+.pl .g-card-title {
+  margin: 10px 0 8px;
+  font-size: 1.12rem;
+  line-height: 1.3;
+  color: var(--ink, #1c1a17);
+}
+.pl .g-card-excerpt {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--ink-soft, #6b6457);
+}
+.pl .g-soon {
+  margin-top: 40px;
+  font-size: 0.9rem;
+  color: var(--ink-soft, #6b6457);
+}

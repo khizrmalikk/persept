@@ -85,7 +85,7 @@ const sameDay = (iso: string | null, now: Date): boolean => {
 };
 const decider = (by: string): OSLead["decidedBy"] => {
   const v = by.toLowerCase();
-  return v === "hunter" || v === "chief" || v === "owner" ? v : "";
+  return v === "hunter" || v === "percy" || v === "owner" ? v : "";
 };
 
 type LeadRow = Awaited<ReturnType<typeof getSuggestedLeads>>[number];

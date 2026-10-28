@@ -1000,6 +1000,7 @@ function Campaigns({ data }: { data: OSMarketing }) {
           return (
             <button
               key={c.id}
+              data-pc={`campaign-${c.id}`}
               type="button"
               onClick={() => setSel(c)}
               style={{
@@ -1138,6 +1139,8 @@ function Campaigns({ data }: { data: OSMarketing }) {
               <button
                 key={o}
                 type="button"
+                data-pc={`campaigns.new.${o}`}
+                data-pc-label={`start a new campaign led by ${o}`}
                 onClick={() => makeNew(o)}
                 style={{
                   display: "flex",
@@ -1312,7 +1315,13 @@ function CampaignPanel({
           }}
         >
           <Field label="name">
-            <input name="name" defaultValue={c.name} style={inputStyle} />
+            <input
+              name="name"
+              data-pc="campaign.name"
+              data-pc-label="the campaign name"
+              defaultValue={c.name}
+              style={inputStyle}
+            />
           </Field>
           <Field label="owner — who leads it">
             <div style={{ display: "flex", gap: 8 }}>
@@ -1437,6 +1446,9 @@ function CampaignPanel({
         >
           <button
             type="button"
+            data-pc="campaign.save"
+            data-pc-label="save the campaign"
+            data-pc-does="creates or updates the campaign draft"
             onClick={() => saveWith()}
             style={{
               flex: 1,

@@ -33,7 +33,7 @@ export type Lead = {
   campaign: string; // slug
   status: LeadStatus;
   // who decided this lead and why. `decided_by` is "hunter" (auto-qualify),
-  // "chief" or "owner"; "" while nobody has touched it. `reason` is the one-line
+  // "percy" or "owner"; "" while nobody has touched it. `reason` is the one-line
   // reason (Hunter's when he leaves/dismisses a lead, else the owner's).
   decided_by: string;
   decided_at: string | null;
@@ -169,7 +169,7 @@ export async function getSuggestedLeadCount(): Promise<number> {
   }
 }
 
-// Chief's triage decisions — `events` rows with kind 'triage' (newest first) in
+// Percy's triage decisions — `events` rows with kind 'triage' (newest first) in
 // the last `days` days. The company / decision / reason / lead id come from the
 // event payload, falling back to the summary text. Defensive like the rest.
 export type TriageEvent = {

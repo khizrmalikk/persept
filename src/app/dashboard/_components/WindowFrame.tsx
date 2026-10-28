@@ -24,7 +24,7 @@ import { Marketing } from "./windows/Marketing";
 import { WarRoom } from "./windows/WarRoom";
 
 // The one-window-at-a-time frame: scrim + a full-bleed card with the standard
-// header (owner large, collaborators as chips, chief-oversight chip on
+// header (owner large, collaborators as chips, percy-oversight chip on
 // workspaces, a "n waiting for you" amber chip, close). The body is routed by
 // `win`. Window bodies are filled in per phase; until then they show a short note.
 
@@ -32,6 +32,7 @@ export function WindowFrame({
   agents,
   pending,
   approvals,
+  recentDecisions,
   manual,
   inFlight,
   frontdesk,
@@ -45,6 +46,7 @@ export function WindowFrame({
   agents: OSAgent[];
   pending: number;
   approvals: OSApproval[];
+  recentDecisions: OSApproval[];
   manual: OSManualPost[];
   inFlight: OSFlightRow[];
   frontdesk: OSFrontDesk;
@@ -96,7 +98,7 @@ export function WindowFrame({
     k === "you" ? "you" : (agents.find((a) => a.id === k)?.name ?? k);
 
   const isAgent = os.win === "agent";
-  const agentKey: AgentKey = os.sub.k ?? "chief";
+  const agentKey: AgentKey = os.sub.k ?? "percy";
   const meta = os.win !== "agent" ? WINDOWS[os.win] : null;
 
   const owner: AgentKey | null = isAgent ? agentKey : (meta?.owner ?? null);
@@ -127,7 +129,7 @@ export function WindowFrame({
 
   // v3 §6 geometry. Normal: inset frame (inset by the drawer when open). Zoomed:
   // fills everything below the 36px menu bar to the viewport edges, radius 0,
-  // above the dock — but stops 454px short when the Chief drawer is open.
+  // above the dock — but stops 454px short when the Percy drawer is open.
   const geom: React.CSSProperties = zoomed
     ? {
         left: 0,
@@ -141,7 +143,7 @@ export function WindowFrame({
         left: 14,
         right: drawerOpen ? 468 : 14,
         top: 46,
-        bottom: 90,
+        bottom: 77,
         borderRadius: 20,
         zIndex: 16,
       };
@@ -171,6 +173,7 @@ export function WindowFrame({
       />
       <section
         className={winClass}
+        data-pc="win"
         style={{
           position: "absolute",
           ...geom,
@@ -207,6 +210,7 @@ export function WindowFrame({
           >
             <button
               type="button"
+              data-pc="win-close"
               className="os-traffic is-close"
               onClick={beginClose}
               aria-label="close window"
@@ -402,7 +406,7 @@ export function WindowFrame({
             ))}
             {oversight && (
               <span
-                title="Chief can see and act on everything here"
+                title="Percy can see and act on everything here"
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -415,8 +419,8 @@ export function WindowFrame({
                   whiteSpace: "nowrap",
                 }}
               >
-                <Persona agent="chief" size={20} />
-                chief · oversight
+                <Persona agent="percy" size={20} />
+                percy · oversight
               </span>
             )}
             {os.win !== "approvals" && apN > 0 && (
@@ -446,6 +450,7 @@ export function WindowFrame({
           <WindowBody
             agents={agents}
             approvals={approvals}
+            recentDecisions={recentDecisions}
             manual={manual}
             inFlight={inFlight}
             frontdesk={frontdesk}
@@ -465,6 +470,7 @@ export function WindowFrame({
 function WindowBody({
   agents,
   approvals,
+  recentDecisions,
   manual,
   inFlight,
   frontdesk,
@@ -477,6 +483,7 @@ function WindowBody({
 }: {
   agents: OSAgent[];
   approvals: OSApproval[];
+  recentDecisions: OSApproval[];
   manual: OSManualPost[];
   inFlight: OSFlightRow[];
   frontdesk: OSFrontDesk;
@@ -491,7 +498,12 @@ function WindowBody({
   switch (os.win) {
     case "approvals":
       return (
-        <Approvals approvals={approvals} manual={manual} inFlight={inFlight} />
+        <Approvals
+          approvals={approvals}
+          recentDecisions={recentDecisions}
+          manual={manual}
+          inFlight={inFlight}
+        />
       );
     case "frontdesk":
       return <FrontDesk data={frontdesk} approvals={approvals} />;

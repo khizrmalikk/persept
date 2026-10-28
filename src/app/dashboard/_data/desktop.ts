@@ -8,7 +8,7 @@ import type { OSDesktop, OSEvent, OSGoal, OSRun } from "./desktop-types";
 // yields an empty widget.
 
 const AGENTS = new Set<AgentKey>([
-  "chief",
+  "percy",
   "scout",
   "hunter",
   "scribe",
@@ -16,7 +16,11 @@ const AGENTS = new Set<AgentKey>([
   "fixer",
 ]);
 const asAgent = (v: unknown): AgentKey =>
-  AGENTS.has(v as AgentKey) ? (v as AgentKey) : "chief";
+  AGENTS.has(v as AgentKey) ? (v as AgentKey) : "percy";
+
+// today's date in Dubai (the bridge's clock) as YYYY-MM-DD, for the runs filter.
+const todayDubai = () =>
+  new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Dubai" });
 
 const safe = async <T>(
   p: PromiseLike<{ data: T | null }>,
@@ -46,8 +50,9 @@ export async function loadDesktop(): Promise<OSDesktop> {
     ),
     safe(
       db
-        .from("runs_schedule")
-        .select("time, agent, name, status")
+        .from("runs")
+        .select("time, agent, name, status, why, reply, error")
+        .eq("date", todayDubai())
         .order("time", { ascending: true }),
     ),
   ]);
@@ -77,13 +82,21 @@ export async function loadDesktop(): Promise<OSDesktop> {
   )
     .slice(0, 5)
     .map((e) => {
-      const payloadText = (e.payload as { text?: string } | null)?.text ?? "";
+      const p =
+        (e.payload as {
+          text?: string;
+          op_id?: string;
+          status?: string;
+        } | null) ?? null;
+      const payloadText = p?.text ?? "";
       return {
         id: String(e.id),
         agent: asAgent(e.agent_id),
         kind: (e.kind ?? "run").toLowerCase(),
         text: (e.summary || payloadText || "").slice(0, 120),
         when: ago(e.ts),
+        opId: p?.op_id ? String(p.op_id) : undefined,
+        opStatus: p?.status ? String(p.status) : undefined,
       };
     });
 
@@ -93,15 +106,28 @@ export async function loadDesktop(): Promise<OSDesktop> {
   };
   const runs: OSRun[] = (
     (runRows as
-      | { time: string; agent: string; name: string; status: string }[]
+      | {
+          time: string;
+          agent: string;
+          name: string;
+          status: string;
+          why: string | null;
+          reply: string | null;
+          error: string | null;
+        }[]
       | null) ?? []
   ).map((r) => ({
     minutes: toMinutes(r.time ?? "0:00"),
     agent: asAgent(r.agent),
     name: r.name ?? "run",
-    status: (["planned", "done", "missed"].includes(r.status)
+    status: (["planned", "running", "done", "failed", "missed"].includes(
+      r.status,
+    )
       ? r.status
       : "planned") as OSRun["status"],
+    why: r.why ?? "",
+    reply: r.reply ?? "",
+    error: r.error ?? "",
   }));
 
   return { goals, feed, runs };

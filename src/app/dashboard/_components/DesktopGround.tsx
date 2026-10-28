@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { OSAgent, OSVps } from "../_data/agents";
+import { sendAgentCommand } from "@/lib/workforce/actions";
+import type { OSAgent, OSVps, OSWorker } from "../_data/agents";
 import type { OSApproval } from "../_data/approvals";
 import type { OSDesktop } from "../_data/desktop-types";
 import {
@@ -21,7 +22,7 @@ import { type AgentKey, Persona } from "./Persona";
 // stage). Per the contract the node ring is cost, not CPU.
 
 const HUE: Record<Exclude<AgentKey, "you">, number> = {
-  chief: 70,
+  percy: 70,
   scout: 20,
   hunter: 150,
   scribe: 220,
@@ -30,7 +31,7 @@ const HUE: Record<Exclude<AgentKey, "you">, number> = {
 };
 // offsets from stage centre (y centre +10)
 const OFF: Record<string, [number, number]> = {
-  chief: [0, -20],
+  percy: [0, -20],
   scout: [-262, -175],
   hunter: [-275, 95],
   scribe: [-20, 205],
@@ -43,11 +44,11 @@ const EDGES: [string, string, string][] = [
   ["scribe", "hunter", ""],
   ["hunter", "muse", "campaigns"],
   ["muse", "scribe", "copy check"],
-  ["chief", "fixer", "tasks"],
-  ["chief", "scout", ""],
-  ["chief", "hunter", ""],
-  ["chief", "muse", ""],
-  ["chief", "scribe", ""],
+  ["percy", "fixer", "tasks"],
+  ["percy", "scout", ""],
+  ["percy", "hunter", ""],
+  ["percy", "muse", ""],
+  ["percy", "scribe", ""],
 ];
 const DOT: Record<string, string> = {
   working: "var(--dot-working)",
@@ -75,6 +76,7 @@ export function DesktopGround({
   desktop,
   warroom,
   pipeline,
+  workers,
 }: {
   agents: OSAgent[];
   vps: OSVps | null;
@@ -82,6 +84,7 @@ export function DesktopGround({
   desktop: OSDesktop;
   warroom: OSWarRoom;
   pipeline: OSPipeline;
+  workers: OSWorker[];
 }) {
   const os = useOS();
   const [vp, setVp] = useState<{ w: number; h: number } | null>(null);
@@ -121,6 +124,25 @@ export function DesktopGround({
 
   const showWidgets = os.view.widgets;
 
+  // agents with a running worker — their node carries a "fresh" badge while Percy's
+  // handoff is still being worked.
+  const busyAgents = new Set(
+    workers.filter((w) => w.status === "running").map((w) => w.agent),
+  );
+
+  // an ops event is "live" (spinner) while its op is running and no done/failed
+  // twin for the same op_id has landed in the feed yet.
+  const opTerminal = new Set(
+    desktop.feed
+      .filter(
+        (f) =>
+          f.kind === "ops" &&
+          (f.opStatus === "done" || f.opStatus === "failed"),
+      )
+      .map((f) => f.opId)
+      .filter(Boolean),
+  );
+
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: the wallpaper's only interaction is a right-click context menu, which has no keyboard equivalent; all of its commands are reachable from the menu bar
     <div
@@ -157,6 +179,7 @@ export function DesktopGround({
             >
               <button
                 type="button"
+                data-live-node={a.id}
                 onClick={() => os.openAgent(a.id)}
                 aria-label={`open ${a.name}`}
                 style={{
@@ -171,6 +194,26 @@ export function DesktopGround({
                 }}
               >
                 <Persona agent={a.id} size={68} status={a.status} />
+                {busyAgents.has(a.id) && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: -2,
+                      right: -2,
+                      padding: "1px 6px",
+                      borderRadius: 999,
+                      background: "var(--accent)",
+                      color: "var(--onacc, #0c0c0c)",
+                      fontSize: 8.5,
+                      fontWeight: 800,
+                      letterSpacing: "0.06em",
+                      textTransform: "uppercase",
+                      border: "1.5px solid var(--map)",
+                    }}
+                  >
+                    fresh
+                  </span>
+                )}
               </button>
               <button
                 type="button"
@@ -242,8 +285,8 @@ export function DesktopGround({
         >
           <Card>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <Persona agent="chief" size={30} />
-              <span style={{ fontSize: 12.5, fontWeight: 600 }}>Chief</span>
+              <Persona agent="percy" size={30} />
+              <span style={{ fontSize: 12.5, fontWeight: 600 }}>Percy</span>
               <span className="os-kicker">today&apos;s brief</span>
             </div>
             <div
@@ -276,9 +319,9 @@ export function DesktopGround({
               <button
                 type="button"
                 className="os-btn os-btn-primary"
-                onClick={() => os.openDrawer("chief")}
+                onClick={() => os.openDrawer("percy")}
               >
-                reply to chief
+                reply to percy
               </button>
               <button
                 type="button"
@@ -728,58 +771,110 @@ export function DesktopGround({
                   what your AI just did
                 </span>
               </div>
-              {desktop.feed.map((f) => (
-                <div
-                  key={f.id}
-                  style={{
-                    display: "flex",
-                    gap: 10,
-                    padding: "9px 0",
-                    borderTop: "1px solid var(--line)",
-                    alignItems: "flex-start",
-                  }}
-                >
-                  <Persona agent={f.agent} size={24} />
+              {desktop.feed.map((f) => {
+                const spinning =
+                  f.kind === "ops" &&
+                  f.opStatus === "running" &&
+                  (!f.opId || !opTerminal.has(f.opId));
+                return (
                   <div
+                    key={f.id}
                     style={{
                       display: "flex",
-                      flexDirection: "column",
-                      gap: 3,
-                      minWidth: 0,
-                      flex: 1,
+                      gap: 10,
+                      padding: "9px 0",
+                      borderTop: "1px solid var(--line)",
+                      alignItems: "flex-start",
                     }}
                   >
-                    <span style={{ fontSize: 12.5, lineHeight: 1.35 }}>
-                      {f.text}
-                    </span>
-                    <span
-                      style={{
-                        display: "flex",
-                        gap: 8,
-                        alignItems: "center",
-                        fontSize: 11,
-                        color: "var(--mute)",
-                      }}
-                    >
+                    {f.kind === "ops" ? (
                       <span
-                        className="os-mono"
+                        aria-hidden="true"
                         style={{
-                          fontSize: 9.5,
-                          letterSpacing: "0.06em",
-                          textTransform: "uppercase",
-                          padding: "1px 6px",
-                          borderRadius: 4,
-                          background: "var(--surf2)",
-                          color: "var(--soft)",
+                          width: 24,
+                          height: 24,
+                          flex: "none",
+                          borderRadius: 6,
+                          background: "var(--code, #0a0a0a)",
+                          border: "1px solid var(--line)",
+                          display: "grid",
+                          placeItems: "center",
+                          color: "var(--accent)",
                         }}
                       >
-                        {f.kind}
+                        <svg
+                          width="13"
+                          height="13"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <path d="M4 17l6-6-6-6M12 19h8" />
+                        </svg>
                       </span>
-                      {cap(f.agent)} · {f.when}
-                    </span>
+                    ) : (
+                      <Persona agent={f.agent} size={24} />
+                    )}
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 3,
+                        minWidth: 0,
+                        flex: 1,
+                      }}
+                    >
+                      <span style={{ fontSize: 12.5, lineHeight: 1.35 }}>
+                        {f.text}
+                      </span>
+                      <span
+                        style={{
+                          display: "flex",
+                          gap: 8,
+                          alignItems: "center",
+                          fontSize: 11,
+                          color: "var(--mute)",
+                        }}
+                      >
+                        <span
+                          className="os-mono"
+                          style={{
+                            fontSize: 9.5,
+                            letterSpacing: "0.06em",
+                            textTransform: "uppercase",
+                            padding: "1px 6px",
+                            borderRadius: 4,
+                            background: "var(--surf2)",
+                            color: "var(--soft)",
+                          }}
+                        >
+                          {f.kind}
+                        </span>
+                        {spinning && (
+                          <svg
+                            className="os-spin"
+                            width="11"
+                            height="11"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="var(--accent)"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            aria-hidden="true"
+                          >
+                            <path d="M12 3a9 9 0 1 0 9 9" />
+                          </svg>
+                        )}
+                        {cap(f.agent)} · {f.when}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </Card>
           )}
         </div>
@@ -793,7 +888,7 @@ export function DesktopGround({
           style={{
             position: "absolute",
             left: "50%",
-            bottom: 96,
+            bottom: 77,
             transform: "translateX(-50%)",
             zIndex: 4,
             display: "flex",
@@ -890,6 +985,8 @@ function RunsTimeline({
   now: Date;
   byId: Map<AgentKey, OSAgent>;
 }) {
+  const os = useOS();
+  const [open, setOpen] = useState<OSDesktop["runs"][number] | null>(null);
   const mins = now.getHours() * 60 + now.getMinutes();
   const nowPct = (mins / 1440) * 100;
   return (
@@ -916,11 +1013,17 @@ function RunsTimeline({
       />
       {runs.map((r, i) => {
         const col = `var(${AGENT_HUE_VAR[r.agent]})`;
+        const bad = "var(--bad, oklch(0.63 0.2 25))";
+        const running = r.status === "running";
         const done = r.status === "done";
+        const failed = r.status === "failed";
         const missed = r.status === "missed";
         return (
-          <div
+          <button
+            type="button"
             key={`${r.name}-${i}`}
+            title={r.why || undefined}
+            onClick={() => setOpen(open?.name === r.name ? null : r)}
             style={{
               position: "absolute",
               left: `${(r.minutes / 1440) * 100}%`,
@@ -930,15 +1033,25 @@ function RunsTimeline({
               flexDirection: "column",
               alignItems: "center",
               gap: 4,
+              background: "transparent",
+              border: "none",
+              padding: 0,
+              cursor: "pointer",
+              color: "var(--ink)",
             }}
           >
             <span
+              className={running ? "os-ring-pulse" : undefined}
               style={{
                 width: 14,
                 height: 14,
                 borderRadius: "50%",
-                border: `2px solid ${missed ? "var(--bad)" : col}`,
-                background: done ? col : "var(--surf)",
+                border: `2px solid ${failed ? bad : missed ? "var(--mute)" : col}`,
+                background: failed
+                  ? bad
+                  : done || running
+                    ? col
+                    : "var(--surf)",
               }}
             />
             <span
@@ -949,14 +1062,24 @@ function RunsTimeline({
                 whiteSpace: "nowrap",
               }}
             >
-              {String(Math.floor(r.minutes / 60)).padStart(2, "0")}:00
+              {String(Math.floor(r.minutes / 60)).padStart(2, "0")}:
+              {String(r.minutes % 60).padStart(2, "0")}
             </span>
             <span
-              style={{ fontSize: 10.5, whiteSpace: "nowrap", marginTop: -3 }}
+              style={{
+                fontSize: 10.5,
+                whiteSpace: "nowrap",
+                marginTop: -3,
+                maxWidth: 92,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                textDecoration: missed ? "line-through" : "none",
+                color: missed ? "var(--mute)" : "var(--ink)",
+              }}
             >
-              {byId.get(r.agent)?.name ?? cap(r.agent)}
+              {r.name.replace(/-/g, " ")}
             </span>
-          </div>
+          </button>
         );
       })}
       <div
@@ -970,6 +1093,99 @@ function RunsTimeline({
           boxShadow: "0 0 10px var(--accent)",
         }}
       />
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            left: `${Math.min(82, Math.max(18, (open.minutes / 1440) * 100))}%`,
+            top: 52,
+            transform: "translateX(-50%)",
+            zIndex: 6,
+            width: 280,
+            maxWidth: "80vw",
+            padding: "10px 12px",
+            borderRadius: 12,
+            background: "var(--surf)",
+            border: "1px solid var(--line)",
+            boxShadow: "var(--shadow)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: 6,
+            }}
+          >
+            <span style={{ fontSize: 12, fontWeight: 700 }}>
+              {open.name.replace(/-/g, " ")}
+            </span>
+            <span
+              style={{ fontSize: 11, color: "var(--mute)", marginLeft: "auto" }}
+            >
+              {byId.get(open.agent)?.name ?? cap(open.agent)} · {open.status}
+            </span>
+          </div>
+          {(open.error || open.reply) && (
+            <pre
+              className="os-mono"
+              style={{
+                margin: 0,
+                fontSize: 11,
+                lineHeight: 1.45,
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+                maxHeight: 160,
+                overflow: "auto",
+                color: open.error
+                  ? "var(--bad, oklch(0.63 0.2 25))"
+                  : "var(--soft)",
+              }}
+            >
+              {open.error || open.reply}
+            </pre>
+          )}
+          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+            <button
+              type="button"
+              onClick={() => {
+                void sendAgentCommand(open.agent, `run ${open.name}`);
+                os.showToast(`running ${open.name.replace(/-/g, " ")}`);
+                setOpen(null);
+              }}
+              style={{
+                border: "none",
+                background: "var(--accent)",
+                color: "var(--onacc, #0c0c0c)",
+                borderRadius: 999,
+                padding: "4px 12px",
+                fontSize: 11.5,
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              run again
+            </button>
+            <button
+              type="button"
+              onClick={() => setOpen(null)}
+              style={{
+                border: "1px solid var(--line)",
+                background: "transparent",
+                color: "var(--soft)",
+                borderRadius: 999,
+                padding: "4px 12px",
+                fontSize: 11.5,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

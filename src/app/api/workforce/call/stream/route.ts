@@ -4,8 +4,8 @@ import { currentUser } from "@/lib/supabase/server";
 // GET /api/workforce/call/stream?agent=<id> — opens the VPS bridge's SSE call
 // channel with the server-side token and pipes it through unchanged. Events:
 // {type:"ready"}, {type:"delta",text,runId}…, {type:"final",text,runId} |
-// {type:"error",text}; `: hb` keepalives every 15s. 501 when unconfigured →
-// client uses the Supabase path. Aborts upstream when the client disconnects.
+// {type:"error",text}; `: hb` keepalives every 15s. 501 when unconfigured (the
+// call is bridge-only). Aborts upstream when the client disconnects.
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -85,10 +85,16 @@ export async function GET(req: NextRequest) {
         signal: req.signal,
       },
     );
-  } catch {
+  } catch (e) {
+    console.error(
+      `[call/stream] bridge fetch failed via ${host}: ${(e as Error)?.message ?? e}`,
+    );
     return new NextResponse(null, { status: 502 });
   }
   if (!upstream.ok || !upstream.body) {
+    console.error(
+      `[call/stream] bridge returned ${upstream.status} via ${host} — the call stream backend is likely down`,
+    );
     return new NextResponse(null, { status: upstream.status || 502 });
   }
 

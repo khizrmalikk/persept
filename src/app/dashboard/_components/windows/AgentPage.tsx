@@ -38,8 +38,8 @@ function relTime(iso: string): string {
 }
 
 // Agent page — one per agent. overview / chat / permissions & schedule / runs &
-// logs. The chat itself lives in the Chief drawer (shared thread), so the chat
-// tab links there. Model changes go out as a CONFIG block to Chief; everything
+// logs. The chat itself lives in the Percy drawer (shared thread), so the chat
+// tab links there. Model changes go out as a CONFIG block to Percy; everything
 // per the day-30 contract (cost not cpu, locked send/merge/publish/pay).
 
 const TABS: [string, string][] = [
@@ -49,7 +49,7 @@ const TABS: [string, string][] = [
   ["runs", "runs & logs"],
 ];
 const AGENT_KEYS: AgentKey[] = [
-  "chief",
+  "percy",
   "scout",
   "hunter",
   "scribe",
@@ -86,7 +86,7 @@ export function AgentPage({
   const [focusModel, setFocusModel] = useState(false);
   const [confirmRestart, setConfirmRestart] = useState(false);
 
-  const selected: AgentKey = os.sub.k ?? "chief";
+  const selected: AgentKey = os.sub.k ?? "percy";
   const agent = agents.find((a) => a.id === selected) ?? agents[0];
 
   // reset tab + local toggles when the viewed agent changes
@@ -110,7 +110,7 @@ export function AgentPage({
   };
   const hue = `var(${AGENT_HUE_VAR[agent.id]})`;
   const tint = `var(${AGENT_TINT_VAR[agent.id]})`;
-  const isChief = agent.id === "chief";
+  const isPercy = agent.id === "percy";
 
   const nameToKey = (n: string): AgentKey | undefined => {
     const low = n.toLowerCase();
@@ -132,7 +132,7 @@ export function AgentPage({
       let role: string | null = null;
       if (w.owner === agent.id) role = "owner";
       else if (w.collab.includes(agent.id)) role = "collaborator";
-      else if (isChief) role = "oversight";
+      else if (isPercy) role = "oversight";
       return role ? [{ key: w.key, name: w.name, role }] : [];
     });
   const owns = worksIn.filter((w) => w.role === "owner");
@@ -213,6 +213,7 @@ export function AgentPage({
           {AGENT_KEYS.filter((k) => k !== agent.id).map((k) => (
             <button
               key={k}
+              data-pc={`agent-${k}`}
               type="button"
               title={agents.find((a) => a.id === k)?.name ?? k}
               onClick={() => os.openAgent(k)}
@@ -359,10 +360,10 @@ export function AgentPage({
                   >
                     message {agent.name}
                   </button>
-                  {!isChief && (
+                  {!isPercy && (
                     <button
                       type="button"
-                      onClick={() => os.openDrawer("chief")}
+                      onClick={() => os.openDrawer("percy")}
                       style={{
                         padding: "10px 14px",
                         borderRadius: 10,
@@ -374,7 +375,7 @@ export function AgentPage({
                         color: "var(--ink)",
                       }}
                     >
-                      ask via Chief
+                      ask via Percy
                     </button>
                   )}
                 </div>
@@ -719,10 +720,10 @@ export function AgentPage({
                 color: "var(--soft)",
               }}
             >
-              <Persona agent="chief" size={22} />
-              {isChief
-                ? "Chief hands your requests to the right agent and reports back here."
-                : `you're talking to ${agent.name} directly. Chief still sees this thread.`}
+              <Persona agent="percy" size={22} />
+              {isPercy
+                ? "Percy hands your requests to the right agent and reports back here."
+                : `you're talking to ${agent.name} directly. Percy still sees this thread.`}
             </div>
             <Persona agent={agent.id} size={72} ring status={agent.status} />
             <span
@@ -1031,7 +1032,7 @@ export function AgentPage({
                 </div>
                 <span style={{ fontSize: 11.5, color: "var(--mute)" }}>
                   current: {modelDisplay(agent.model)}. picking a tier sends
-                  Chief a CONFIG block; the bridge sets the model.
+                  Percy a CONFIG block; the bridge sets the model.
                 </span>
               </div>
               <div
@@ -1056,7 +1057,7 @@ export function AgentPage({
                       padding: "6px 0",
                     }}
                   >
-                    runs on demand, when Chief or you give it work.
+                    runs on demand, when Percy or you give it work.
                   </span>
                 ) : (
                   ex.runs.map((r) => (

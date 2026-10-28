@@ -26,14 +26,14 @@ fallback.
 - "ask Hunter to follow up" = `actions` message to hunter: `follow up with <company>: <note>`.
 
 ## backlog (new columns)
-- `source_event_id` (→ events.id) + `session_key`: the Chief reply that created it → render a task card under that drawer message (`task → <owner>`).
+- `source_event_id` (→ events.id) + `session_key`: the Percy reply that created it → render a task card under that drawer message (`task → <owner>`).
 - `waiting_on_owner` (bool): bridge sets each minute when the owner agent has a pending approval.
 - kanban: to do = open & !waiting · in progress = open & owner `agents.status=working` · waiting for you = `waiting_on_owner` · done = done. drop→done patches `status: done`. there is **no** "in progress" status — it's derived.
 
 ## agents (new columns)
 `cost_today`, `tokens_today`, `cost_month` (ledger every 2h + on "cost report"),
 `budget_usd` (owner sets on permissions tab; direct patch), `budget_alerted_at`,
-`model` (CONFIG block: `actions` msg to chief `CONFIG\nagent: hunter\nmodel: cheap\nwhy: …`; bridge applies, Chief acks. tiers: cheap, routine, judgment).
+`model` (CONFIG block: `actions` msg to percy `CONFIG\nagent: hunter\nmodel: cheap\nwhy: …`; bridge applies, Percy acks. tiers: cheap, routine, judgment).
 - **map ring = `cost_today / (budget_usd / daysInMonth)` capped 100%.**
 - **"on the vps" bars = cost + tokens, NOT cpu.** (per-agent cpu/mem not provided — use cost.)
 
@@ -49,18 +49,18 @@ fallback.
 ## integrations
 `id`, `name`, `status` (`connected | pending | off`), `detail`, `updated_at`.
 rows: gmail, linkedin-profile, linkedin-page, places, telegram, runner, ledger.
-agent page "connected accounts": hunter→gmail,places · muse→linkedin-profile,linkedin-page · fixer→runner · chief→telegram,ledger · scout→places.
+agent page "connected accounts": hunter→gmail,places · muse→linkedin-profile,linkedin-page · fixer→runner · percy→telegram,ledger · scout→places.
 
 ## goals (dashboard-owned)
-`id`, `label`, `period`, `value`, `target`, `sort`. owner creates/edits on the desktop widget (direct writes). Chief updates `value` via GOAL block matched on `label` case-insensitively — keep labels stable.
+`id`, `label`, `period`, `value`, `target`, `sort`. owner creates/edits on the desktop widget (direct writes). Percy updates `value` via GOAL block matched on `label` case-insensitively — keep labels stable.
 
 ## usage_daily (day-29 bundle)
 `date`, `session_key`, `agent_id`, `model`, `cost_usd`, `input_tokens`, `output_tokens`,
 `cache_read`, `cache_write`, `total_tokens`, `context_tokens`. source for any cost chart.
 
-## Chief's threads
+## Percy's threads
 direct chat with an agent is still an `actions` message to that agent; the bridge
-mirrors it into Chief's `inbox/THREADS.md` so "Chief still sees this thread" holds. no dashboard change.
+mirrors it into Percy's `inbox/THREADS.md` so "Percy still sees this thread" holds. no dashboard change.
 
 ## Not provided yet — hide or stub honestly
 per-agent cpu/mem (use cost), calendar calls. **agent cursors on the whiteboard
@@ -94,7 +94,7 @@ cols: `id`, `kind` (`sticky | arrow | note`), `author` (`owner` | agent id), `te
 - actions: "ask Fixer to fix" = `actions` msg to fixer `fix error <id>` (bridge writes the FIX REQUEST + sets `state: queued`); "ignore" = patch `state: ignored`. owner gets a Telegram line the first time a signature hits 10 in a day.
 
 ## agent instructions
-every agent can add to the war room with a WARROOM block when asked; Chief records
+every agent can add to the war room with a WARROOM block when asked; Percy records
 decisions there at the weekly review. Fixer has `inbox/ERRORS.md` and never queues
 an error fix on its own.
 
@@ -103,7 +103,7 @@ an error fix on its own.
 # Addendum — bundle C (day 32): the war room is now goals
 
 The whiteboard is gone. The war room is its own window next to approvals (crimson
-dock tile): every goal, where it's heading, Chief's plan + roadmap, and the needle
+dock tile): every goal, where it's heading, Percy's plan + roadmap, and the needle
 movers. Run `bridge/goals.sql`. The Command window keeps `today · backlog · ideas ·
 weekly review · schedule` only. The desktop Goals widget shows the first four goals
 and opens the war room with that goal selected. Light theme ships **paper** (no switcher).
@@ -112,8 +112,8 @@ and opens the war room with that goal selected. Light theme ships **paper** (no 
 - `goals`: `id`, `name`, `tag` (impact-chip label), `unit` (`count | AED`), `src`
   (`manual | won-count | won-value | prospects-count | replied-count | calls-count`),
   `model` (`pace | pipeline`), `cur` (bridge keeps current for live `src`), `target`,
-  `start`, `due`, `owner` (agent id), `team` (agent ids), `summary` (Chief's),
-  `plan_at`, `plan_stale`, `planning` (Chief is writing), `archived`, `sort`,
+  `start`, `due`, `owner` (agent id), `team` (agent ids), `summary` (Percy's),
+  `plan_at`, `plan_stale`, `planning` (Percy is writing), `archived`, `sort`,
   `updated_at`. (`label`, `value`, `period` are the old widget columns — read
   `name`/`cur`, write both `cur` and `value` for manual goals.)
 - `goal_steps`: `goal_id`, `text`, `agent`, `when_label`, `status`
@@ -121,13 +121,13 @@ and opens the war room with that goal selected. Light theme ships **paper** (no 
 - `goal_phases`: `goal_id`, `name`, `agent`, `from_wk`, `to_wk` (weeks from `plan_at`),
   `milestone`, `sort`.
 - `goal_snapshots`: `goal_id`, `date`, `value` (one/day, the chart's actual line + 28-day pace).
-- `goal_movers`: Chief's movers: `text`, `why`, `agent`, `ask` (message sent to that
+- `goal_movers`: Percy's movers: `text`, `why`, `agent`, `ask` (message sent to that
   agent when tapped), `impacts` (`[{goal, delta}]`, goal = tag or name),
   `status` (`open | done | dismissed`).
 
 ## dashboard writes (direct, service key) → `src/lib/workforce/actions.ts`
 - `createGoal(fd)` — insert `goals` (`src: manual` unless a live source is picked),
-  then `actions` msg to chief `plan goal <id>`; `planning: true` optimistic (bridge
+  then `actions` msg to percy `plan goal <id>`; `planning: true` optimistic (bridge
   clears it when the PLAN lands). suggestion chips: pilots signed → `won-count`,
   revenue signed → `won-value`, new prospects → `prospects-count` (shown `· live`).
 - `updateGoal(fd)` — patch; if `target`/`due` changed and steps exist → `plan_stale: true`.
@@ -156,6 +156,6 @@ reply approval +.15. deal `v` = `value_aed`, or 1 for count goals. Derived mover
 on track .6, hit .2). A mover disappears when its source resolves; `moved today` lists those.
 
 ## agents (already on the VPS)
-Each agent gets `inputs/GOALS.md`; Chief answers `plan goal` / `re-plan goal` with a
+Each agent gets `inputs/GOALS.md`; Percy answers `plan goal` / `re-plan goal` with a
 PLAN block the bridge turns into steps + phases, updates manual numbers with GOAL
 blocks, and raises MOVER blocks. Nothing in the UI calls a model.

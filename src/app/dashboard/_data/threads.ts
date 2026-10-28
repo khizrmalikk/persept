@@ -21,9 +21,33 @@ export type OSThreadMsg = {
   ts: string;
   // present only when the message contained blocks/system lines (never on `mine`).
   parts?: Part[];
+  // day51: a `decision` event — the owner deciding an approval through Percy.
+  // Rendered as a small centred line in the thread, never a bubble.
+  decision?: boolean;
 };
 
-const AGENTS = ["chief", "scout", "hunter", "scribe", "muse", "fixer"];
+// day51: build the "you approved #14 through Percy" line from a decision event.
+// The bridge's `summary` is the authored line; this is the fallback when it's
+// missing, reading whatever the payload carries.
+function decisionLine(p: {
+  decision?: string;
+  action?: string;
+  approval_id?: number | string;
+  id?: number | string;
+}): string {
+  const v = String(p.decision ?? p.action ?? "").toLowerCase();
+  const n = p.approval_id ?? p.id;
+  const verb = v.startsWith("approve")
+    ? "approved"
+    : v.startsWith("reject")
+      ? "rejected"
+      : v
+        ? `${v}ed`
+        : "decided";
+  return n != null ? `you ${verb} #${n} through Percy` : "";
+}
+
+const AGENTS = ["percy", "scout", "hunter", "scribe", "muse", "fixer"];
 const hm = (iso: string | null): string => {
   if (!iso) return "";
   const d = new Date(iso);
@@ -42,19 +66,44 @@ export async function loadThreads(): Promise<Record<string, OSThreadMsg[]>> {
     // ascending+limit would return the OLDEST 300 and never include new replies.
     const { data } = await supabaseAdmin()
       .from("events")
-      .select("id, agent_id, ts, summary, payload")
-      .eq("kind", "message")
+      .select("id, kind, agent_id, ts, summary, payload")
+      // `decision` events (owner decided an approval through Percy) ride the same
+      // stream so they interleave with messages by time on the reverse below.
+      .in("kind", ["message", "decision"])
       .order("ts", { ascending: false })
       .limit(300);
     for (const row of (data as
       | {
           id: number | string;
+          kind: string | null;
           agent_id: string | null;
           ts: string | null;
           summary: string | null;
           payload: unknown;
         }[]
       | null) ?? []) {
+      // a decision always belongs to Percy's thread — he is the conversation.
+      if (row.kind === "decision") {
+        const dp = (row.payload ?? {}) as {
+          text?: string;
+          decision?: string;
+          action?: string;
+          approval_id?: number | string;
+          id?: number | string;
+        };
+        const line = (row.summary || dp.text || decisionLine(dp) || "")
+          .toString()
+          .trim();
+        if (line)
+          out.percy.push({
+            id: String(row.id),
+            mine: false,
+            text: line,
+            ts: hm(row.ts),
+            decision: true,
+          });
+        continue;
+      }
       const aid = String(row.agent_id ?? "");
       if (!(aid in out)) continue;
       const p = (row.payload ?? {}) as { role?: string; text?: string };

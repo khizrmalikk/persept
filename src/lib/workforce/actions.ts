@@ -186,7 +186,7 @@ async function decideOne(
   const row = ap as { action?: string | null; agent_id?: string | null } | null;
   const action = String(row?.action ?? "");
   const agentId =
-    (agentHint || "").trim() || (row?.agent_id ?? "").trim() || "chief";
+    (agentHint || "").trim() || (row?.agent_id ?? "").trim() || "percy";
 
   await db
     .from("actions")
@@ -785,7 +785,7 @@ export async function handoffDropFromForm(fd: FormData) {
   await setHandoff(String(fd.get("id") ?? ""), "dropped");
 }
 
-// ── Chief's backlog: create / edit / complete / drop / reopen ─────────────────
+// ── Percy's backlog: create / edit / complete / drop / reopen ─────────────────
 // `backlog` is DASHBOARD-WRITABLE (like `handoffs`/`campaigns`): the dashboard
 // writes rows directly; agents also change rows through the bridge (BACKLOG
 // blocks), so a row can appear/change without the dashboard. Every write guards.
@@ -802,7 +802,7 @@ function backlogFields(fd: FormData) {
 }
 
 function revalidateBacklog() {
-  revalidatePath("/dashboard/agents/chief");
+  revalidatePath("/dashboard/agents/percy");
   revalidatePath("/dashboard");
 }
 
@@ -864,9 +864,9 @@ export async function backlogReopenFromForm(fd: FormData) {
   await setBacklog(String(fd.get("id") ?? ""), "open");
 }
 
-// "start"/"start again" a backlog item (day-39): hand the task off through Chief
+// "start"/"start again" a backlog item (day-39): hand the task off through Percy
 // with the exact `start backlog <uuid>[: note]` command. The bridge marks the row
-// `started`, sends the TASK to the owner agent directly, and tells Chief; the card
+// `started`, sends the TASK to the owner agent directly, and tells Percy; the card
 // moves on the next tick. We do NOT touch `status` here — the bridge owns it.
 export async function startBacklogItem(
   id: string,
@@ -876,7 +876,7 @@ export async function startBacklogItem(
   const rowId = id.trim();
   if (!rowId) return;
   const n = (note ?? "").trim();
-  await sendAgentCommand("chief", `start backlog ${rowId}${n ? `: ${n}` : ""}`);
+  await sendAgentCommand("percy", `start backlog ${rowId}${n ? `: ${n}` : ""}`);
   revalidateBacklog();
 }
 
@@ -919,7 +919,7 @@ function revalidateLeads() {
 
 // Core accept: send Hunter the "add prospect:" message and flip the lead to
 // sent_to_hunter, stamped as an owner decision. Used by the owner's accept and by
-// undoing a Chief dismiss (which accepts regardless of current status).
+// undoing a Percy dismiss (which accepts regardless of current status).
 async function acceptLeadCore(
   db: DbClient,
   rowId: string,
@@ -1540,7 +1540,7 @@ const KNOWLEDGE_AGENT_IDS = [
   "scribe",
   "hunter",
   "muse",
-  "chief",
+  "percy",
   "scout",
   "fixer",
 ];
@@ -1694,7 +1694,7 @@ export async function removeKnowledgeFile(id: string): Promise<void> {
 
 // ── Ideas inbox: dismiss ──────────────────────────────────────────────────────
 // `ideas` is BRIDGE-owned; the dashboard only flips `status` (like leads). Dismiss
-// records the reason and stamps the decision. "ask chief" is a plain sendAgentCommand
+// records the reason and stamps the decision. "ask percy" is a plain sendAgentCommand
 // from the client (`decide idea <short_id> now`), so it needs no action here.
 export async function dismissIdea(id: string): Promise<void> {
   await guard();
@@ -1708,7 +1708,7 @@ export async function dismissIdea(id: string): Promise<void> {
       decided_at: new Date().toISOString(),
     })
     .eq("id", rowId);
-  revalidatePath("/dashboard/agents/chief");
+  revalidatePath("/dashboard/agents/percy");
   revalidatePath("/dashboard");
 }
 
@@ -1850,7 +1850,7 @@ export async function setAgentBudget(
     .eq("id", id);
 }
 
-// Permissions tab model picker: send Chief a CONFIG block naming the tier. The
+// Permissions tab model picker: send Percy a CONFIG block naming the tier. The
 // bridge resolves the tier (cheap|routine|judgment) to a concrete gateway model
 // and writes it back to agents.model — the UI never names a model string.
 export async function setAgentModelTier(
@@ -1861,7 +1861,7 @@ export async function setAgentModelTier(
   const id = agentId.trim();
   if (!id || !["cheap", "routine", "judgment"].includes(tier)) return;
   await sendAgentCommand(
-    "chief",
+    "percy",
     `CONFIG\nagent: ${id}\nmodel: ${tier}\nwhy: owner, permissions tab`,
   );
 }
@@ -1873,9 +1873,12 @@ export async function restartAgent(agentId: string): Promise<void> {
   await guard();
   const id = agentId.trim();
   if (!id) return;
-  await supabaseAdmin()
-    .from("actions")
-    .insert({ kind: "message", agent_id: id, text: "restart" });
+  // Route through Percy as an OPS block (Percy operates the system); the bridge
+  // runs `agent reset <id>` and records the op.
+  await sendAgentCommand(
+    "percy",
+    `OPS\ndo: agent reset ${id}\nwhy: owner restarted ${id} from the dashboard`,
+  );
   revalidatePath(`/dashboard/agents/${id}`);
 }
 
@@ -1895,7 +1898,7 @@ export async function ignoreError(id: string): Promise<void> {
 // The war room replaces the old whiteboard. `goals`, `goal_steps`, `goal_phases`,
 // `goal_snapshots`, `goal_movers` are the tables. The dashboard writes `goals`,
 // `goal_steps`, `goal_movers` and `backlog` DIRECTLY (service key, no anon RLS);
-// planning itself is Chief's, driven by a `plan goal <id>` message on `actions`.
+// planning itself is Percy's, driven by a `plan goal <id>` message on `actions`.
 // goal_phases/goal_snapshots are bridge-owned (read only here). No redirect: the
 // windows re-pull via the tick's `goals_updated_at`.
 
@@ -1913,7 +1916,7 @@ const GOAL_SRC = [
 ] as const;
 const GOAL_PRODUCT = ["all", "persept", "gyst"] as const;
 
-// Create a goal, then ask Chief to plan it. `src: manual` unless the owner picked
+// Create a goal, then ask Percy to plan it. `src: manual` unless the owner picked
 // a live source (the bridge keeps `cur` current for live sources). We optimistically
 // set `planning: true`; the bridge flips it false when the PLAN lands. For manual
 // goals we write both the new `cur`/`name` and the old widget `value`/`label`.
@@ -1935,7 +1938,7 @@ export async function createGoal(
     : "all";
   const model =
     String(fd.get("model") ?? "pace") === "pipeline" ? "pipeline" : "pace";
-  const owner = String(fd.get("owner") ?? "chief").trim() || "chief";
+  const owner = String(fd.get("owner") ?? "percy").trim() || "percy";
   const team = fd
     .getAll("team")
     .map(String)
@@ -1981,7 +1984,7 @@ export async function createGoal(
     .maybeSingle();
   if (error) return { error: error.message };
   const id = (data as { id: string } | null)?.id ?? "";
-  if (id) await sendAgentCommand("chief", `plan goal ${id}`);
+  if (id) await sendAgentCommand("percy", `plan goal ${id}`);
   return { id };
 }
 
@@ -2010,7 +2013,7 @@ export async function updateGoal(
 
   const name = String(fd.get("name") ?? "").trim() || "untitled goal";
   const tag = String(fd.get("tag") ?? "").trim() || name.toLowerCase();
-  const owner = String(fd.get("owner") ?? "chief").trim() || "chief";
+  const owner = String(fd.get("owner") ?? "percy").trim() || "percy";
   const team = fd
     .getAll("team")
     .map(String)
@@ -2060,10 +2063,10 @@ export async function updateGoal(
     })
     .eq("id", id);
   if (error) return { error: error.message };
-  // a source/product change re-paces the goal entirely — re-plan so Chief's
+  // a source/product change re-paces the goal entirely — re-plan so Percy's
   // roadmap matches the new numbers.
   if (srcChanged || productChanged)
-    await sendAgentCommand("chief", `re-plan goal ${id}`);
+    await sendAgentCommand("percy", `re-plan goal ${id}`);
   return { ok: true };
 }
 
@@ -2084,10 +2087,10 @@ export async function setGoalSource(
     .from("goals")
     .update({ src, product: prod, planning: true, plan_stale: false })
     .eq("id", goalId);
-  await sendAgentCommand("chief", `re-plan goal ${goalId}`);
+  await sendAgentCommand("percy", `re-plan goal ${goalId}`);
 }
 
-// "re-plan": ask Chief to redo the plan for a goal. Sets planning optimistically.
+// "re-plan": ask Percy to redo the plan for a goal. Sets planning optimistically.
 export async function replanGoal(id: string): Promise<void> {
   await guard();
   const goalId = id.trim();
@@ -2097,7 +2100,7 @@ export async function replanGoal(id: string): Promise<void> {
     .from("goals")
     .update({ planning: true, plan_stale: false })
     .eq("id", goalId);
-  await sendAgentCommand("chief", `re-plan goal ${goalId}`);
+  await sendAgentCommand("percy", `re-plan goal ${goalId}`);
 }
 
 // "remove": archive only — steps and phases stay for history.
@@ -2137,7 +2140,7 @@ export async function setGoalStepStatus(
   await supabaseAdmin().from("goal_steps").update({ status }).eq("id", stepId);
 }
 
-// "→ backlog": turn a step into a Chief backlog item (owner = the step's agent,
+// "→ backlog": turn a step into a Percy backlog item (owner = the step's agent,
 // due parsed from `when_label` if it is an ISO date), then link it back on the step.
 // The bridge marks the step done when the backlog item is done.
 export async function goalStepToBacklog(fd: FormData): Promise<void> {
@@ -2173,7 +2176,7 @@ export async function goalStepToBacklog(fd: FormData): Promise<void> {
   revalidateBacklog();
 }
 
-// Chief's needle movers (`goal_movers`). Tapping one with an `ask` sends that agent
+// Percy's needle movers (`goal_movers`). Tapping one with an `ask` sends that agent
 // the message and marks the mover done; "dismiss" just dismisses it. (Derived movers
 // — pending approvals, failed fixes, overdue backlog — resolve via their own source
 // action, not here.)

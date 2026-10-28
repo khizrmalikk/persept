@@ -1,7 +1,7 @@
 import { Desktop } from "./_components/Desktop";
 import { OSMobile } from "./_components/OSMobile";
 import { loadAgentExtras } from "./_data/agentpage";
-import { loadAgents, loadVps } from "./_data/agents";
+import { loadAgents, loadVps, loadWorkers } from "./_data/agents";
 import { loadApprovals } from "./_data/approvals";
 import { loadCommand } from "./_data/command";
 import { loadDesktop } from "./_data/desktop";
@@ -9,6 +9,8 @@ import { loadDev } from "./_data/dev";
 import { loadFrontDesk } from "./_data/frontdesk";
 import { loadKnowledge } from "./_data/knowledge";
 import { loadMarketing } from "./_data/marketing";
+import { loadOps } from "./_data/ops";
+import { loadPlans, loadShows, loadUis } from "./_data/plans";
 import { loadThreads } from "./_data/threads";
 import { loadWarRoom } from "./_data/warroom";
 
@@ -28,7 +30,7 @@ export default async function OSPage() {
   const [
     { agents, working },
     vps,
-    { approvals, manual, pending, inFlight },
+    { approvals, recentDecisions, manual, pending, inFlight },
     frontdesk,
     desktop,
     marketing,
@@ -38,6 +40,11 @@ export default async function OSPage() {
     warroom,
     agentExtras,
     threads,
+    ops,
+    plans,
+    shows,
+    uis,
+    workers,
   ] = await Promise.all([
     loadAgents(),
     loadVps(),
@@ -51,6 +58,11 @@ export default async function OSPage() {
     loadWarRoom(),
     loadAgentExtras(),
     loadThreads(),
+    loadOps(),
+    loadPlans(),
+    loadShows(),
+    loadUis(),
+    loadWorkers(),
   ]);
   return (
     <>
@@ -62,6 +74,7 @@ export default async function OSPage() {
           working={working}
           vps={vps}
           approvals={approvals}
+          recentDecisions={recentDecisions}
           manual={manual}
           inFlight={inFlight}
           frontdesk={frontdesk}
@@ -73,9 +86,14 @@ export default async function OSPage() {
           warroom={warroom}
           agentExtras={agentExtras}
           threads={threads}
+          ops={ops}
+          plans={plans}
+          shows={shows}
+          uis={uis}
+          workers={workers}
         />
       </div>
-      {/* < 1280px: the mobile app (chat with Chief + approvals) */}
+      {/* < 1280px: the mobile app (chat with Percy + approvals) */}
       <OSMobile agents={agents} approvals={approvals} threads={threads} />
     </>
   );

@@ -16,13 +16,20 @@ export type OSEvent = {
   kind: string;
   text: string;
   when: string;
+  // ops events carry the op they belong to + its status, so the feed can show a
+  // spinner on a `running` op until its done/failed twin (same opId) arrives.
+  opId?: string;
+  opStatus?: string;
 };
 
 export type OSRun = {
   minutes: number; // minutes since midnight (Dubai)
   agent: AgentKey;
   name: string;
-  status: "planned" | "done" | "missed";
+  status: "planned" | "running" | "done" | "failed" | "missed";
+  why: string; // tooltip ("scheduled", "the owner asked for it", "…, 23 min late")
+  reply: string; // shown on click when the run finished
+  error: string; // shown on click when the run failed
 };
 
 export type OSDesktop = {

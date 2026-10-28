@@ -17,7 +17,7 @@ import { useOS } from "./os-store";
 const LINES = [
   "mounting /knowledge · 41 files",
   "connecting bridge · vps-dxb-01",
-  "chief.runner started",
+  "percy.runner started",
   "scout.runner started",
   "hunter.runner started",
   "scribe.runner started",

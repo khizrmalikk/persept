@@ -161,7 +161,7 @@ export function Command({ data }: { data: OSCommand }) {
               refresh(backlogReopenFromForm(formOf({ id })), "reopened")
             }
             onStart={(id) =>
-              refresh(startBacklogItem(id), "asked Chief to hand it over")
+              refresh(startBacklogItem(id), "asked Percy to hand it over")
             }
             onReassign={(id, owner) =>
               refresh(
@@ -179,7 +179,7 @@ export function Command({ data }: { data: OSCommand }) {
                 addBacklogItem(
                   formOf({
                     title: i.title,
-                    owner: i.by === "you" ? "chief" : i.by,
+                    owner: i.by === "you" ? "percy" : i.by,
                   }),
                 ),
                 "moved to the backlog",
@@ -194,12 +194,12 @@ export function Command({ data }: { data: OSCommand }) {
             onRun={() => {
               refresh(
                 sendAgentCommand(
-                  "chief",
+                  "percy",
                   "write the weekly workforce review now, exactly as in AGENTS.md",
                 ),
               );
               os.showToast(
-                "Chief is running the review. it lands here shortly",
+                "Percy is running the review. it lands here shortly",
               );
             }}
           />
@@ -778,21 +778,21 @@ function Today({ data }: { data: OSCommand }) {
             style={{
               padding: 16,
               borderRadius: 16,
-              background: "var(--t-chief)",
+              background: "var(--t-percy)",
               display: "flex",
               flexDirection: "column",
               gap: 10,
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <Persona agent="chief" size={30} />
+              <Persona agent="percy" size={30} />
               <span style={{ fontSize: 13, fontWeight: 700 }}>
                 today&apos;s brief
               </span>
             </div>
             <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.55 }}>
               {data.brief ??
-                "Chief's brief appears here each morning once STATE.md is written."}
+                "Percy's brief appears here each morning once STATE.md is written."}
             </p>
           </div>
         </div>
@@ -803,7 +803,7 @@ function Today({ data }: { data: OSCommand }) {
 
 // ── backlog ───────────────────────────────────────────────────────────────────
 // day-39: `backlog.status` is the single source of truth. The dashboard only ever
-// sends `start backlog <uuid>` (through Chief), marks items done/dropped by hand,
+// sends `start backlog <uuid>` (through Percy), marks items done/dropped by hand,
 // or re-assigns the owner. The bridge owns started|doing|blocked|stalled.
 function timeAgo(iso: string | null): string {
   if (!iso) return "";
@@ -836,7 +836,7 @@ function Backlog({
   onReassign: (id: string, owner: string) => void;
 }) {
   const [newT, setNewT] = useState("");
-  const [owner, setOwner] = useState<AgentKey>("chief");
+  const [owner, setOwner] = useState<AgentKey>("percy");
   const [filter, setFilter] = useState<string>("all");
   const [showDropped, setShowDropped] = useState(false);
   const add = () => {
@@ -879,6 +879,8 @@ function Backlog({
           }}
         >
           <input
+            data-pc="backlog.new"
+            data-pc-label="new backlog item field"
             value={newT}
             onChange={(e) => setNewT(e.target.value)}
             onKeyDown={(e) => {
@@ -1082,6 +1084,7 @@ function BacklogCard({
 
   return (
     <div
+      data-pc={`backlog-${b.id}`}
       style={{
         padding: 13,
         borderRadius: 13,
@@ -1108,8 +1111,8 @@ function BacklogCard({
             textTransform: "uppercase",
             padding: "2px 7px",
             borderRadius: 5,
-            background: "var(--t-chief)",
-            color: "var(--c-chief)",
+            background: "var(--t-percy)",
+            color: "var(--c-percy)",
           }}
         >
           workforce
@@ -1303,7 +1306,7 @@ function BacklogCard({
                   <button
                     type="button"
                     onClick={() => onStart(b.id)}
-                    title={`${startLabel} — hand to ${nm(b.owner)} via Chief`}
+                    title={`${startLabel} — hand to ${nm(b.owner)} via Percy`}
                     style={startBtn}
                   >
                     <svg
@@ -1409,7 +1412,7 @@ function Ideas({
       }}
     >
       <span style={{ fontSize: 13, color: "var(--soft)", marginBottom: 6 }}>
-        ideas from you and the team. promote one and Chief turns it into a
+        ideas from you and the team. promote one and Percy turns it into a
         backlog item.
       </span>
       {data.ideas.length === 0 ? (
@@ -1569,7 +1572,7 @@ function Review({ data, onRun }: { data: OSCommand; onRun: () => void }) {
         <Markdown text={data.review.markdown} />
       ) : (
         <div style={{ fontSize: 14, color: "var(--soft)", lineHeight: 1.5 }}>
-          Chief writes a weekly review to improvements/. run it now and it lands
+          Percy writes a weekly review to improvements/. run it now and it lands
           here.
         </div>
       )}

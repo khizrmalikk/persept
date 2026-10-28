@@ -144,7 +144,7 @@ export const BACKLOG_COLUMNS: {
     key: "todo",
     label: "to do",
     color: "var(--ink)",
-    empty: "nothing queued. Chief adds items here when you ask for something.",
+    empty: "nothing queued. Percy adds items here when you ask for something.",
   },
   {
     key: "doing",
@@ -189,7 +189,7 @@ export const PRIORITY_DOT: Record<string, string> = {
 };
 
 export const ROSTER_IDS: AgentKey[] = [
-  "chief",
+  "percy",
   "scout",
   "hunter",
   "scribe",

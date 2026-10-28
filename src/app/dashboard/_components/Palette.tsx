@@ -6,8 +6,8 @@ import { DOCK_WS, WINDOWS } from "../_data/windows";
 import { useOS } from "./os-store";
 import { Persona } from "./Persona";
 
-// ⌘K palette. Typing anything and pressing Enter asks Chief (opens the drawer on
-// the Chief thread, carrying the text). It doubles as navigation: workspaces,
+// ⌘K palette. Typing anything and pressing Enter asks Percy (opens the drawer on
+// the Percy thread, carrying the text). It doubles as navigation: workspaces,
 // agents, deals and projects — indexed from the real tables, filtered by query.
 export function Palette({
   agents,
@@ -40,12 +40,12 @@ export function Palette({
     .filter((p) => !query || p.name.toLowerCase().includes(query))
     .slice(0, query ? 5 : 2);
 
-  const askChief = () => {
-    os.openDrawer("chief");
+  const askPercy = () => {
+    os.openDrawer("percy");
     os.closePal();
-    // The Chief thread composer picks up a pending ask via sessionStorage.
-    if (q.trim()) window.sessionStorage.setItem("os-ask-chief", q.trim());
-    window.dispatchEvent(new CustomEvent("os-ask-chief"));
+    // The Percy thread composer picks up a pending ask via sessionStorage.
+    if (q.trim()) window.sessionStorage.setItem("os-ask-percy", q.trim());
+    window.dispatchEvent(new CustomEvent("os-ask-percy"));
   };
 
   return (
@@ -89,15 +89,15 @@ export function Palette({
             borderBottom: "1px solid var(--line)",
           }}
         >
-          <Persona agent="chief" size={34} />
+          <Persona agent="percy" size={34} />
           <input
             ref={inputRef}
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && q.trim()) askChief();
+              if (e.key === "Enter" && q.trim()) askPercy();
             }}
-            placeholder="ask chief anything, or jump to a deal, project or agent"
+            placeholder="ask percy anything, or jump to a deal, project or agent"
             style={{
               flex: 1,
               border: "none",
@@ -133,7 +133,7 @@ export function Palette({
           {q.trim() && (
             <button
               type="button"
-              onClick={askChief}
+              onClick={askPercy}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -149,10 +149,10 @@ export function Palette({
               }}
             >
               <span style={{ fontSize: 14, flex: 1 }}>
-                ask chief: <b>{q}</b>
+                ask percy: <b>{q}</b>
               </span>
               <span style={{ fontSize: 12, color: "var(--mute)" }}>
-                ↵ chief hands it to the right agent
+                ↵ percy hands it to the right agent
               </span>
             </button>
           )}
