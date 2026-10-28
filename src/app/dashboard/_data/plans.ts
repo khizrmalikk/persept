@@ -78,7 +78,7 @@ export async function loadPlans(limit = 5): Promise<OSPlan[]> {
       .from("events")
       .select("id, ts, payload")
       .eq("kind", "plan")
-      .eq("agent", "percy")
+      .eq("agent_id", "percy")
       .order("id", { ascending: false })
       .limit(limit);
     return ((data as EventRow[] | null) ?? []).map((r) => {
@@ -147,7 +147,7 @@ export async function loadShows(limit = 5): Promise<OSShow[]> {
       .from("events")
       .select("id, ts, payload")
       .eq("kind", "show")
-      .eq("agent", "percy")
+      .eq("agent_id", "percy")
       .order("id", { ascending: false })
       .limit(limit);
     return ((data as EventRow[] | null) ?? []).map((r) => {
@@ -232,7 +232,7 @@ export async function loadUis(limit = 5): Promise<OSUi[]> {
       .from("events")
       .select("id, ts, payload")
       .eq("kind", "ui")
-      .eq("agent", "percy")
+      .eq("agent_id", "percy")
       .order("id", { ascending: false })
       .limit(limit);
     return ((data as EventRow[] | null) ?? []).map((r) => {
